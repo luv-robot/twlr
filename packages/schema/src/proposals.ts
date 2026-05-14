@@ -1,4 +1,4 @@
-import type { NarrativeEventType } from "./events";
+import type { NarrativeEvent } from "./events";
 
 export type ProposalStatus = "pending" | "accepted" | "edited" | "rejected";
 
@@ -28,14 +28,8 @@ export interface StateProposal {
   summary: string;
   evidence: string[];
   proposed_events: Array<{
-    event_type: NarrativeEventType;
-    payload: {
-      target_type: string;
-      target_id: string;
-      field?: string;
-      old_value?: unknown;
-      new_value?: unknown;
-    };
+    event_type: NarrativeEvent["event_type"];
+    payload: NarrativeEvent["payload"];
   }>;
   review: {
     reviewed_at: string | null;

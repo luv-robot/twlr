@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { countWords } from "@twlr/core";
-import type { StateProposal } from "@twlr/schema";
+import { countWords, proposalToNarrativeEvents, reviewStateProposal } from "@twlr/core";
+import type { NarrativeEvent, StateProposal } from "@twlr/schema";
 import { createMockCharacterProposal, demoChapters } from "../data/demoWorkspace";
 import { AppRail } from "./AppRail";
 import { ManuscriptEditor } from "./ManuscriptEditor";
@@ -12,13 +12,14 @@ export function AppShell() {
   const [chapters, setChapters] = useState(demoChapters);
   const [activeChapterId, setActiveChapterId] = useState("03");
   const [proposals, setProposals] = useState<StateProposal[]>([]);
-  const [acceptedEventCount, setAcceptedEventCount] = useState(0);
   const [autosaveLabel, setAutosaveLabel] = useState("Autosaved locally");
   const [changedChapterIds, setChangedChapterIds] = useState<Set<string>>(() => new Set());
+  const [acceptedEvents, setAcceptedEvents] = useState<NarrativeEvent[]>([]);
 
   const activeChapter = chapters.find((chapter) => chapter.id === activeChapterId) ?? chapters[0];
   const wordCount = countWords(activeChapter.body);
   const changedChapterCount = changedChapterIds.size;
+  const acceptedEventCount = acceptedEvents.length;
 
   const coordinatorItems = useMemo(
     () => [
@@ -75,8 +76,14 @@ export function AppShell() {
   }
 
   function acceptProposal(proposalId: string) {
-    setProposals((current) => current.filter((proposal) => proposal.proposal_id !== proposalId));
-    setAcceptedEventCount((count) => count + 1);
+    const proposal = proposals.find((item) => item.proposal_id === proposalId);
+    if (!proposal) {
+      return;
+    }
+
+    const reviewedProposal = reviewStateProposal({ proposal, decision: "accepted" });
+    setAcceptedEvents((events) => [...proposalToNarrativeEvents(reviewedProposal), ...events]);
+    setProposals((current) => current.filter((item) => item.proposal_id !== proposalId));
   }
 
   function rejectProposal(proposalId: string) {
@@ -108,6 +115,7 @@ export function AppShell() {
       <StudioCoordinatorPanel
         acceptedEventCount={acceptedEventCount}
         items={coordinatorItems}
+        latestAcceptedEvent={acceptedEvents[0]}
         onAcceptProposal={acceptProposal}
         onCreateMockProposal={createMockProposal}
         onRejectProposal={rejectProposal}

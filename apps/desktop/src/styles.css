@@ -321,6 +321,14 @@ button:disabled {
   line-height: 1.45;
 }
 
+.quiet-card p + p {
+  margin-top: 8px;
+}
+
+.event-note {
+  color: #2f7d7a;
+}
+
 .proposal-card {
   display: grid;
   gap: 12px;
