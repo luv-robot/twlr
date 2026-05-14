@@ -1,5 +1,5 @@
 import { countWords, parseChapterMarkdown, replaceChapterMarkdownBody } from "@twlr/core";
-import type { CharacterStateFile, NarrativeEvent, OpenLoopStateFile, TimelineStateFile } from "@twlr/schema";
+import type { CharacterStateFile, NarrativeEvent, OpenLoopStateFile, StateProposal, TimelineStateFile } from "@twlr/schema";
 import type { DemoChapter } from "../data/demoWorkspace";
 import {
   createProject,
@@ -11,6 +11,7 @@ import {
   readCharacterState,
   readNarrativeEvents,
   readOpenLoopState,
+  readStateProposals,
   readTimelineState,
   saveSnapshot,
   writeChapter,
@@ -26,6 +27,7 @@ export interface LoadedWorkspace {
   openLoopState: OpenLoopStateFile;
   timelineState: TimelineStateFile;
   events: NarrativeEvent[];
+  proposals: StateProposal[];
 }
 
 export async function createLocalWorkspace(projectPath: string, title: string): Promise<LoadedWorkspace> {
@@ -42,13 +44,14 @@ export async function createLocalWorkspace(projectPath: string, title: string): 
 
 export async function loadLocalWorkspace(projectPath: string): Promise<LoadedWorkspace> {
   assertTauriRuntime();
-  const [project, summaries, characterState, openLoopState, timelineState, events] = await Promise.all([
+  const [project, summaries, characterState, openLoopState, timelineState, events, proposals] = await Promise.all([
     openProject(projectPath),
     listChapters(projectPath),
     readCharacterState(projectPath),
     readOpenLoopState(projectPath),
     readTimelineState(projectPath),
     readNarrativeEvents(projectPath),
+    readStateProposals(projectPath),
   ]);
   const contents = await Promise.all(
     summaries.map((summary) => readChapter(projectPath, summary.file_path)),
@@ -61,7 +64,20 @@ export async function loadLocalWorkspace(projectPath: string): Promise<LoadedWor
     openLoopState,
     timelineState,
     events: [...events].reverse(),
+    proposals: latestPendingProposals(proposals),
   };
+}
+
+function latestPendingProposals(proposals: StateProposal[]): StateProposal[] {
+  const latestById = new Map<string, StateProposal>();
+
+  for (const proposal of proposals) {
+    latestById.set(proposal.proposal_id, proposal);
+  }
+
+  return [...latestById.values()]
+    .filter((proposal) => proposal.status === "pending")
+    .reverse();
 }
 
 export async function saveWorkspaceChapter(projectPath: string, chapter: DemoChapter): Promise<void> {

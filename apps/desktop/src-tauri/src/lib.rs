@@ -300,6 +300,11 @@ fn append_state_proposals(request: AppendProjectRecordsRequest) -> Result<usize,
 }
 
 #[tauri::command]
+fn read_state_proposals(project_path: String) -> Result<Vec<serde_json::Value>, String> {
+    read_project_jsonl_records(&project_path, "proposals/state_proposals.jsonl")
+}
+
+#[tauri::command]
 fn append_room_meetings(request: AppendProjectRecordsRequest) -> Result<usize, String> {
     append_project_jsonl_records(
         &request.project_path,
@@ -421,6 +426,7 @@ pub fn run() {
             append_narrative_events,
             read_narrative_events,
             append_state_proposals,
+            read_state_proposals,
             append_room_meetings,
             save_snapshot,
             snapshot_status,
@@ -753,6 +759,19 @@ mod tests {
         assert!(event_log.contains("event_test_001"));
         let events = read_narrative_events(project_path_text.clone()).expect("events should be readable");
         assert_eq!(events[0]["event_id"], "event_test_001");
+
+        let proposals_appended = append_state_proposals(AppendProjectRecordsRequest {
+            project_path: project_path_text.clone(),
+            records: vec![json!({
+                "proposal_id": "proposal_test_001",
+                "status": "pending"
+            })],
+        })
+        .expect("proposal should be appended");
+        assert_eq!(proposals_appended, 1);
+        let proposals = read_state_proposals(project_path_text.clone())
+            .expect("proposals should be readable");
+        assert_eq!(proposals[0]["proposal_id"], "proposal_test_001");
 
         let meetings_appended = append_room_meetings(AppendProjectRecordsRequest {
             project_path: project_path_text.clone(),

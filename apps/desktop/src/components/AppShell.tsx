@@ -30,6 +30,8 @@ import {
   persistAcceptedProposal,
   persistCharacterState,
   persistOpenLoopState,
+  persistPendingProposals,
+  persistReviewedProposal,
   persistRoomMeeting,
   persistTimelineState,
 } from "../services/projectPersistence";
@@ -161,7 +163,7 @@ export function AppShell() {
       setCharacterState(workspace.characterState);
       setOpenLoopState(workspace.openLoopState);
       setTimelineState(workspace.timelineState);
-      setProposals([]);
+      setProposals(workspace.proposals);
       setRoomMeeting(null);
       setAcceptedEvents(workspace.events);
       setActiveChapterId(workspace.chapters[0]?.id ?? "01");
@@ -190,7 +192,7 @@ export function AppShell() {
       setCharacterState(workspace.characterState);
       setOpenLoopState(workspace.openLoopState);
       setTimelineState(workspace.timelineState);
-      setProposals([]);
+      setProposals(workspace.proposals);
       setRoomMeeting(null);
       setAcceptedEvents(workspace.events);
       setActiveChapterId(workspace.chapters[0]?.id ?? "01");
@@ -280,19 +282,24 @@ export function AppShell() {
       `Projected ${contextPacket.current_chapter.word_count} words, ${contextPacket.characters.length} characters, ${contextPacket.open_loops.length} open loops, ${contextPacket.recent_events.length} events.`,
     );
 
-    setProposals((current) => {
-      const proposal = runMockProductionSkill(skillId, {
-        chapter_id: activeChapter.filePath?.replace("manuscript/", "").replace(".md", "") ?? `chapter_${activeChapter.id}`,
-        chapter_title: activeChapter.title,
-        selected_text: selectedText,
-        context_packet: contextPacket,
-      });
+    const proposal = runMockProductionSkill(skillId, {
+      chapter_id: activeChapter.filePath?.replace("manuscript/", "").replace(".md", "") ?? `chapter_${activeChapter.id}`,
+      chapter_title: activeChapter.title,
+      selected_text: selectedText,
+      context_packet: contextPacket,
+    });
 
-      if (proposal && current.some((item) => item.status === "pending" && item.source.name === proposal.source.name)) {
+    if (!proposal) {
+      return;
+    }
+
+    setProposals((current) => {
+      if (current.some((item) => item.status === "pending" && item.source.name === proposal.source.name)) {
         return current;
       }
 
-      return proposal ? [proposal, ...current] : current;
+      void savePendingProposalCards([proposal]);
+      return [proposal, ...current];
     });
   }
 
@@ -338,7 +345,14 @@ export function AppShell() {
   }
 
   function rejectProposal(proposalId: string) {
-    setProposals((current) => current.filter((proposal) => proposal.proposal_id !== proposalId));
+    const proposal = proposals.find((item) => item.proposal_id === proposalId);
+    if (!proposal) {
+      return;
+    }
+
+    const reviewedProposal = reviewStateProposal({ proposal, decision: "rejected" });
+    setProposals((current) => current.filter((item) => item.proposal_id !== proposalId));
+    void saveReviewedProposal(reviewedProposal);
   }
 
   async function openWritersRoom() {
@@ -388,12 +402,13 @@ export function AppShell() {
 
     const generatedProposals = createWritersRoomProposalCards(roomMeeting);
     const generatedProposalIds = generatedProposals.map((proposal) => proposal.proposal_id);
-    setProposals((current) => [
-      ...generatedProposals.filter(
+    let proposalsToPersist: StateProposal[] = [];
+    setProposals((current) => {
+      proposalsToPersist = generatedProposals.filter(
         (proposal) => !current.some((existingProposal) => existingProposal.proposal_id === proposal.proposal_id),
-      ),
-      ...current,
-    ]);
+      );
+      return [...proposalsToPersist, ...current];
+    });
     setRoomMeeting({
       ...roomMeeting,
       generated_proposals: Array.from(new Set([...roomMeeting.generated_proposals, ...generatedProposalIds])),
@@ -402,7 +417,28 @@ export function AppShell() {
         decided_at: new Date().toISOString(),
       },
     });
+    void savePendingProposalCards(proposalsToPersist);
     setStorageStatus(`${generatedProposalIds.length} Writers' Room proposal card(s) ready for review.`);
+  }
+
+  async function savePendingProposalCards(nextProposals: StateProposal[]) {
+    try {
+      const result = await persistPendingProposals(projectPath, nextProposals);
+      if (result.status === "persisted") {
+        setStorageStatus(result.message);
+      }
+    } catch (error) {
+      setStorageStatus(error instanceof Error ? error.message : "Failed to persist proposal cards.");
+    }
+  }
+
+  async function saveReviewedProposal(proposal: StateProposal) {
+    try {
+      const result = await persistReviewedProposal(projectPath, proposal);
+      setStorageStatus(result.message);
+    } catch (error) {
+      setStorageStatus(error instanceof Error ? error.message : "Failed to persist reviewed proposal.");
+    }
   }
 
   return (

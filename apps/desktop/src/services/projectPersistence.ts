@@ -26,6 +26,71 @@ export interface PersistAcceptedProposalInput {
   events: NarrativeEvent[];
 }
 
+export async function persistPendingProposals(
+  projectPath: string | null,
+  proposals: StateProposal[],
+): Promise<PersistenceResult> {
+  if (proposals.length === 0) {
+    return {
+      status: "skipped",
+      message: "No proposal cards to persist.",
+    };
+  }
+
+  if (!projectPath) {
+    return {
+      status: "skipped",
+      message: "Proposal cards are held in this demo session.",
+    };
+  }
+
+  if (!isTauriRuntime()) {
+    return {
+      status: "skipped",
+      message: "Browser preview only. Proposal cards were not written.",
+    };
+  }
+
+  await appendStateProposals({
+    project_path: projectPath,
+    records: proposals,
+  });
+
+  return {
+    status: "persisted",
+    message: `${proposals.length} proposal card(s) saved for review.`,
+  };
+}
+
+export async function persistReviewedProposal(
+  projectPath: string | null,
+  proposal: StateProposal,
+): Promise<PersistenceResult> {
+  if (!projectPath) {
+    return {
+      status: "skipped",
+      message: "Reviewed proposal is held in this demo session.",
+    };
+  }
+
+  if (!isTauriRuntime()) {
+    return {
+      status: "skipped",
+      message: "Browser preview only. Reviewed proposal was not written.",
+    };
+  }
+
+  await appendStateProposals({
+    project_path: projectPath,
+    records: [proposal],
+  });
+
+  return {
+    status: "persisted",
+    message: `Proposal ${proposal.status}.`,
+  };
+}
+
 export async function persistAcceptedProposal(input: PersistAcceptedProposalInput): Promise<PersistenceResult> {
   if (!input.projectPath) {
     return {

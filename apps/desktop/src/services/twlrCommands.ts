@@ -117,6 +117,10 @@ export async function appendStateProposals(request: AppendProjectRecordsRequest<
   return invoke<number>("append_state_proposals", { request });
 }
 
+export async function readStateProposals(projectPath: string): Promise<StateProposal[]> {
+  return invoke<StateProposal[]>("read_state_proposals", { projectPath });
+}
+
 export async function appendRoomMeetings(request: AppendProjectRecordsRequest<RoomMeeting>): Promise<number> {
   return invoke<number>("append_room_meetings", { request });
 }
