@@ -4,5 +4,8 @@
   "private": true,
   "type": "module",
   "main": "./src/index.ts",
-  "types": "./src/index.ts"
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@twlr/schema": "0.0.0"
+  }
 }

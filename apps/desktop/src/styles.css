@@ -90,6 +90,10 @@ button {
   color: #ffffff;
 }
 
+.primary-button.compact {
+  width: auto;
+}
+
 .secondary-button.wide {
   width: 100%;
   margin-top: 10px;
@@ -292,4 +296,64 @@ button {
 
 .risk {
   color: #c94a4a;
+}
+
+.quiet-card p {
+  margin: 0;
+  color: #6f6b63;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.proposal-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #e5e2dc;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.proposal-kicker {
+  color: #5b6ee1;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.proposal-card h3 {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.proposal-scope {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #eef0ff;
+  color: #5b6ee1;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.proposal-evidence strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #9a948b;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.proposal-evidence p {
+  margin: 0;
+  color: #242424;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.proposal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
 }
