@@ -80,6 +80,14 @@ struct SnapshotSummary {
     changed_files: usize,
 }
 
+#[derive(Debug, Serialize)]
+struct SnapshotStatus {
+    changed_files: usize,
+    changed_chapters: usize,
+    changed_state_files: usize,
+    has_snapshot: bool,
+}
+
 #[tauri::command]
 fn create_project(request: CreateProjectRequest) -> Result<ProjectSummary, String> {
     let project_path = PathBuf::from(&request.project_path);
@@ -343,6 +351,29 @@ fn save_snapshot(request: SaveSnapshotRequest) -> Result<SnapshotSummary, String
 }
 
 #[tauri::command]
+fn snapshot_status(project_path: String) -> Result<SnapshotStatus, String> {
+    let project_path_buf = PathBuf::from(&project_path);
+    if !project_path_buf.exists() {
+        return Err("Project folder does not exist.".to_string());
+    }
+
+    init_git(&project_path_buf);
+    let status = run_git(&project_path_buf, &["status", "--short"])?;
+    let changed_paths = parse_git_status_paths(&status);
+    let has_snapshot = run_git(&project_path_buf, &["rev-parse", "--verify", "HEAD"]).is_ok();
+
+    Ok(SnapshotStatus {
+        changed_files: changed_paths.len(),
+        changed_chapters: changed_paths
+            .iter()
+            .filter(|path| path.starts_with("manuscript/"))
+            .count(),
+        changed_state_files: changed_paths.iter().filter(|path| path.starts_with("state/")).count(),
+        has_snapshot,
+    })
+}
+
+#[tauri::command]
 fn read_character_state(project_path: String) -> Result<serde_json::Value, String> {
     read_project_json_file(&project_path, "state/characters.json")
 }
@@ -376,6 +407,7 @@ pub fn run() {
             append_state_proposals,
             append_room_meetings,
             save_snapshot,
+            snapshot_status,
             read_character_state,
             write_character_state,
             read_open_loop_state,
@@ -429,6 +461,21 @@ fn run_git(project_path: &Path, args: &[&str]) -> Result<String, String> {
 
     let stderr = String::from_utf8_lossy(&output.stderr);
     Err(format!("Git command failed: {stderr}"))
+}
+
+fn parse_git_status_paths(status: &str) -> Vec<String> {
+    status
+        .lines()
+        .filter_map(|line| line.get(3..))
+        .map(|line| {
+            line.split_once(" -> ")
+                .map(|(_, right)| right)
+                .unwrap_or(line)
+                .trim()
+                .to_string()
+        })
+        .filter(|path| !path.is_empty())
+        .collect()
 }
 
 fn read_project_json_file(project_path: &str, relative_path: &str) -> Result<serde_json::Value, String> {
@@ -720,6 +767,11 @@ mod tests {
             .expect("open loop state should be readable");
         assert_eq!(open_loops["open_loops"][0]["open_loop_id"], "loop_test");
 
+        let status = snapshot_status(project_path_text.clone()).expect("snapshot status should be readable");
+        assert!(status.changed_files > 0);
+        assert!(status.changed_chapters > 0);
+        assert!(status.changed_state_files > 0);
+
         let snapshot = save_snapshot(SaveSnapshotRequest {
             project_path: project_path_text.clone(),
             message: Some("Smoke snapshot".to_string()),
@@ -729,6 +781,9 @@ mod tests {
         assert_eq!(snapshot.message, "Smoke snapshot");
         assert!(snapshot.changed_files > 0);
         assert_ne!(snapshot.snapshot_id, "none");
+        let clean_status = snapshot_status(project_path_text.clone()).expect("clean status should be readable");
+        assert_eq!(clean_status.changed_files, 0);
+        assert!(clean_status.has_snapshot);
 
         fs::remove_dir_all(project_path).expect("test project should be removed");
     }

@@ -20,6 +20,7 @@ import {
 import {
   createLocalWorkspace,
   createWorkspaceChapter,
+  getWorkspaceSnapshotStatus,
   loadLocalWorkspace,
   saveWorkspaceChapter,
   saveWorkspaceSnapshot,
@@ -45,6 +46,7 @@ export function AppShell() {
   const [projectPathInput, setProjectPathInput] = useState("/private/tmp/twlr-glass-city");
   const [storageStatus, setStorageStatus] = useState("Demo session");
   const [workspaceStatus, setWorkspaceStatus] = useState("Demo workspace");
+  const [snapshotStatus, setSnapshotStatus] = useState("No local snapshot status.");
 
   const activeChapter = chapters.find((chapter) => chapter.id === activeChapterId) ?? chapters[0];
   const wordCount = countWords(activeChapter.body);
@@ -71,6 +73,7 @@ export function AppShell() {
         try {
           await saveWorkspaceChapter(projectPath, activeChapter);
           setAutosaveLabel("Autosaved to project folder");
+          refreshSnapshotStatus(projectPath);
         } catch (error) {
           setAutosaveLabel(error instanceof Error ? error.message : "Autosave failed");
         }
@@ -118,6 +121,7 @@ export function AppShell() {
           ? "No changes to snapshot"
           : `Snapshot saved ${snapshot.snapshot_id}`,
       );
+      refreshSnapshotStatus(projectPath);
     } catch (error) {
       setAutosaveLabel(error instanceof Error ? error.message : "Snapshot failed");
     }
@@ -140,6 +144,7 @@ export function AppShell() {
       setChangedChapterIds(new Set());
       setWorkspaceStatus(`Opened ${workspace.project.title}`);
       setStorageStatus("Local project logs enabled.");
+      refreshSnapshotStatus(nextProjectPath);
     } catch (error) {
       setWorkspaceStatus(error instanceof Error ? error.message : "Failed to open local project.");
     }
@@ -162,6 +167,7 @@ export function AppShell() {
       setChangedChapterIds(new Set());
       setWorkspaceStatus(`Created ${workspace.project.title}`);
       setStorageStatus("Local project logs enabled.");
+      refreshSnapshotStatus(nextProjectPath);
     } catch (error) {
       setWorkspaceStatus(error instanceof Error ? error.message : "Failed to create local project.");
     }
@@ -196,8 +202,20 @@ export function AppShell() {
       setChapters((current) => [...current, { ...chapter, state: "active" }]);
       setActiveChapterId(chapter.id);
       setWorkspaceStatus(`Created ${chapter.title}`);
+      refreshSnapshotStatus(projectPath);
     } catch (error) {
       setWorkspaceStatus(error instanceof Error ? error.message : "Failed to create chapter.");
+    }
+  }
+
+  async function refreshSnapshotStatus(nextProjectPath: string) {
+    try {
+      const status = await getWorkspaceSnapshotStatus(nextProjectPath);
+      setSnapshotStatus(
+        `${status.changed_files} changed files, ${status.changed_chapters} chapter files, ${status.changed_state_files} state files.`,
+      );
+    } catch (error) {
+      setSnapshotStatus(error instanceof Error ? error.message : "Snapshot status unavailable.");
     }
   }
 
@@ -304,6 +322,7 @@ export function AppShell() {
         onRejectProposal={rejectProposal}
         proposals={proposals}
         roomMeeting={roomMeeting}
+        snapshotStatus={snapshotStatus}
         storageStatus={storageStatus}
       />
     </div>

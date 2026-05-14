@@ -65,6 +65,13 @@ export interface SnapshotSummary {
   changed_files: number;
 }
 
+export interface SnapshotStatus {
+  changed_files: number;
+  changed_chapters: number;
+  changed_state_files: number;
+  has_snapshot: boolean;
+}
+
 export async function createProject(request: CreateProjectRequest): Promise<ProjectSummary> {
   return invoke<ProjectSummary>("create_project", { request });
 }
@@ -105,6 +112,10 @@ export async function appendRoomMeetings(request: AppendProjectRecordsRequest<Ro
 
 export async function saveSnapshot(request: SaveSnapshotRequest): Promise<SnapshotSummary> {
   return invoke<SnapshotSummary>("save_snapshot", { request });
+}
+
+export async function getSnapshotStatus(projectPath: string): Promise<SnapshotStatus> {
+  return invoke<SnapshotStatus>("snapshot_status", { projectPath });
 }
 
 export async function readCharacterState(projectPath: string): Promise<CharacterStateFile> {

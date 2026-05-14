@@ -15,6 +15,7 @@ interface StudioCoordinatorPanelProps {
   onCreateMockProposal: () => void;
   onOpenWritersRoom: () => void;
   roomMeeting: RoomMeeting | null;
+  snapshotStatus: string;
 }
 
 export function StudioCoordinatorPanel({
@@ -30,6 +31,7 @@ export function StudioCoordinatorPanel({
   onRejectProposal,
   storageStatus,
   roomMeeting,
+  snapshotStatus,
 }: StudioCoordinatorPanelProps) {
   return (
     <aside className="context-panel">
@@ -93,6 +95,11 @@ export function StudioCoordinatorPanel({
             Latest: {latestAcceptedEvent.event_type} on {latestAcceptedEvent.payload.target_type}.
           </p>
         ) : null}
+      </section>
+
+      <section className="coordinator-card quiet-card">
+        <div className="section-label">Snapshot status</div>
+        <p>{snapshotStatus}</p>
       </section>
 
       <section className="coordinator-card quiet-card">

@@ -3,6 +3,7 @@ import type { DemoChapter } from "../data/demoWorkspace";
 import {
   createProject,
   createChapter,
+  getSnapshotStatus,
   listChapters,
   openProject,
   readChapter,
@@ -72,6 +73,11 @@ export async function saveWorkspaceSnapshot(projectPath: string, message: string
     project_path: projectPath,
     message,
   });
+}
+
+export async function getWorkspaceSnapshotStatus(projectPath: string) {
+  assertTauriRuntime();
+  return getSnapshotStatus(projectPath);
 }
 
 function chapterContentToItem(chapter: ChapterContent, index: number): DemoChapter {
