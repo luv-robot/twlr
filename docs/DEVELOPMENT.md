@@ -95,6 +95,7 @@ The current P0 vertical slice includes:
 - Writers' Room to proposal-card handoff
 - official agent registry
 - production skill registry
+- Timeline Compiler mock proposal
 - remote provider interface with mock provider
 - Save Snapshot command
 - snapshot status lite

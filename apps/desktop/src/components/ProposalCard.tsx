@@ -7,14 +7,19 @@ interface ProposalCardProps {
 }
 
 export function ProposalCard({ proposal, onAccept, onReject }: ProposalCardProps) {
+  const kicker = proposal.affected.timeline_events.length > 0 ? "Timeline Update" : "Character State Update";
+
   return (
     <section className="proposal-card">
-      <div className="proposal-kicker">Character State Update</div>
+      <div className="proposal-kicker">{kicker}</div>
       <h3>{proposal.summary}</h3>
       <div className="proposal-scope">
         <span>{proposal.affected.chapters.length} chapter</span>
         <span>{proposal.affected.characters.length} character</span>
         <span>{proposal.affected.open_loops.length} unresolved thread</span>
+        {proposal.affected.timeline_events.length > 0 ? (
+          <span>{proposal.affected.timeline_events.length} timeline event</span>
+        ) : null}
       </div>
       <div className="proposal-evidence">
         <strong>Evidence</strong>

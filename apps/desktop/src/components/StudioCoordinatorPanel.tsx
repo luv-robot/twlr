@@ -23,6 +23,7 @@ interface StudioCoordinatorPanelProps {
   onCreateRoomProposalCards: () => void;
   onRejectProposal: (proposalId: string) => void;
   onCreateMockProposal: () => void;
+  onCreateTimelineProposal: () => void;
   onOpenWritersRoom: () => void;
   roomMeeting: RoomMeeting | null;
   snapshotStatus: string;
@@ -40,6 +41,7 @@ export function StudioCoordinatorPanel({
   onAcceptProposal,
   onCreateRoomProposalCards,
   onCreateMockProposal,
+  onCreateTimelineProposal,
   onOpenWritersRoom,
   onRejectProposal,
   storageStatus,
@@ -71,6 +73,9 @@ export function StudioCoordinatorPanel({
         <div className="section-label">Next useful actions</div>
         <button className="primary-button" onClick={onCreateMockProposal}>
           Mock Character Sheet
+        </button>
+        <button className="secondary-button wide" onClick={onCreateTimelineProposal}>
+          Mock Timeline Compiler
         </button>
         <button className="secondary-button wide">Check affected chapters</button>
         <button className="secondary-button wide" onClick={onOpenWritersRoom}>

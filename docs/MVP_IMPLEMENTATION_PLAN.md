@@ -201,6 +201,7 @@ The first vertical slice is now partially executable with mock AI:
 - Writers' Room to proposal-card handoff
 - official agent registry
 - production skill registry
+- Timeline Compiler mock proposal
 - provider interface with mock provider
 
 Remaining P0 work should focus on replacing hardcoded demo paths and mock outputs with real context projection, provider-backed structured outputs, and more complete production skills.

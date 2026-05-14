@@ -52,11 +52,15 @@ export function runMockProductionSkill(
   context: ProductionSkillContext,
   now = new Date().toISOString(),
 ): StateProposal | null {
-  if (skillId !== "character_sheet") {
-    return null;
+  if (skillId === "character_sheet") {
+    return createMockCharacterSheetProposal(context, now);
   }
 
-  return createMockCharacterSheetProposal(context, now);
+  if (skillId === "timeline_compiler") {
+    return createMockTimelineCompilerProposal(context, now);
+  }
+
+  return null;
 }
 
 function createMockCharacterSheetProposal(context: ProductionSkillContext, now: string): StateProposal {
@@ -102,6 +106,61 @@ function createMockCharacterSheetProposal(context: ProductionSkillContext, now: 
           target_id: "loop_altered_archive_record",
           field: "title",
           new_value: "Altered archive record",
+        },
+      },
+    ],
+    review: {
+      reviewed_at: null,
+      reviewed_by: null,
+      decision: null,
+      edited_summary: null,
+    },
+  };
+}
+
+function createMockTimelineCompilerProposal(context: ProductionSkillContext, now: string): StateProposal {
+  return {
+    proposal_id: `proposal_${Date.now()}_timeline`,
+    created_at: now,
+    status: "pending",
+    source: {
+      kind: "skill",
+      name: "Timeline Compiler",
+      llm_provider: "mock",
+    },
+    scope: {
+      chapters: [context.chapter_id],
+      selected_text_range: null,
+    },
+    affected: {
+      chapters: [context.chapter_id],
+      characters: ["char_mira_chen"],
+      open_loops: ["loop_altered_archive_record"],
+      timeline_events: ["timeline_altered_archive_record"],
+    },
+    summary: "Chapter event: Mira discovers that the archive record was altered after the trial.",
+    evidence: [
+      context.selected_text ??
+        context.context_packet?.current_chapter.body_excerpt ??
+        "The name had not been erased. It had been replaced.",
+    ],
+    proposed_events: [
+      {
+        event_type: "timeline_event_created",
+        payload: {
+          target_type: "timeline_event",
+          target_id: "timeline_altered_archive_record",
+          field: "label",
+          new_value: "Mira discovers the altered archive record",
+        },
+      },
+      {
+        event_type: "timeline_event_changed",
+        payload: {
+          target_type: "timeline_event",
+          target_id: "timeline_altered_archive_record",
+          field: "summary",
+          new_value: "Mira sees evidence that the archive record was changed after the trial.",
         },
       },
     ],

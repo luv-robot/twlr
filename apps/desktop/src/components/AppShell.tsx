@@ -11,7 +11,12 @@ import {
   proposalToNarrativeEvents,
   reviewStateProposal,
 } from "@twlr/core";
-import { createMockWritersRoomMeeting, createWritersRoomProposalCards, runMockProductionSkill } from "@twlr/ai";
+import {
+  createMockWritersRoomMeeting,
+  createWritersRoomProposalCards,
+  runMockProductionSkill,
+  type ProductionSkillId,
+} from "@twlr/ai";
 import type {
   CharacterStateFile,
   NarrativeEvent,
@@ -245,6 +250,14 @@ export function AppShell() {
   }
 
   function createMockProposal() {
+    createSkillProposal("character_sheet");
+  }
+
+  function createTimelineProposal() {
+    createSkillProposal("timeline_compiler");
+  }
+
+  function createSkillProposal(skillId: ProductionSkillId) {
     const selectedText = activeChapter.body.split("\n\n")[0];
     const contextPacket = buildActiveChapterContextProjection("production_skill", selectedText);
     setContextProjectionStatus(
@@ -252,16 +265,16 @@ export function AppShell() {
     );
 
     setProposals((current) => {
-      if (current.some((proposal) => proposal.status === "pending")) {
-        return current;
-      }
-
-      const proposal = runMockProductionSkill("character_sheet", {
+      const proposal = runMockProductionSkill(skillId, {
         chapter_id: activeChapter.filePath?.replace("manuscript/", "").replace(".md", "") ?? `chapter_${activeChapter.id}`,
         chapter_title: activeChapter.title,
         selected_text: selectedText,
         context_packet: contextPacket,
       });
+
+      if (proposal && current.some((item) => item.status === "pending" && item.source.name === proposal.source.name)) {
+        return current;
+      }
 
       return proposal ? [proposal, ...current] : current;
     });
@@ -415,6 +428,7 @@ export function AppShell() {
         onAcceptProposal={acceptProposal}
         onCreateRoomProposalCards={createProposalCardsFromRoom}
         onCreateMockProposal={createMockProposal}
+        onCreateTimelineProposal={createTimelineProposal}
         onOpenWritersRoom={openWritersRoom}
         onRejectProposal={rejectProposal}
         proposals={proposals}
