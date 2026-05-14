@@ -8,7 +8,7 @@ import {
 } from "@twlr/ai";
 import type { StateProposal } from "@twlr/schema";
 import { isTauriRuntime } from "./tauriRuntime";
-import { generateOpenAiStructured, getOpenAiEnvironmentStatus } from "./twlrCommands";
+import { generateLlmStructured, getLlmEnvironmentStatus, type LlmProviderStatus } from "./twlrCommands";
 
 export interface RunProductionSkillResult {
   proposal: StateProposal | null;
@@ -28,8 +28,11 @@ export async function runProductionSkill(
     };
   }
 
+  let providerStatus: LlmProviderStatus | null = null;
+
   try {
-    const proposal = await generateOpenAiStructured<StateProposal>({
+    providerStatus = await getLlmEnvironmentStatus();
+    const proposal = await generateLlmStructured<StateProposal>({
       schema_name: remoteRequest.schemaName,
       json_schema: remoteRequest.jsonSchema,
       system_prompt: remoteRequest.systemPrompt,
@@ -38,13 +41,13 @@ export async function runProductionSkill(
 
     return {
       proposal: normalizeRemoteStateProposalSkillResult(proposal, remoteRequest, context),
-      message: `OpenAI ${remoteRequest.skillLabel} proposal generated.`,
+      message: `${formatProviderLabel(providerStatus.provider)} ${remoteRequest.skillLabel} proposal generated.`,
     };
   } catch (error) {
     return {
       proposal: runMockProductionSkill(skillId, context),
       message: `${summarizeLlmProviderError(error, {
-        providerLabel: "OpenAI",
+        providerLabel: providerStatus ? formatProviderLabel(providerStatus.provider) : "Remote provider",
         capabilityLabel: remoteRequest.skillLabel,
       })} Using mock ${remoteRequest.skillLabel}.`,
     };
@@ -53,10 +56,16 @@ export async function runProductionSkill(
 
 export async function getAiProviderStatus(): Promise<string> {
   if (!isTauriRuntime()) {
-    return "Browser preview. OpenAI runs in the Tauri desktop app.";
+    return "Browser preview. Remote providers run in the Tauri desktop app.";
   }
 
-  return (await getOpenAiEnvironmentStatus())
-    ? "OpenAI provider ready."
-    : "OPENAI_API_KEY is not set. Character Sheet will use mock output.";
+  return (await getLlmEnvironmentStatus()).message;
+}
+
+function formatProviderLabel(provider: LlmProviderStatus["provider"]): string {
+  if (provider === "deepseek") {
+    return "DeepSeek";
+  }
+
+  return "OpenAI";
 }

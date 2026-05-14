@@ -47,12 +47,19 @@ struct WriteProjectJsonRequest {
 }
 
 #[derive(Debug, Deserialize)]
-struct OpenAiStructuredRequest {
+struct LlmStructuredRequest {
     prompt: String,
     system_prompt: Option<String>,
     schema_name: String,
     json_schema: serde_json::Value,
     model: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+struct LlmProviderStatus {
+    provider: String,
+    ready: bool,
+    message: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -100,7 +107,8 @@ struct SnapshotStatus {
 #[tauri::command]
 fn create_project(request: CreateProjectRequest) -> Result<ProjectSummary, String> {
     let project_path = PathBuf::from(&request.project_path);
-    fs::create_dir_all(&project_path).map_err(|error| format!("Failed to create project directory: {error}"))?;
+    fs::create_dir_all(&project_path)
+        .map_err(|error| format!("Failed to create project directory: {error}"))?;
     let title = request.title.clone();
     let kind = request.kind.clone();
     let language = request.language.clone().unwrap_or_else(|| "en".to_string());
@@ -140,7 +148,10 @@ fn create_project(request: CreateProjectRequest) -> Result<ProjectSummary, Strin
         .map_err(|error| format!("Failed to serialize project manifest: {error}"))?,
     )?;
 
-    write_if_missing(&project_path.join(".gitignore"), "cache/\n*.sqlite\n.DS_Store\n")?;
+    write_if_missing(
+        &project_path.join(".gitignore"),
+        "cache/\n*.sqlite\n.DS_Store\n",
+    )?;
     write_if_missing(
         &project_path.join("manuscript/chapter-001.md"),
         &format!(
@@ -162,7 +173,10 @@ fn create_project(request: CreateProjectRequest) -> Result<ProjectSummary, Strin
             "tags": []
         }),
     )?;
-    write_json_if_missing(&project_path.join("state/characters.json"), json!({"schema_version": 1, "characters": []}))?;
+    write_json_if_missing(
+        &project_path.join("state/characters.json"),
+        json!({"schema_version": 1, "characters": []}),
+    )?;
     write_json_if_missing(
         &project_path.join("state/relationships.json"),
         json!({"schema_version": 1, "relationships": []}),
@@ -175,7 +189,10 @@ fn create_project(request: CreateProjectRequest) -> Result<ProjectSummary, Strin
         &project_path.join("state/open_loops.json"),
         json!({"schema_version": 1, "open_loops": []}),
     )?;
-    write_json_if_missing(&project_path.join("state/themes.json"), json!({"schema_version": 1, "themes": []}))?;
+    write_json_if_missing(
+        &project_path.join("state/themes.json"),
+        json!({"schema_version": 1, "themes": []}),
+    )?;
     write_json_if_missing(
         &project_path.join("state/world_rules.json"),
         json!({"schema_version": 1, "world_rules": []}),
@@ -199,13 +216,16 @@ fn open_project(project_path: String) -> Result<ProjectSummary, String> {
     let manifest_path = project_path_buf.join("twlr.project.json");
     let manifest_text = fs::read_to_string(&manifest_path)
         .map_err(|error| format!("Failed to read twlr.project.json: {error}"))?;
-    let manifest: serde_json::Value =
-        serde_json::from_str(&manifest_text).map_err(|error| format!("Invalid twlr.project.json: {error}"))?;
+    let manifest: serde_json::Value = serde_json::from_str(&manifest_text)
+        .map_err(|error| format!("Invalid twlr.project.json: {error}"))?;
     let chapters = list_chapters(project_path.clone())?;
 
     Ok(ProjectSummary {
         project_path,
-        project_id: manifest["project_id"].as_str().unwrap_or("unknown").to_string(),
+        project_id: manifest["project_id"]
+            .as_str()
+            .unwrap_or("unknown")
+            .to_string(),
         title: manifest["title"].as_str().unwrap_or("Untitled").to_string(),
         kind: manifest["kind"].as_str().unwrap_or("other").to_string(),
         chapter_count: chapters.len(),
@@ -222,14 +242,17 @@ fn list_chapters(project_path: String) -> Result<Vec<ChapterSummary>, String> {
         return Ok(chapters);
     }
 
-    for entry in fs::read_dir(&manuscript_dir).map_err(|error| format!("Failed to read manuscript directory: {error}"))? {
+    for entry in fs::read_dir(&manuscript_dir)
+        .map_err(|error| format!("Failed to read manuscript directory: {error}"))?
+    {
         let entry = entry.map_err(|error| format!("Failed to read chapter entry: {error}"))?;
         let path = entry.path();
         if path.extension().and_then(|extension| extension.to_str()) != Some("md") {
             continue;
         }
 
-        let content = fs::read_to_string(&path).map_err(|error| format!("Failed to read chapter file: {error}"))?;
+        let content = fs::read_to_string(&path)
+            .map_err(|error| format!("Failed to read chapter file: {error}"))?;
         chapters.push(parse_chapter_summary(&content, &path)?);
     }
 
@@ -240,7 +263,8 @@ fn list_chapters(project_path: String) -> Result<Vec<ChapterSummary>, String> {
 #[tauri::command]
 fn read_chapter(project_path: String, file_path: String) -> Result<ChapterContent, String> {
     let full_path = resolve_project_relative_path(&project_path, &file_path)?;
-    let content = fs::read_to_string(&full_path).map_err(|error| format!("Failed to read chapter: {error}"))?;
+    let content = fs::read_to_string(&full_path)
+        .map_err(|error| format!("Failed to read chapter: {error}"))?;
     let summary = parse_chapter_summary(&content, &full_path)?;
     Ok(ChapterContent { summary, content })
 }
@@ -248,15 +272,22 @@ fn read_chapter(project_path: String, file_path: String) -> Result<ChapterConten
 #[tauri::command]
 fn write_chapter(request: WriteChapterRequest) -> Result<ChapterSummary, String> {
     let full_path = resolve_project_relative_path(&request.project_path, &request.file_path)?;
-    fs::write(&full_path, request.content).map_err(|error| format!("Failed to write chapter: {error}"))?;
-    let content = fs::read_to_string(&full_path).map_err(|error| format!("Failed to reread chapter: {error}"))?;
+    fs::write(&full_path, request.content)
+        .map_err(|error| format!("Failed to write chapter: {error}"))?;
+    let content = fs::read_to_string(&full_path)
+        .map_err(|error| format!("Failed to reread chapter: {error}"))?;
     parse_chapter_summary(&content, &full_path)
 }
 
 #[tauri::command]
 fn create_chapter(request: CreateChapterRequest) -> Result<ChapterContent, String> {
     let chapters = list_chapters(request.project_path.clone())?;
-    let order = chapters.iter().map(|chapter| chapter.order).max().unwrap_or(0) + 1;
+    let order = chapters
+        .iter()
+        .map(|chapter| chapter.order)
+        .max()
+        .unwrap_or(0)
+        + 1;
     let title = request
         .title
         .filter(|value| !value.trim().is_empty())
@@ -332,7 +363,10 @@ fn save_snapshot(request: SaveSnapshotRequest) -> Result<SnapshotSummary, String
     init_git(&project_path);
     run_git(&project_path, &["add", "."])?;
     let status = run_git(&project_path, &["status", "--short"])?;
-    let changed_files = status.lines().filter(|line| !line.trim().is_empty()).count();
+    let changed_files = status
+        .lines()
+        .filter(|line| !line.trim().is_empty())
+        .count();
 
     if changed_files == 0 {
         return Ok(SnapshotSummary {
@@ -387,7 +421,10 @@ fn snapshot_status(project_path: String) -> Result<SnapshotStatus, String> {
             .iter()
             .filter(|path| path.starts_with("manuscript/"))
             .count(),
-        changed_state_files: changed_paths.iter().filter(|path| path.starts_with("state/")).count(),
+        changed_state_files: changed_paths
+            .iter()
+            .filter(|path| path.starts_with("state/"))
+            .count(),
         has_snapshot,
     })
 }
@@ -399,7 +436,11 @@ fn read_character_state(project_path: String) -> Result<serde_json::Value, Strin
 
 #[tauri::command]
 fn write_character_state(request: WriteProjectJsonRequest) -> Result<(), String> {
-    write_project_json_file(&request.project_path, "state/characters.json", request.value)
+    write_project_json_file(
+        &request.project_path,
+        "state/characters.json",
+        request.value,
+    )
 }
 
 #[tauri::command]
@@ -409,7 +450,11 @@ fn read_open_loop_state(project_path: String) -> Result<serde_json::Value, Strin
 
 #[tauri::command]
 fn write_open_loop_state(request: WriteProjectJsonRequest) -> Result<(), String> {
-    write_project_json_file(&request.project_path, "state/open_loops.json", request.value)
+    write_project_json_file(
+        &request.project_path,
+        "state/open_loops.json",
+        request.value,
+    )
 }
 
 #[tauri::command]
@@ -430,9 +475,51 @@ fn openai_environment_status() -> bool {
 }
 
 #[tauri::command]
-async fn generate_openai_structured(request: OpenAiStructuredRequest) -> Result<serde_json::Value, String> {
-    let api_key = std::env::var("OPENAI_API_KEY")
-        .map_err(|_| "OPENAI_API_KEY is not set.".to_string())?;
+fn llm_environment_status() -> LlmProviderStatus {
+    match configured_llm_provider().as_str() {
+        "deepseek" => {
+            let ready = env_var_is_present("DEEPSEEK_API_KEY");
+            LlmProviderStatus {
+                provider: "deepseek".to_string(),
+                ready,
+                message: if ready {
+                    "DeepSeek provider ready.".to_string()
+                } else {
+                    "DEEPSEEK_API_KEY is not set. Character Sheet will use mock output.".to_string()
+                },
+            }
+        }
+        _ => {
+            let ready = env_var_is_present("OPENAI_API_KEY");
+            LlmProviderStatus {
+                provider: "openai".to_string(),
+                ready,
+                message: if ready {
+                    "OpenAI provider ready.".to_string()
+                } else {
+                    "OPENAI_API_KEY is not set. Character Sheet will use mock output.".to_string()
+                },
+            }
+        }
+    }
+}
+
+#[tauri::command]
+async fn generate_llm_structured(
+    request: LlmStructuredRequest,
+) -> Result<serde_json::Value, String> {
+    match configured_llm_provider().as_str() {
+        "deepseek" => generate_deepseek_structured(request).await,
+        _ => generate_openai_structured(request).await,
+    }
+}
+
+#[tauri::command]
+async fn generate_openai_structured(
+    request: LlmStructuredRequest,
+) -> Result<serde_json::Value, String> {
+    let api_key =
+        std::env::var("OPENAI_API_KEY").map_err(|_| "OPENAI_API_KEY is not set.".to_string())?;
     let mut input = Vec::new();
 
     if let Some(system_prompt) = request.system_prompt {
@@ -476,7 +563,9 @@ async fn generate_openai_structured(request: OpenAiStructuredRequest) -> Result<
         .map_err(|error| format!("OpenAI response body could not be read: {error}"))?;
 
     if !status.is_success() {
-        return Err(format!("OpenAI request failed with {status}: {response_text}"));
+        return Err(format!(
+            "OpenAI request failed with {status}: {response_text}"
+        ));
     }
 
     let response_json: serde_json::Value = serde_json::from_str(&response_text)
@@ -486,6 +575,81 @@ async fn generate_openai_structured(request: OpenAiStructuredRequest) -> Result<
 
     serde_json::from_str(output_text)
         .map_err(|error| format!("OpenAI structured output was not valid JSON: {error}"))
+}
+
+async fn generate_deepseek_structured(
+    request: LlmStructuredRequest,
+) -> Result<serde_json::Value, String> {
+    let api_key = std::env::var("DEEPSEEK_API_KEY")
+        .map_err(|_| "DEEPSEEK_API_KEY is not set.".to_string())?;
+    let model = request
+        .model
+        .or_else(|| std::env::var("DEEPSEEK_MODEL").ok())
+        .unwrap_or_else(|| "deepseek-v4-flash".to_string());
+    let mut messages = Vec::new();
+    let schema_text = serde_json::to_string(&request.json_schema)
+        .map_err(|error| format!("DeepSeek schema could not be serialized: {error}"))?;
+    let system_prompt = [
+        request.system_prompt.unwrap_or_default(),
+        format!(
+            "Return only valid json for schema '{}'. Do not include markdown fences. Schema: {}",
+            request.schema_name, schema_text
+        ),
+    ]
+    .into_iter()
+    .filter(|part| !part.trim().is_empty())
+    .collect::<Vec<_>>()
+    .join(" ");
+
+    messages.push(json!({
+        "role": "system",
+        "content": system_prompt
+    }));
+    messages.push(json!({
+        "role": "user",
+        "content": request.prompt
+    }));
+
+    let body = json!({
+        "model": model,
+        "messages": messages,
+        "response_format": {
+            "type": "json_object"
+        },
+        "thinking": {
+            "type": "disabled"
+        },
+        "max_tokens": 4096,
+        "stream": false
+    });
+
+    let client = reqwest::Client::new();
+    let response = client
+        .post("https://api.deepseek.com/chat/completions")
+        .header("Authorization", format!("Bearer {api_key}"))
+        .header("Content-Type", "application/json")
+        .body(body.to_string())
+        .send()
+        .await
+        .map_err(|error| format!("DeepSeek request failed: {error}"))?;
+    let status = response.status();
+    let response_text = response
+        .text()
+        .await
+        .map_err(|error| format!("DeepSeek response body could not be read: {error}"))?;
+
+    if !status.is_success() {
+        return Err(format!(
+            "DeepSeek request failed with {status}: {response_text}"
+        ));
+    }
+
+    let response_json: serde_json::Value = serde_json::from_str(&response_text)
+        .map_err(|error| format!("DeepSeek response was not valid JSON: {error}"))?;
+    let output_text = extract_deepseek_output_text(&response_json)
+        .ok_or_else(|| "DeepSeek response did not include message content.".to_string())?;
+
+    parse_structured_json(output_text, "DeepSeek")
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -512,6 +676,8 @@ pub fn run() {
             read_timeline_state,
             write_timeline_state,
             openai_environment_status,
+            llm_environment_status,
+            generate_llm_structured,
             generate_openai_structured
         ])
         .run(tauri::generate_context!())
@@ -524,15 +690,16 @@ fn write_if_missing(path: &Path, content: &str) -> Result<(), String> {
     }
 
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).map_err(|error| format!("Failed to create parent directory: {error}"))?;
+        fs::create_dir_all(parent)
+            .map_err(|error| format!("Failed to create parent directory: {error}"))?;
     }
 
     fs::write(path, content).map_err(|error| format!("Failed to write {}: {error}", path.display()))
 }
 
 fn write_json_if_missing(path: &Path, value: serde_json::Value) -> Result<(), String> {
-    let content =
-        serde_json::to_string_pretty(&value).map_err(|error| format!("Failed to serialize JSON file: {error}"))?;
+    let content = serde_json::to_string_pretty(&value)
+        .map_err(|error| format!("Failed to serialize JSON file: {error}"))?;
     write_if_missing(path, &format!("{content}\n"))
 }
 
@@ -557,7 +724,8 @@ fn run_git(project_path: &Path, args: &[&str]) -> Result<String, String> {
         .map_err(|error| format!("Failed to run git: {error}"))?;
 
     if output.status.success() {
-        return String::from_utf8(output.stdout).map_err(|error| format!("Invalid git output: {error}"));
+        return String::from_utf8(output.stdout)
+            .map_err(|error| format!("Invalid git output: {error}"));
     }
 
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -579,11 +747,15 @@ fn parse_git_status_paths(status: &str) -> Vec<String> {
         .collect()
 }
 
-fn read_project_json_file(project_path: &str, relative_path: &str) -> Result<serde_json::Value, String> {
+fn read_project_json_file(
+    project_path: &str,
+    relative_path: &str,
+) -> Result<serde_json::Value, String> {
     let full_path = resolve_project_relative_path(project_path, relative_path)?;
     let content = fs::read_to_string(&full_path)
         .map_err(|error| format!("Failed to read {}: {error}", full_path.display()))?;
-    serde_json::from_str(&content).map_err(|error| format!("Invalid JSON in {}: {error}", full_path.display()))
+    serde_json::from_str(&content)
+        .map_err(|error| format!("Invalid JSON in {}: {error}", full_path.display()))
 }
 
 fn write_project_json_file(
@@ -593,11 +765,12 @@ fn write_project_json_file(
 ) -> Result<(), String> {
     let full_path = resolve_project_relative_path(project_path, relative_path)?;
     if let Some(parent) = full_path.parent() {
-        fs::create_dir_all(parent).map_err(|error| format!("Failed to create state directory: {error}"))?;
+        fs::create_dir_all(parent)
+            .map_err(|error| format!("Failed to create state directory: {error}"))?;
     }
 
-    let content =
-        serde_json::to_string_pretty(&value).map_err(|error| format!("Failed to serialize state JSON: {error}"))?;
+    let content = serde_json::to_string_pretty(&value)
+        .map_err(|error| format!("Failed to serialize state JSON: {error}"))?;
     fs::write(&full_path, format!("{content}\n"))
         .map_err(|error| format!("Failed to write {}: {error}", full_path.display()))
 }
@@ -609,7 +782,8 @@ fn append_project_jsonl_records(
 ) -> Result<usize, String> {
     let full_path = resolve_project_relative_path(project_path, relative_path)?;
     if let Some(parent) = full_path.parent() {
-        fs::create_dir_all(parent).map_err(|error| format!("Failed to create log directory: {error}"))?;
+        fs::create_dir_all(parent)
+            .map_err(|error| format!("Failed to create log directory: {error}"))?;
     }
 
     let mut file = OpenOptions::new()
@@ -622,14 +796,18 @@ fn append_project_jsonl_records(
     for record in records {
         let line = serde_json::to_string(&record)
             .map_err(|error| format!("Failed to serialize JSONL record: {error}"))?;
-        writeln!(file, "{line}").map_err(|error| format!("Failed to append JSONL record: {error}"))?;
+        writeln!(file, "{line}")
+            .map_err(|error| format!("Failed to append JSONL record: {error}"))?;
         count += 1;
     }
 
     Ok(count)
 }
 
-fn read_project_jsonl_records(project_path: &str, relative_path: &str) -> Result<Vec<serde_json::Value>, String> {
+fn read_project_jsonl_records(
+    project_path: &str,
+    relative_path: &str,
+) -> Result<Vec<serde_json::Value>, String> {
     let full_path = resolve_project_relative_path(project_path, relative_path)?;
     if !full_path.exists() {
         return Ok(Vec::new());
@@ -644,8 +822,13 @@ fn read_project_jsonl_records(project_path: &str, relative_path: &str) -> Result
             continue;
         }
 
-        let record = serde_json::from_str(line)
-            .map_err(|error| format!("Invalid JSONL record {} in {}: {error}", index + 1, full_path.display()))?;
+        let record = serde_json::from_str(line).map_err(|error| {
+            format!(
+                "Invalid JSONL record {} in {}: {error}",
+                index + 1,
+                full_path.display()
+            )
+        })?;
         records.push(record);
     }
 
@@ -671,6 +854,42 @@ fn extract_openai_output_text(response: &serde_json::Value) -> Option<&str> {
         .find_map(|content| content.get("text").and_then(|value| value.as_str()))
 }
 
+fn extract_deepseek_output_text(response: &serde_json::Value) -> Option<&str> {
+    response
+        .get("choices")
+        .and_then(|value| value.as_array())
+        .into_iter()
+        .flatten()
+        .find_map(|choice| {
+            choice
+                .get("message")
+                .and_then(|message| message.get("content"))
+                .and_then(|content| content.as_str())
+        })
+}
+
+fn parse_structured_json(
+    output_text: &str,
+    provider_label: &str,
+) -> Result<serde_json::Value, String> {
+    serde_json::from_str(output_text)
+        .map_err(|error| format!("{provider_label} structured output was not valid JSON: {error}"))
+}
+
+fn configured_llm_provider() -> String {
+    std::env::var("TWLR_LLM_PROVIDER")
+        .map(|value| value.trim().to_ascii_lowercase())
+        .ok()
+        .filter(|value| value == "openai" || value == "deepseek")
+        .unwrap_or_else(|| "openai".to_string())
+}
+
+fn env_var_is_present(name: &str) -> bool {
+    std::env::var(name)
+        .map(|value| !value.trim().is_empty())
+        .unwrap_or(false)
+}
+
 fn resolve_project_relative_path(project_path: &str, file_path: &str) -> Result<PathBuf, String> {
     let relative = Path::new(file_path);
     if relative.is_absolute() {
@@ -678,7 +897,10 @@ fn resolve_project_relative_path(project_path: &str, file_path: &str) -> Result<
     }
 
     for component in relative.components() {
-        if matches!(component, Component::ParentDir | Component::RootDir | Component::Prefix(_)) {
+        if matches!(
+            component,
+            Component::ParentDir | Component::RootDir | Component::Prefix(_)
+        ) {
             return Err("Project file path cannot escape the project directory.".to_string());
         }
     }
@@ -733,14 +955,20 @@ fn parse_frontmatter(content: &str) -> std::collections::HashMap<String, String>
         let Some((key, value)) = line.split_once(':') else {
             continue;
         };
-        values.insert(key.trim().to_string(), value.trim().trim_matches('"').to_string());
+        values.insert(
+            key.trim().to_string(),
+            value.trim().trim_matches('"').to_string(),
+        );
     }
 
     values
 }
 
 fn count_words(content: &str) -> usize {
-    content.split_whitespace().filter(|word| word.chars().any(char::is_alphanumeric)).count()
+    content
+        .split_whitespace()
+        .filter(|word| word.chars().any(char::is_alphanumeric))
+        .count()
 }
 
 fn chapter_body(content: &str) -> &str {
@@ -769,7 +997,13 @@ fn make_project_id(title: &str) -> String {
         .trim()
         .to_lowercase()
         .chars()
-        .map(|character| if character.is_ascii_alphanumeric() { character } else { '_' })
+        .map(|character| {
+            if character.is_ascii_alphanumeric() {
+                character
+            } else {
+                '_'
+            }
+        })
         .collect::<String>();
 
     while slug.contains("__") {
@@ -778,7 +1012,10 @@ fn make_project_id(title: &str) -> String {
 
     let slug = slug.trim_matches('_');
 
-    format!("project_{}", if slug.is_empty() { "untitled" } else { slug })
+    format!(
+        "project_{}",
+        if slug.is_empty() { "untitled" } else { slug }
+    )
 }
 
 #[cfg(test)]
@@ -853,7 +1090,8 @@ mod tests {
         let event_log = fs::read_to_string(project_path.join("events/narrative_events.jsonl"))
             .expect("event log should be readable");
         assert!(event_log.contains("event_test_001"));
-        let events = read_narrative_events(project_path_text.clone()).expect("events should be readable");
+        let events =
+            read_narrative_events(project_path_text.clone()).expect("events should be readable");
         assert_eq!(events[0]["event_id"], "event_test_001");
 
         let proposals_appended = append_state_proposals(AppendProjectRecordsRequest {
@@ -865,8 +1103,8 @@ mod tests {
         })
         .expect("proposal should be appended");
         assert_eq!(proposals_appended, 1);
-        let proposals = read_state_proposals(project_path_text.clone())
-            .expect("proposals should be readable");
+        let proposals =
+            read_state_proposals(project_path_text.clone()).expect("proposals should be readable");
         assert_eq!(proposals[0]["proposal_id"], "proposal_test_001");
 
         let meetings_appended = append_room_meetings(AppendProjectRecordsRequest {
@@ -945,9 +1183,13 @@ mod tests {
         .expect("timeline state should be written");
         let timeline = read_timeline_state(project_path_text.clone())
             .expect("timeline state should be readable");
-        assert_eq!(timeline["timeline_events"][0]["timeline_event_id"], "timeline_test");
+        assert_eq!(
+            timeline["timeline_events"][0]["timeline_event_id"],
+            "timeline_test"
+        );
 
-        let status = snapshot_status(project_path_text.clone()).expect("snapshot status should be readable");
+        let status =
+            snapshot_status(project_path_text.clone()).expect("snapshot status should be readable");
         assert!(status.changed_files > 0);
         assert!(status.changed_chapters > 0);
         assert!(status.changed_state_files > 0);
@@ -961,7 +1203,8 @@ mod tests {
         assert_eq!(snapshot.message, "Smoke snapshot");
         assert!(snapshot.changed_files > 0);
         assert_ne!(snapshot.snapshot_id, "none");
-        let clean_status = snapshot_status(project_path_text.clone()).expect("clean status should be readable");
+        let clean_status =
+            snapshot_status(project_path_text.clone()).expect("clean status should be readable");
         assert_eq!(clean_status.changed_files, 0);
         assert!(clean_status.has_snapshot);
 

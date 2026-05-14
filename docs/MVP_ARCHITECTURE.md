@@ -374,7 +374,7 @@ Current failure categories:
 
 MVP provider strategy:
 
-1. Implement OpenAI first.
+1. Implement OpenAI first and allow DeepSeek as a development provider.
 2. Keep provider interface stable for Anthropic, Gemini, and custom providers.
 3. Use environment variables for API keys during development.
 4. Add desktop keychain support before trial operations if needed.
@@ -382,7 +382,16 @@ MVP provider strategy:
 
 All AI outputs that may affect state must pass schema validation.
 
-In the desktop MVP, API keys should stay outside the webview. The first OpenAI path is routed through a Tauri command that reads `OPENAI_API_KEY` from the desktop process environment and returns structured JSON to the UI. If the key is unavailable or a request fails, the production skill may fall back to mock output during development.
+In the desktop MVP, API keys should stay outside the webview. Remote provider calls are routed through Tauri commands that read provider keys from the desktop process environment and return structured JSON to the UI. If the key is unavailable or a request fails, the production skill may fall back to mock output during development.
+
+Development provider selection:
+
+```text
+TWLR_LLM_PROVIDER=openai   → OPENAI_API_KEY
+TWLR_LLM_PROVIDER=deepseek → DEEPSEEK_API_KEY
+```
+
+OpenAI remains the default provider when `TWLR_LLM_PROVIDER` is not set.
 
 Production skills should not hand-build provider prompts inside UI services. The AI package owns the remote state-proposal adapter:
 

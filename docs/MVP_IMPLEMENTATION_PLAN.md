@@ -189,6 +189,7 @@ The first vertical slice is now partially executable with mock AI:
 - snapshot status lite
 - Character Sheet mock proposal
 - OpenAI Character Sheet proposal path with mock fallback
+- DeepSeek Character Sheet proposal path with mock fallback
 - remote state-proposal skill request adapter
 - pending proposal card persistence and reopen recovery
 - proposal accept / reject

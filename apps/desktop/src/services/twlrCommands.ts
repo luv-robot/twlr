@@ -42,12 +42,20 @@ export interface WriteProjectJsonRequest<TValue> {
   value: TValue;
 }
 
-export interface OpenAiStructuredRequest {
+export interface LlmStructuredRequest {
   prompt: string;
   system_prompt?: string;
   schema_name: string;
   json_schema: Record<string, unknown>;
   model?: string;
+}
+
+export type OpenAiStructuredRequest = LlmStructuredRequest;
+
+export interface LlmProviderStatus {
+  provider: "openai" | "deepseek";
+  ready: boolean;
+  message: string;
 }
 
 export interface ProjectSummary {
@@ -171,4 +179,12 @@ export async function generateOpenAiStructured<TValue>(request: OpenAiStructured
 
 export async function getOpenAiEnvironmentStatus(): Promise<boolean> {
   return invoke<boolean>("openai_environment_status");
+}
+
+export async function generateLlmStructured<TValue>(request: LlmStructuredRequest): Promise<TValue> {
+  return invoke<TValue>("generate_llm_structured", { request });
+}
+
+export async function getLlmEnvironmentStatus(): Promise<LlmProviderStatus> {
+  return invoke<LlmProviderStatus>("llm_environment_status");
 }

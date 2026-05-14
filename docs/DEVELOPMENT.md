@@ -10,6 +10,8 @@ This document records the current local development entry points, verified check
 - Use SSH for GitHub operations.
 - The first real remote LLM provider is OpenAI.
 - Development API key source is `OPENAI_API_KEY`.
+- DeepSeek can be used during development by setting `TWLR_LLM_PROVIDER=deepseek` and `DEEPSEEK_API_KEY`.
+- Optional DeepSeek model override: `DEEPSEEK_MODEL`. The default is `deepseek-v4-flash`.
 - Remote provider failures are classified in `@twlr/ai` before being shown in the desktop UI.
 
 ## Frontend
@@ -37,6 +39,16 @@ Run the Vite dev server:
 ```bash
 npm run dev -w @twlr/desktop -- --host 127.0.0.1
 ```
+
+Run the Tauri app with DeepSeek as the development provider:
+
+```bash
+export TWLR_LLM_PROVIDER=deepseek
+export DEEPSEEK_API_KEY="..."
+npm run tauri -w @twlr/desktop
+```
+
+OpenAI remains the default provider when `TWLR_LLM_PROVIDER` is not set.
 
 Current verified frontend status:
 
@@ -102,6 +114,7 @@ The current P0 vertical slice includes:
 - Timeline Compiler mock proposal
 - Foreshadow Tracker mock proposal
 - OpenAI Character Sheet proposal path with mock fallback
+- DeepSeek Character Sheet proposal path with mock fallback
 - remote provider interface with mock provider
 - remote state-proposal skill adapter for building structured LLM requests outside the desktop UI layer
 - provider failure summaries for missing keys, invalid keys, insufficient quota, unavailable models, schema rejection, and network errors

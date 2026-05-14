@@ -1,6 +1,6 @@
 export type LlmProviderKind = "mock" | "remote";
 
-export type RemoteLlmVendor = "openai" | "anthropic" | "gemini" | "custom";
+export type RemoteLlmVendor = "openai" | "deepseek" | "anthropic" | "gemini" | "custom";
 
 export interface LlmProvider {
   readonly id: string;
@@ -96,6 +96,18 @@ export const defaultOpenAiProviderConfig: LlmProviderConfig = {
   enabled: true,
 };
 
+export const defaultDeepSeekProviderConfig: LlmProviderConfig = {
+  provider_id: "deepseek",
+  label: "DeepSeek",
+  kind: "remote",
+  vendor: "deepseek",
+  model: "deepseek-v4-flash",
+  base_url: "https://api.deepseek.com",
+  api_key_source: "environment",
+  api_key_ref: "DEEPSEEK_API_KEY",
+  enabled: true,
+};
+
 export function createMockLlmProvider(options: { textResponse?: string; structuredResponse?: unknown } = {}): LlmProvider {
   return {
     id: mockProviderConfig.provider_id,
@@ -153,7 +165,11 @@ export function classifyLlmProviderError(error: unknown): LlmProviderFailure {
     return { code: "invalid_api_key", rawMessage };
   }
 
-  if (rawMessage.includes("insufficient_quota") || rawMessage.includes("exceeded your current quota")) {
+  if (
+    rawMessage.includes("insufficient_quota") ||
+    rawMessage.includes("insufficient_balance") ||
+    rawMessage.includes("exceeded your current quota")
+  ) {
     return { code: "insufficient_quota", rawMessage };
   }
 
