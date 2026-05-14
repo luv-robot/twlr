@@ -1,5 +1,12 @@
 import type { CoordinatorStatusItem } from "../data/demoWorkspace";
-import type { CharacterStateFile, NarrativeEvent, OpenLoopStateFile, RoomMeeting, StateProposal } from "@twlr/schema";
+import type {
+  CharacterStateFile,
+  NarrativeEvent,
+  OpenLoopStateFile,
+  RoomMeeting,
+  StateProposal,
+  TimelineStateFile,
+} from "@twlr/schema";
 import { ProposalCard } from "./ProposalCard";
 
 interface StudioCoordinatorPanelProps {
@@ -9,6 +16,7 @@ interface StudioCoordinatorPanelProps {
   characterState: CharacterStateFile;
   contextProjectionStatus: string;
   openLoopState: OpenLoopStateFile;
+  timelineState: TimelineStateFile;
   latestAcceptedEvent: NarrativeEvent | undefined;
   storageStatus: string;
   onAcceptProposal: (proposalId: string) => void;
@@ -28,6 +36,7 @@ export function StudioCoordinatorPanel({
   characterState,
   contextProjectionStatus,
   openLoopState,
+  timelineState,
   onAcceptProposal,
   onCreateRoomProposalCards,
   onCreateMockProposal,
@@ -115,6 +124,7 @@ export function StudioCoordinatorPanel({
         <div className="section-label">Projected state</div>
         <p>{characterState.characters.length} character state records in this session.</p>
         <p>{openLoopState.open_loops.length} open loop records in this session.</p>
+        <p>{timelineState.timeline_events.length} timeline event records in this session.</p>
         {characterState.characters[0] ? (
           <p className="event-note">
             {characterState.characters[0].name}: {characterState.characters[0].current_status}

@@ -193,6 +193,7 @@ The first vertical slice is now partially executable with mock AI:
 - local project reopen reads narrative event log
 - projected character state
 - projected open-loop state
+- projected timeline state
 - local project reopen reads projected state files
 - context projection packet for skills and Writers' Room
 - Writers' Room mock meeting

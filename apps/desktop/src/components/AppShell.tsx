@@ -2,21 +2,31 @@ import { useEffect, useMemo, useState } from "react";
 import {
   applyCharacterEvents,
   applyOpenLoopEvents,
+  applyTimelineEvents,
   buildChapterContextProjection,
   countWords,
   createEmptyCharacterStateFile,
   createEmptyOpenLoopStateFile,
+  createEmptyTimelineStateFile,
   proposalToNarrativeEvents,
   reviewStateProposal,
 } from "@twlr/core";
 import { createMockWritersRoomMeeting, createWritersRoomProposalCards, runMockProductionSkill } from "@twlr/ai";
-import type { CharacterStateFile, NarrativeEvent, OpenLoopStateFile, RoomMeeting, StateProposal } from "@twlr/schema";
+import type {
+  CharacterStateFile,
+  NarrativeEvent,
+  OpenLoopStateFile,
+  RoomMeeting,
+  StateProposal,
+  TimelineStateFile,
+} from "@twlr/schema";
 import { demoChapters } from "../data/demoWorkspace";
 import {
   persistAcceptedProposal,
   persistCharacterState,
   persistOpenLoopState,
   persistRoomMeeting,
+  persistTimelineState,
 } from "../services/projectPersistence";
 import {
   createLocalWorkspace,
@@ -42,6 +52,7 @@ export function AppShell() {
   const [acceptedEvents, setAcceptedEvents] = useState<NarrativeEvent[]>([]);
   const [characterState, setCharacterState] = useState<CharacterStateFile>(() => createEmptyCharacterStateFile());
   const [openLoopState, setOpenLoopState] = useState<OpenLoopStateFile>(() => createEmptyOpenLoopStateFile());
+  const [timelineState, setTimelineState] = useState<TimelineStateFile>(() => createEmptyTimelineStateFile());
   const [roomMeeting, setRoomMeeting] = useState<RoomMeeting | null>(null);
   const [projectPath, setProjectPath] = useState<string | null>(null);
   const [projectPathInput, setProjectPathInput] = useState("/private/tmp/twlr-glass-city");
@@ -144,6 +155,7 @@ export function AppShell() {
       setChapters(workspace.chapters);
       setCharacterState(workspace.characterState);
       setOpenLoopState(workspace.openLoopState);
+      setTimelineState(workspace.timelineState);
       setProposals([]);
       setRoomMeeting(null);
       setAcceptedEvents(workspace.events);
@@ -172,6 +184,7 @@ export function AppShell() {
       setChapters(workspace.chapters);
       setCharacterState(workspace.characterState);
       setOpenLoopState(workspace.openLoopState);
+      setTimelineState(workspace.timelineState);
       setProposals([]);
       setRoomMeeting(null);
       setAcceptedEvents(workspace.events);
@@ -264,9 +277,11 @@ export function AppShell() {
     const events = proposalToNarrativeEvents(reviewedProposal);
     const nextCharacterState = applyCharacterEvents(characterState, events);
     const nextOpenLoopState = applyOpenLoopEvents(openLoopState, events);
+    const nextTimelineState = applyTimelineEvents(timelineState, events);
     setAcceptedEvents((currentEvents) => [...events, ...currentEvents]);
     setCharacterState(nextCharacterState);
     setOpenLoopState(nextOpenLoopState);
+    setTimelineState(nextTimelineState);
     setProposals((current) => current.filter((item) => item.proposal_id !== proposalId));
     setStorageStatus("Saving event log...");
 
@@ -278,12 +293,15 @@ export function AppShell() {
       });
       const stateResult = await persistCharacterState(projectPath, nextCharacterState);
       const openLoopResult = await persistOpenLoopState(projectPath, nextOpenLoopState);
+      const timelineResult = await persistTimelineState(projectPath, nextTimelineState);
       setStorageStatus(
-        openLoopResult.status === "persisted"
-          ? openLoopResult.message
-          : stateResult.status === "persisted"
-            ? stateResult.message
-            : result.message,
+        timelineResult.status === "persisted"
+          ? timelineResult.message
+          : openLoopResult.status === "persisted"
+            ? openLoopResult.message
+            : stateResult.status === "persisted"
+              ? stateResult.message
+              : result.message,
       );
     } catch (error) {
       setStorageStatus(error instanceof Error ? error.message : "Failed to persist event log.");
@@ -393,6 +411,7 @@ export function AppShell() {
         items={coordinatorItems}
         latestAcceptedEvent={acceptedEvents[0]}
         openLoopState={openLoopState}
+        timelineState={timelineState}
         onAcceptProposal={acceptProposal}
         onCreateRoomProposalCards={createProposalCardsFromRoom}
         onCreateMockProposal={createMockProposal}

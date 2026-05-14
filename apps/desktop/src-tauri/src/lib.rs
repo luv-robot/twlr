@@ -398,6 +398,16 @@ fn write_open_loop_state(request: WriteProjectJsonRequest) -> Result<(), String>
     write_project_json_file(&request.project_path, "state/open_loops.json", request.value)
 }
 
+#[tauri::command]
+fn read_timeline_state(project_path: String) -> Result<serde_json::Value, String> {
+    read_project_json_file(&project_path, "state/timeline.json")
+}
+
+#[tauri::command]
+fn write_timeline_state(request: WriteProjectJsonRequest) -> Result<(), String> {
+    write_project_json_file(&request.project_path, "state/timeline.json", request.value)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -417,7 +427,9 @@ pub fn run() {
             read_character_state,
             write_character_state,
             read_open_loop_state,
-            write_open_loop_state
+            write_open_loop_state,
+            read_timeline_state,
+            write_timeline_state
         ])
         .run(tauri::generate_context!())
         .expect("error while running TWLR desktop app");
@@ -797,6 +809,28 @@ mod tests {
         let open_loops = read_open_loop_state(project_path_text.clone())
             .expect("open loop state should be readable");
         assert_eq!(open_loops["open_loops"][0]["open_loop_id"], "loop_test");
+
+        write_timeline_state(WriteProjectJsonRequest {
+            project_path: project_path_text.clone(),
+            value: json!({
+                "schema_version": 1,
+                "timeline_events": [{
+                    "timeline_event_id": "timeline_test",
+                    "label": "Test timeline event",
+                    "story_time": "unknown",
+                    "chapter_id": "chapter_001",
+                    "scene_id": null,
+                    "characters": [],
+                    "summary": "testing state writes",
+                    "certainty": "needs_review",
+                    "updated_at": "2026-05-14T00:00:00.000Z"
+                }]
+            }),
+        })
+        .expect("timeline state should be written");
+        let timeline = read_timeline_state(project_path_text.clone())
+            .expect("timeline state should be readable");
+        assert_eq!(timeline["timeline_events"][0]["timeline_event_id"], "timeline_test");
 
         let status = snapshot_status(project_path_text.clone()).expect("snapshot status should be readable");
         assert!(status.changed_files > 0);

@@ -1,4 +1,12 @@
-import type { CharacterState, CharacterStateFile, NarrativeEvent, OpenLoop, OpenLoopStateFile } from "@twlr/schema";
+import type {
+  CharacterState,
+  CharacterStateFile,
+  NarrativeEvent,
+  OpenLoop,
+  OpenLoopStateFile,
+  TimelineEvent,
+  TimelineStateFile,
+} from "@twlr/schema";
 
 export function createEmptyCharacterStateFile(): CharacterStateFile {
   return {
@@ -11,6 +19,13 @@ export function createEmptyOpenLoopStateFile(): OpenLoopStateFile {
   return {
     schema_version: 1,
     open_loops: [],
+  };
+}
+
+export function createEmptyTimelineStateFile(): TimelineStateFile {
+  return {
+    schema_version: 1,
+    timeline_events: [],
   };
 }
 
@@ -77,6 +92,75 @@ export function applyOpenLoopEvents(
   };
 }
 
+export function applyTimelineEvents(
+  stateFile: TimelineStateFile,
+  events: NarrativeEvent[],
+): TimelineStateFile {
+  const timelineEvents = new Map(
+    stateFile.timeline_events.map((timelineEvent) => [timelineEvent.timeline_event_id, timelineEvent]),
+  );
+
+  for (const event of events) {
+    if (event.payload.target_type !== "timeline_event") {
+      continue;
+    }
+
+    const existing = timelineEvents.get(event.payload.target_id) ?? createUnknownTimelineEvent(event.payload.target_id, event);
+    const next = applyTimelineEvent(existing, event);
+    timelineEvents.set(next.timeline_event_id, next);
+  }
+
+  return {
+    schema_version: 1,
+    timeline_events: [...timelineEvents.values()],
+  };
+}
+
+function applyTimelineEvent(timelineEvent: TimelineEvent, event: NarrativeEvent): TimelineEvent {
+  const base = {
+    ...timelineEvent,
+    characters: mergeUnique(timelineEvent.characters, event.references.characters),
+    chapter_id: timelineEvent.chapter_id ?? event.references.chapters[0] ?? null,
+    updated_at: event.created_at,
+  };
+
+  if (event.payload.field === "label" && typeof event.payload.new_value === "string") {
+    return {
+      ...base,
+      label: event.payload.new_value,
+    };
+  }
+
+  if (event.payload.field === "summary" && typeof event.payload.new_value === "string") {
+    return {
+      ...base,
+      summary: event.payload.new_value,
+    };
+  }
+
+  if (event.payload.field === "story_time" && typeof event.payload.new_value === "string") {
+    return {
+      ...base,
+      story_time: event.payload.new_value,
+    };
+  }
+
+  if (
+    event.payload.field === "certainty" &&
+    (event.payload.new_value === "confirmed" ||
+      event.payload.new_value === "inferred" ||
+      event.payload.new_value === "contradicted" ||
+      event.payload.new_value === "needs_review")
+  ) {
+    return {
+      ...base,
+      certainty: event.payload.new_value,
+    };
+  }
+
+  return base;
+}
+
 function applyOpenLoopEvent(openLoop: OpenLoop, event: NarrativeEvent): OpenLoop {
   if (event.event_type === "open_loop_paid_off") {
     return {
@@ -140,6 +224,20 @@ function createUnknownOpenLoop(openLoopId: string, event: NarrativeEvent): OpenL
     related_characters: event.references.characters,
     related_chapters: event.references.chapters,
     notes: "Created from accepted proposal.",
+    updated_at: event.created_at,
+  };
+}
+
+function createUnknownTimelineEvent(timelineEventId: string, event: NarrativeEvent): TimelineEvent {
+  return {
+    timeline_event_id: timelineEventId,
+    label: timelineEventId.replace(/^event_/, "").replaceAll("_", " "),
+    story_time: "unknown",
+    chapter_id: event.references.chapters[0] ?? null,
+    scene_id: null,
+    characters: event.references.characters,
+    summary: "Created from accepted proposal.",
+    certainty: "needs_review",
     updated_at: event.created_at,
   };
 }
