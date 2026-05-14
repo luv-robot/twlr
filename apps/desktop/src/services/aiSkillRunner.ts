@@ -68,7 +68,7 @@ export async function runProductionSkill(
   } catch (error) {
     return {
       proposal: runMockProductionSkill(skillId, context),
-      message: `OpenAI Character Sheet failed: ${getErrorMessage(error)} Using mock Character Sheet.`,
+      message: `${summarizeOpenAiError(error)} Using mock Character Sheet.`,
     };
   }
 }
@@ -97,6 +97,28 @@ function getErrorMessage(error: unknown): string {
   } catch {
     return "Unknown error.";
   }
+}
+
+function summarizeOpenAiError(error: unknown): string {
+  const message = getErrorMessage(error);
+
+  if (message.includes("insufficient_quota") || message.includes("exceeded your current quota")) {
+    return "OpenAI Character Sheet failed: quota is unavailable. Check the API key's plan, billing, or credits.";
+  }
+
+  if (message.includes("invalid_api_key") || message.includes("Incorrect API key") || message.includes("401")) {
+    return "OpenAI Character Sheet failed: API key is invalid or not authorized.";
+  }
+
+  if (message.includes("model_not_found") || message.includes("does not have access to model") || message.includes("404")) {
+    return "OpenAI Character Sheet failed: the configured model is unavailable for this key.";
+  }
+
+  if (message.includes("schema") || message.includes("response_format") || message.includes("json_schema")) {
+    return `OpenAI Character Sheet failed: structured output schema was rejected. ${message}`;
+  }
+
+  return `OpenAI Character Sheet failed: ${message}`;
 }
 
 function normalizeRemoteCharacterProposal(
