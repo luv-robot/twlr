@@ -286,6 +286,11 @@ fn append_narrative_events(request: AppendProjectRecordsRequest) -> Result<usize
 }
 
 #[tauri::command]
+fn read_narrative_events(project_path: String) -> Result<Vec<serde_json::Value>, String> {
+    read_project_jsonl_records(&project_path, "events/narrative_events.jsonl")
+}
+
+#[tauri::command]
 fn append_state_proposals(request: AppendProjectRecordsRequest) -> Result<usize, String> {
     append_project_jsonl_records(
         &request.project_path,
@@ -404,6 +409,7 @@ pub fn run() {
             write_chapter,
             create_chapter,
             append_narrative_events,
+            read_narrative_events,
             append_state_proposals,
             append_room_meetings,
             save_snapshot,
@@ -526,6 +532,29 @@ fn append_project_jsonl_records(
     }
 
     Ok(count)
+}
+
+fn read_project_jsonl_records(project_path: &str, relative_path: &str) -> Result<Vec<serde_json::Value>, String> {
+    let full_path = resolve_project_relative_path(project_path, relative_path)?;
+    if !full_path.exists() {
+        return Ok(Vec::new());
+    }
+
+    let content = fs::read_to_string(&full_path)
+        .map_err(|error| format!("Failed to read {}: {error}", full_path.display()))?;
+    let mut records = Vec::new();
+
+    for (index, line) in content.lines().enumerate() {
+        if line.trim().is_empty() {
+            continue;
+        }
+
+        let record = serde_json::from_str(line)
+            .map_err(|error| format!("Invalid JSONL record {} in {}: {error}", index + 1, full_path.display()))?;
+        records.push(record);
+    }
+
+    Ok(records)
 }
 
 fn resolve_project_relative_path(project_path: &str, file_path: &str) -> Result<PathBuf, String> {
@@ -710,6 +739,8 @@ mod tests {
         let event_log = fs::read_to_string(project_path.join("events/narrative_events.jsonl"))
             .expect("event log should be readable");
         assert!(event_log.contains("event_test_001"));
+        let events = read_narrative_events(project_path_text.clone()).expect("events should be readable");
+        assert_eq!(events[0]["event_id"], "event_test_001");
 
         let meetings_appended = append_room_meetings(AppendProjectRecordsRequest {
             project_path: project_path_text.clone(),

@@ -190,6 +190,7 @@ The first vertical slice is now partially executable with mock AI:
 - Character Sheet mock proposal
 - proposal accept / reject
 - accepted proposal to narrative events
+- local project reopen reads narrative event log
 - projected character state
 - projected open-loop state
 - local project reopen reads projected state files

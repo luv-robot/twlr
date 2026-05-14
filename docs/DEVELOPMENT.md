@@ -85,6 +85,7 @@ The current P0 vertical slice includes:
 - Markdown chapter list and editor
 - chapter create and autosave
 - accepted proposal event logging
+- local project reopen reads narrative event log
 - projected character state
 - projected open-loop state
 - local project reopen reads projected state files

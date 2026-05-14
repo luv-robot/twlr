@@ -92,7 +92,7 @@ export function StudioCoordinatorPanel({
 
       <section className="coordinator-card quiet-card">
         <div className="section-label">Durable events</div>
-        <p>{acceptedEventCount} accepted narrative events in this session.</p>
+        <p>{acceptedEventCount} accepted narrative events available.</p>
         <p className="event-note">{storageStatus}</p>
         {latestAcceptedEvent ? (
           <p className="event-note">

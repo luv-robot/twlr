@@ -1,5 +1,5 @@
 import { countWords, parseChapterMarkdown, replaceChapterMarkdownBody } from "@twlr/core";
-import type { CharacterStateFile, OpenLoopStateFile } from "@twlr/schema";
+import type { CharacterStateFile, NarrativeEvent, OpenLoopStateFile } from "@twlr/schema";
 import type { DemoChapter } from "../data/demoWorkspace";
 import {
   createProject,
@@ -9,6 +9,7 @@ import {
   openProject,
   readChapter,
   readCharacterState,
+  readNarrativeEvents,
   readOpenLoopState,
   saveSnapshot,
   writeChapter,
@@ -22,6 +23,7 @@ export interface LoadedWorkspace {
   chapters: DemoChapter[];
   characterState: CharacterStateFile;
   openLoopState: OpenLoopStateFile;
+  events: NarrativeEvent[];
 }
 
 export async function createLocalWorkspace(projectPath: string, title: string): Promise<LoadedWorkspace> {
@@ -38,11 +40,12 @@ export async function createLocalWorkspace(projectPath: string, title: string): 
 
 export async function loadLocalWorkspace(projectPath: string): Promise<LoadedWorkspace> {
   assertTauriRuntime();
-  const [project, summaries, characterState, openLoopState] = await Promise.all([
+  const [project, summaries, characterState, openLoopState, events] = await Promise.all([
     openProject(projectPath),
     listChapters(projectPath),
     readCharacterState(projectPath),
     readOpenLoopState(projectPath),
+    readNarrativeEvents(projectPath),
   ]);
   const contents = await Promise.all(
     summaries.map((summary) => readChapter(projectPath, summary.file_path)),
@@ -53,6 +56,7 @@ export async function loadLocalWorkspace(projectPath: string): Promise<LoadedWor
     chapters: contents.map((content, index) => chapterContentToItem(content, index)),
     characterState,
     openLoopState,
+    events: [...events].reverse(),
   };
 }
 

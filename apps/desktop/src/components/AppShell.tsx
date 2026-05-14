@@ -146,7 +146,7 @@ export function AppShell() {
       setOpenLoopState(workspace.openLoopState);
       setProposals([]);
       setRoomMeeting(null);
-      setAcceptedEvents([]);
+      setAcceptedEvents(workspace.events);
       setActiveChapterId(workspace.chapters[0]?.id ?? "01");
       setChangedChapterIds(new Set());
       setWorkspaceStatus(`Opened ${workspace.project.title}`);
@@ -174,7 +174,7 @@ export function AppShell() {
       setOpenLoopState(workspace.openLoopState);
       setProposals([]);
       setRoomMeeting(null);
-      setAcceptedEvents([]);
+      setAcceptedEvents(workspace.events);
       setActiveChapterId(workspace.chapters[0]?.id ?? "01");
       setChangedChapterIds(new Set());
       setWorkspaceStatus(`Created ${workspace.project.title}`);

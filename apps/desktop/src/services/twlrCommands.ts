@@ -102,6 +102,10 @@ export async function appendNarrativeEvents(
   return invoke<number>("append_narrative_events", { request });
 }
 
+export async function readNarrativeEvents(projectPath: string): Promise<NarrativeEvent[]> {
+  return invoke<NarrativeEvent[]>("read_narrative_events", { projectPath });
+}
+
 export async function appendStateProposals(request: AppendProjectRecordsRequest<StateProposal>): Promise<number> {
   return invoke<number>("append_state_proposals", { request });
 }
