@@ -24,7 +24,7 @@ export function reviewStateProposal(input: ReviewProposalInput): StateProposal {
 }
 
 export function proposalToNarrativeEvents(proposal: StateProposal, now = new Date().toISOString()): NarrativeEvent[] {
-  return proposal.proposed_events.map((event, index) => ({
+  return proposalEventsForCommit(proposal).map((event, index) => ({
     event_id: makeProposalEventId(proposal.proposal_id, index),
     event_type: event.event_type,
     created_at: now,
@@ -48,4 +48,32 @@ export function serializeJsonlRecord(record: unknown): string {
 
 function makeProposalEventId(proposalId: string, index: number): string {
   return `event_${proposalId}_${String(index + 1).padStart(3, "0")}`;
+}
+
+function proposalEventsForCommit(proposal: StateProposal): StateProposal["proposed_events"] {
+  if (
+    proposal.source.name !== "Character Sheet" ||
+    proposal.proposed_events.some((event) => event.payload.target_type === "character")
+  ) {
+    return proposal.proposed_events;
+  }
+
+  const characterId = proposal.affected.characters[0];
+  if (!characterId) {
+    return proposal.proposed_events;
+  }
+
+  return [
+    {
+      event_type: "character_state_changed",
+      payload: {
+        target_type: "character",
+        target_id: characterId,
+        field: "current_status",
+        old_value: null,
+        new_value: proposal.summary,
+      },
+    },
+    ...proposal.proposed_events,
+  ];
 }

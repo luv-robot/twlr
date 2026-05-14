@@ -39,6 +39,7 @@ const remoteStateProposalSkillDefinitions: Partial<Record<ProductionSkillId, Rem
       "Summary should describe the story-state change, not the skill action.",
       "Evidence should contain 1 or 2 short quotes or paraphrased observations from the selected text.",
       "Prefer character_state_changed for observed character status, motivation, fear, desire, secret, or arc-stage changes.",
+      "Always include at least one proposed event with target_type character.",
       "If the text implies a secret, cover-up, unexplained motive, altered record, hidden identity, missing cause, or suspicious silence, include one open_loop_created proposal.",
       "If you propose an open loop, include its id in affected.open_loops.",
       "Do not produce broad literary critique or scene advice.",
@@ -77,7 +78,17 @@ export function normalizeRemoteStateProposalSkillResult(
   request: RemoteStateProposalSkillRequest,
   context: ProductionSkillContext,
 ): StateProposal {
-  const proposedEvents = proposal.proposed_events ?? [];
+  const rawProposedEvents = proposal.proposed_events ?? [];
+  const affectedCharacters = proposal.affected?.characters?.length
+    ? proposal.affected.characters
+    : inferTargetIds(rawProposedEvents, "character");
+  const summary = normalizeProposalSummary(
+    typeof proposal.summary === "string" ? proposal.summary : "Review character state update.",
+  );
+  const proposedEvents =
+    request.skillId === "character_sheet"
+      ? ensureCharacterStateEvent(rawProposedEvents, affectedCharacters, summary)
+      : rawProposedEvents;
 
   return {
     ...proposal,
@@ -95,9 +106,7 @@ export function normalizeRemoteStateProposalSkillResult(
     },
     affected: {
       chapters: proposal.affected?.chapters?.length ? proposal.affected.chapters : [context.chapter_id],
-      characters: proposal.affected?.characters?.length
-        ? proposal.affected.characters
-        : inferTargetIds(proposedEvents, "character"),
+      characters: affectedCharacters.length ? affectedCharacters : inferTargetIds(proposedEvents, "character"),
       open_loops: proposal.affected?.open_loops?.length
         ? proposal.affected.open_loops
         : inferTargetIds(proposedEvents, "open_loop"),
@@ -105,9 +114,7 @@ export function normalizeRemoteStateProposalSkillResult(
         ? proposal.affected.timeline_events
         : inferTargetIds(proposedEvents, "timeline_event"),
     },
-    summary: normalizeProposalSummary(
-      typeof proposal.summary === "string" ? proposal.summary : "Review character state update.",
-    ),
+    summary,
     evidence: normalizeEvidence(proposal.evidence ?? []),
     proposed_events: proposedEvents,
     review: {
@@ -162,6 +169,8 @@ function createStateProposalPrompt(input: {
       output_contract: {
         summary: "One short state update, not an explanation paragraph.",
         evidence: "1 or 2 short entries.",
+        character_state_policy:
+          "Character Sheet must include at least one proposed event with event_type character_state_changed and target_type character.",
         open_loop_policy:
           "Create an open loop when the selected text suggests a secret, cover-up, unexplained motive, suspicious silence, or altered record.",
         proposal_card_reader: "The author should be able to decide accept/reject from the card without reading a long essay.",
@@ -202,4 +211,33 @@ function inferTargetIds(
     .filter(Boolean);
 
   return [...new Set(ids)];
+}
+
+function ensureCharacterStateEvent(
+  events: StateProposal["proposed_events"],
+  affectedCharacters: string[],
+  summary: string,
+): StateProposal["proposed_events"] {
+  if (events.some((event) => event.payload.target_type === "character")) {
+    return events;
+  }
+
+  const characterId = affectedCharacters[0];
+  if (!characterId) {
+    return events;
+  }
+
+  return [
+    {
+      event_type: "character_state_changed",
+      payload: {
+        target_type: "character",
+        target_id: characterId,
+        field: "current_status",
+        old_value: null,
+        new_value: summary,
+      },
+    },
+    ...events,
+  ];
 }
