@@ -6,6 +6,7 @@ interface ProjectNavigatorProps {
   activeChapterId: string;
   projectPathInput: string;
   workspaceStatus: string;
+  onCreateChapter: () => void;
   onCreateLocalProject: () => void;
   onOpenLocalProject: () => void;
   onProjectPathInput: (value: string) => void;
@@ -15,6 +16,7 @@ interface ProjectNavigatorProps {
 export function ProjectNavigator({
   activeChapterId,
   chapters,
+  onCreateChapter,
   onCreateLocalProject,
   onOpenLocalProject,
   onProjectPathInput,
@@ -45,7 +47,12 @@ export function ProjectNavigator({
         <p>{workspaceStatus}</p>
       </section>
       <button className="part-pill">Act I</button>
-      <div className="section-label">Chapters</div>
+      <div className="section-heading">
+        <div className="section-label">Chapters</div>
+        <button className="icon-button" aria-label="Create chapter" onClick={onCreateChapter}>
+          +
+        </button>
+      </div>
       <div className="chapter-list">
         {chapters.map((chapter) => (
           <button

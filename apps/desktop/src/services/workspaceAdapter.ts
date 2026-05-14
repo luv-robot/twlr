@@ -2,6 +2,7 @@ import { countWords, parseChapterMarkdown, replaceChapterMarkdownBody } from "@t
 import type { DemoChapter } from "../data/demoWorkspace";
 import {
   createProject,
+  createChapter,
   listChapters,
   openProject,
   readChapter,
@@ -53,6 +54,16 @@ export async function saveWorkspaceChapter(projectPath: string, chapter: DemoCha
     file_path: chapter.filePath,
     content: replaceChapterMarkdownBody(chapter.content, chapter.body),
   });
+}
+
+export async function createWorkspaceChapter(projectPath: string, title: string, index: number): Promise<DemoChapter> {
+  assertTauriRuntime();
+  const chapter = await createChapter({
+    project_path: projectPath,
+    title,
+  });
+
+  return chapterContentToItem(chapter, index);
 }
 
 export async function saveWorkspaceSnapshot(projectPath: string, message: string) {

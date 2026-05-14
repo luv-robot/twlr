@@ -5,6 +5,7 @@ import { createMockCharacterProposal, demoChapters } from "../data/demoWorkspace
 import { persistAcceptedProposal } from "../services/projectPersistence";
 import {
   createLocalWorkspace,
+  createWorkspaceChapter,
   loadLocalWorkspace,
   saveWorkspaceChapter,
   saveWorkspaceSnapshot,
@@ -149,6 +150,40 @@ export function AppShell() {
     }
   }
 
+  async function createChapter() {
+    const nextIndex = chapters.length + 1;
+    const title = `Untitled Chapter ${nextIndex}`;
+
+    if (!projectPath) {
+      const id = String(nextIndex).padStart(2, "0");
+      setChapters((current) => [
+        ...current,
+        {
+          id,
+          title,
+          meta: "Draft",
+          state: "active",
+          body: `# ${title}\n\n`,
+          content: "",
+          filePath: null,
+        },
+      ]);
+      setActiveChapterId(id);
+      setWorkspaceStatus("Created demo chapter.");
+      return;
+    }
+
+    setWorkspaceStatus("Creating chapter...");
+    try {
+      const chapter = await createWorkspaceChapter(projectPath, title, nextIndex - 1);
+      setChapters((current) => [...current, { ...chapter, state: "active" }]);
+      setActiveChapterId(chapter.id);
+      setWorkspaceStatus(`Created ${chapter.title}`);
+    } catch (error) {
+      setWorkspaceStatus(error instanceof Error ? error.message : "Failed to create chapter.");
+    }
+  }
+
   function createMockProposal() {
     setProposals((current) => {
       if (current.some((proposal) => proposal.status === "pending")) {
@@ -200,6 +235,7 @@ export function AppShell() {
       <ProjectNavigator
         activeChapterId={activeChapter.id}
         chapters={chapters}
+        onCreateChapter={createChapter}
         onCreateLocalProject={createProjectAtPath}
         onOpenLocalProject={openLocalProject}
         onProjectPathInput={setProjectPathInput}

@@ -23,6 +23,12 @@ struct WriteChapterRequest {
 }
 
 #[derive(Debug, Deserialize)]
+struct CreateChapterRequest {
+    project_path: String,
+    title: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
 struct AppendProjectRecordsRequest {
     project_path: String,
     records: Vec<serde_json::Value>,
@@ -225,6 +231,38 @@ fn write_chapter(request: WriteChapterRequest) -> Result<ChapterSummary, String>
 }
 
 #[tauri::command]
+fn create_chapter(request: CreateChapterRequest) -> Result<ChapterContent, String> {
+    let chapters = list_chapters(request.project_path.clone())?;
+    let order = chapters.iter().map(|chapter| chapter.order).max().unwrap_or(0) + 1;
+    let title = request
+        .title
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or_else(|| "Untitled Chapter".to_string());
+    let now = current_timestamp();
+    let chapter_id = format!("chapter_{order:03}");
+    let file_path = format!("manuscript/chapter-{order:03}.md");
+    let content = [
+        "---".to_string(),
+        format!("id: {chapter_id}"),
+        format!("title: {title}"),
+        format!("order: {order}"),
+        "status: draft".to_string(),
+        "word_count: 0".to_string(),
+        format!("created_at: {now}"),
+        format!("updated_at: {now}"),
+        "---".to_string(),
+        "".to_string(),
+        format!("# {title}"),
+        "".to_string(),
+    ]
+    .join("\n");
+
+    let full_path = resolve_project_relative_path(&request.project_path, &file_path)?;
+    write_if_missing(&full_path, &content)?;
+    read_chapter(request.project_path, file_path)
+}
+
+#[tauri::command]
 fn append_narrative_events(request: AppendProjectRecordsRequest) -> Result<usize, String> {
     append_project_jsonl_records(
         &request.project_path,
@@ -298,6 +336,7 @@ pub fn run() {
             list_chapters,
             read_chapter,
             write_chapter,
+            create_chapter,
             append_narrative_events,
             append_state_proposals,
             save_snapshot
@@ -519,6 +558,14 @@ mod tests {
         let chapters = list_chapters(project_path_text.clone()).expect("chapters should be listed");
         assert_eq!(chapters.len(), 1);
         assert_eq!(chapters[0].file_path, "manuscript/chapter-001.md");
+
+        let new_chapter = create_chapter(CreateChapterRequest {
+            project_path: project_path_text.clone(),
+            title: Some("Second Chapter".to_string()),
+        })
+        .expect("chapter should be created");
+
+        assert_eq!(new_chapter.summary.file_path, "manuscript/chapter-002.md");
 
         let updated = write_chapter(WriteChapterRequest {
             project_path: project_path_text.clone(),

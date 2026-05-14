@@ -15,6 +15,11 @@ export interface WriteChapterRequest {
   content: string;
 }
 
+export interface CreateChapterRequest {
+  project_path: string;
+  title?: string;
+}
+
 export interface AppendProjectRecordsRequest<TRecord> {
   project_path: string;
   records: TRecord[];
@@ -73,6 +78,10 @@ export async function readChapter(projectPath: string, filePath: string): Promis
 
 export async function writeChapter(request: WriteChapterRequest): Promise<ChapterSummary> {
   return invoke<ChapterSummary>("write_chapter", { request });
+}
+
+export async function createChapter(request: CreateChapterRequest): Promise<ChapterContent> {
+  return invoke<ChapterContent>("create_chapter", { request });
 }
 
 export async function appendNarrativeEvents(

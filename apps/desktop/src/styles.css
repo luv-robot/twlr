@@ -205,6 +205,17 @@ button:disabled {
   text-transform: uppercase;
 }
 
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.section-heading .section-label {
+  margin-bottom: 0;
+}
+
 .chapter-list {
   display: grid;
   gap: 8px;
