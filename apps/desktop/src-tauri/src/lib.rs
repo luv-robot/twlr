@@ -287,6 +287,15 @@ fn append_state_proposals(request: AppendProjectRecordsRequest) -> Result<usize,
 }
 
 #[tauri::command]
+fn append_room_meetings(request: AppendProjectRecordsRequest) -> Result<usize, String> {
+    append_project_jsonl_records(
+        &request.project_path,
+        "meetings/room_meetings.jsonl",
+        request.records,
+    )
+}
+
+#[tauri::command]
 fn save_snapshot(request: SaveSnapshotRequest) -> Result<SnapshotSummary, String> {
     let project_path = PathBuf::from(&request.project_path);
     if !project_path.exists() {
@@ -355,6 +364,7 @@ pub fn run() {
             create_chapter,
             append_narrative_events,
             append_state_proposals,
+            append_room_meetings,
             save_snapshot,
             read_character_state,
             write_character_state
@@ -641,6 +651,19 @@ mod tests {
         let event_log = fs::read_to_string(project_path.join("events/narrative_events.jsonl"))
             .expect("event log should be readable");
         assert!(event_log.contains("event_test_001"));
+
+        let meetings_appended = append_room_meetings(AppendProjectRecordsRequest {
+            project_path: project_path_text.clone(),
+            records: vec![json!({
+                "meeting_id": "meeting_test_001",
+                "question": "Smoke meeting?"
+            })],
+        })
+        .expect("meeting should be appended");
+        assert_eq!(meetings_appended, 1);
+        let meeting_log = fs::read_to_string(project_path.join("meetings/room_meetings.jsonl"))
+            .expect("meeting log should be readable");
+        assert!(meeting_log.contains("meeting_test_001"));
 
         write_character_state(WriteProjectJsonRequest {
             project_path: project_path_text.clone(),

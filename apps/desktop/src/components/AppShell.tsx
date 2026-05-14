@@ -9,7 +9,7 @@ import {
 } from "@twlr/core";
 import type { CharacterStateFile, NarrativeEvent, RoomMeeting, StateProposal } from "@twlr/schema";
 import { createMockCharacterProposal, demoChapters } from "../data/demoWorkspace";
-import { persistAcceptedProposal, persistCharacterState } from "../services/projectPersistence";
+import { persistAcceptedProposal, persistCharacterState, persistRoomMeeting } from "../services/projectPersistence";
 import {
   createLocalWorkspace,
   createWorkspaceChapter,
@@ -234,8 +234,17 @@ export function AppShell() {
     setProposals((current) => current.filter((proposal) => proposal.proposal_id !== proposalId));
   }
 
-  function openWritersRoom() {
-    setRoomMeeting(createMockWritersRoomMeeting());
+  async function openWritersRoom() {
+    const meeting = createMockWritersRoomMeeting();
+    setRoomMeeting(meeting);
+    setStorageStatus("Recording Writers' Room...");
+
+    try {
+      const result = await persistRoomMeeting(projectPath, meeting);
+      setStorageStatus(result.message);
+    } catch (error) {
+      setStorageStatus(error instanceof Error ? error.message : "Failed to record Writers' Room.");
+    }
   }
 
   return (

@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { CharacterStateFile, NarrativeEvent, StateProposal } from "@twlr/schema";
+import type { CharacterStateFile, NarrativeEvent, RoomMeeting, StateProposal } from "@twlr/schema";
 
 export interface CreateProjectRequest {
   project_path: string;
@@ -97,6 +97,10 @@ export async function appendNarrativeEvents(
 
 export async function appendStateProposals(request: AppendProjectRecordsRequest<StateProposal>): Promise<number> {
   return invoke<number>("append_state_proposals", { request });
+}
+
+export async function appendRoomMeetings(request: AppendProjectRecordsRequest<RoomMeeting>): Promise<number> {
+  return invoke<number>("append_room_meetings", { request });
 }
 
 export async function saveSnapshot(request: SaveSnapshotRequest): Promise<SnapshotSummary> {

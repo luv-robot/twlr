@@ -1,7 +1,7 @@
-import type { NarrativeEvent, StateProposal } from "@twlr/schema";
+import type { NarrativeEvent, RoomMeeting, StateProposal } from "@twlr/schema";
 import type { CharacterStateFile } from "@twlr/schema";
 import { isTauriRuntime } from "./tauriRuntime";
-import { appendNarrativeEvents, appendStateProposals, writeCharacterState } from "./twlrCommands";
+import { appendNarrativeEvents, appendRoomMeetings, appendStateProposals, writeCharacterState } from "./twlrCommands";
 
 export type PersistenceResult =
   | {
@@ -75,5 +75,34 @@ export async function persistCharacterState(
   return {
     status: "persisted",
     message: "Character state updated in local project.",
+  };
+}
+
+export async function persistRoomMeeting(
+  projectPath: string | null,
+  meeting: RoomMeeting,
+): Promise<PersistenceResult> {
+  if (!projectPath) {
+    return {
+      status: "skipped",
+      message: "Writers' Room meeting is held in this demo session.",
+    };
+  }
+
+  if (!isTauriRuntime()) {
+    return {
+      status: "skipped",
+      message: "Browser preview only. Meeting was not written.",
+    };
+  }
+
+  await appendRoomMeetings({
+    project_path: projectPath,
+    records: [meeting],
+  });
+
+  return {
+    status: "persisted",
+    message: "Writers' Room meeting appended to local project log.",
   };
 }
