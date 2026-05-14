@@ -6,6 +6,7 @@ target/
 .vite/
 .turbo/
 *.log
+apps/desktop/src-tauri/gen/schemas/
 
 # TWLR local project caches
 cache/

@@ -7,6 +7,7 @@ interface StudioCoordinatorPanelProps {
   proposals: StateProposal[];
   acceptedEventCount: number;
   latestAcceptedEvent: NarrativeEvent | undefined;
+  storageStatus: string;
   onAcceptProposal: (proposalId: string) => void;
   onRejectProposal: (proposalId: string) => void;
   onCreateMockProposal: () => void;
@@ -20,6 +21,7 @@ export function StudioCoordinatorPanel({
   onAcceptProposal,
   onCreateMockProposal,
   onRejectProposal,
+  storageStatus,
 }: StudioCoordinatorPanelProps) {
   return (
     <aside className="context-panel">
@@ -73,6 +75,7 @@ export function StudioCoordinatorPanel({
       <section className="coordinator-card quiet-card">
         <div className="section-label">Durable events</div>
         <p>{acceptedEventCount} accepted narrative events in this session.</p>
+        <p className="event-note">{storageStatus}</p>
         {latestAcceptedEvent ? (
           <p className="event-note">
             Latest: {latestAcceptedEvent.event_type} on {latestAcceptedEvent.payload.target_type}.

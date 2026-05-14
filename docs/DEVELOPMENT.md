@@ -36,26 +36,37 @@ Current verified frontend status:
 
 ## Tauri / Rust
 
-The current local machine has:
+The `/opt/homebrew` toolchain has been installed and should be preferred:
+
+```text
+rustc 1.95.0
+cargo 1.95.0
+```
+
+The previous `/usr/local` Homebrew toolchain had:
 
 ```text
 rustc 1.74.0
 cargo 1.74.0
 ```
 
-That toolchain is too old for the current Tauri dependency resolution. `cargo check` is blocked before compiling TWLR code because transitive crates now use Rust 2024 edition metadata. During verification, the blocker appeared at:
+That older toolchain is too old for the current Tauri dependency resolution. It blocked before compiling TWLR code because transitive crates now use Rust 2024 edition metadata. During verification, the blocker appeared at:
 
 - `idna_adapter v1.2.2`
 - `serde_spanned v1.1.1`
 - `time-core v0.1.8`
 
-Practical next step:
+Use the `/opt/homebrew` toolchain for Tauri checks:
 
-```text
-Upgrade Rust/Cargo to a current stable toolchain before running cargo check or tauri dev.
+```bash
+cargo check
 ```
 
-The currently observed dependency chain includes crates that require at least Rust 1.88. Use a current stable Rust toolchain rather than trying to pin many transitive crates.
+Current verified Tauri status:
+
+- `cargo check` passes.
+
+Do not use the old `/usr/local` Homebrew Rust toolchain for this project.
 
 ## Browser Smoke Check
 

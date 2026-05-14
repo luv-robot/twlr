@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { countWords, proposalToNarrativeEvents, reviewStateProposal } from "@twlr/core";
 import type { NarrativeEvent, StateProposal } from "@twlr/schema";
 import { createMockCharacterProposal, demoChapters } from "../data/demoWorkspace";
+import { persistAcceptedProposal } from "../services/projectPersistence";
 import { AppRail } from "./AppRail";
 import { ManuscriptEditor } from "./ManuscriptEditor";
 import { ProjectNavigator } from "./ProjectNavigator";
@@ -15,6 +16,8 @@ export function AppShell() {
   const [autosaveLabel, setAutosaveLabel] = useState("Autosaved locally");
   const [changedChapterIds, setChangedChapterIds] = useState<Set<string>>(() => new Set());
   const [acceptedEvents, setAcceptedEvents] = useState<NarrativeEvent[]>([]);
+  const [projectPath] = useState<string | null>(null);
+  const [storageStatus, setStorageStatus] = useState("Demo session");
 
   const activeChapter = chapters.find((chapter) => chapter.id === activeChapterId) ?? chapters[0];
   const wordCount = countWords(activeChapter.body);
@@ -75,15 +78,28 @@ export function AppShell() {
     });
   }
 
-  function acceptProposal(proposalId: string) {
+  async function acceptProposal(proposalId: string) {
     const proposal = proposals.find((item) => item.proposal_id === proposalId);
     if (!proposal) {
       return;
     }
 
     const reviewedProposal = reviewStateProposal({ proposal, decision: "accepted" });
-    setAcceptedEvents((events) => [...proposalToNarrativeEvents(reviewedProposal), ...events]);
+    const events = proposalToNarrativeEvents(reviewedProposal);
+    setAcceptedEvents((currentEvents) => [...events, ...currentEvents]);
     setProposals((current) => current.filter((item) => item.proposal_id !== proposalId));
+    setStorageStatus("Saving event log...");
+
+    try {
+      const result = await persistAcceptedProposal({
+        events,
+        projectPath,
+        proposal: reviewedProposal,
+      });
+      setStorageStatus(result.message);
+    } catch (error) {
+      setStorageStatus(error instanceof Error ? error.message : "Failed to persist event log.");
+    }
   }
 
   function rejectProposal(proposalId: string) {
@@ -120,6 +136,7 @@ export function AppShell() {
         onCreateMockProposal={createMockProposal}
         onRejectProposal={rejectProposal}
         proposals={proposals}
+        storageStatus={storageStatus}
       />
     </div>
   );
