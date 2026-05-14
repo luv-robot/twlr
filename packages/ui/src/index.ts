@@ -18,3 +18,5 @@ export const uiTokens = {
     control: 8,
   },
 } as const;
+
+export * from "./i18n";

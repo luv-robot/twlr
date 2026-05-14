@@ -8,6 +8,8 @@ This document records the current local development entry points, verified check
 - Do not upgrade Node casually. The Codex environment currently depends on the newer Node chain.
 - Do not use the old `/usr/local` Homebrew Rust toolchain for this project.
 - Use SSH for GitHub operations.
+- The first real remote LLM provider is OpenAI.
+- Development API key source is `OPENAI_API_KEY`.
 
 ## Frontend
 

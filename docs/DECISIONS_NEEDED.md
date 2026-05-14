@@ -2,48 +2,63 @@
 
 This document tracks product and implementation decisions that should wait for author confirmation.
 
-## Open Decisions
+## Resolved Decisions
 
 1. First remote LLM provider
 
-   Decide whether the first concrete provider should be OpenAI, Anthropic, Gemini, or a custom OpenAI-compatible endpoint.
+   Decision: implement OpenAI first, while keeping the provider interface generic enough for Anthropic, Gemini, and custom providers.
 
 2. API key storage
 
-   Decide whether MVP API keys should use environment variables first, desktop keychain first, or both.
+   Decision: use environment variables first. P0 expects `OPENAI_API_KEY`.
 
 3. Project opening interaction
 
-   Decide whether the first desktop build should keep the current path input or move immediately to the Tauri folder picker.
+   Decision: keep the current path input during development. Move to a Tauri folder picker for trial operations.
 
 4. Writers' Room meeting UI
 
-   Decide the next visual direction for Writers' Room: meeting minutes, Zoom-like professional meeting, or a hybrid with agenda / perspectives / decisions.
+   Decision: do not change the current Writers' Room UI yet. Next design pass should explore multiple meeting-room variants.
 
 5. Default product language
 
-   Decide whether MVP UI copy and templates should default to English, Chinese, or bilingual project templates.
+   Decision: design for multiple languages instead of hard-coding English or Chinese as the product assumption.
 
-6. Proposal persistence semantics
+6. GitHub branch handling
+
+   Decision: merge `codex/p0-vertical-slice` into `main`.
+
+7. Snapshot / impact visibility
+
+   Decision: ordinary user UI should minimize snapshot and impact detail. Keep Git and deep impact diagnostics out of the normal writing surface.
+
+8. Figma next pass
+
+   Decision: prioritize the Writers' Room page, with several style options.
+
+## Open Decisions
+
+1. Proposal persistence semantics
 
    Decide whether pending proposal cards should be written to `proposals/state_proposals.jsonl` immediately or only after accept / reject.
 
-7. P0 official agent scope
+2. P0 official agent scope
 
-   Decide whether P0 includes Theme Analyst or keeps only Development Editor, Reader Agent, Character Editor, and Continuity Editor.
+   Analyze the cost of including Theme Analyst in P0 before making the final call.
 
-8. Snapshot visibility
+3. Snapshot / impact information architecture
 
-   Confirm how much snapshot status is shown in normal UI versus developer/debug mode.
+   Define the exact boundary between normal writing UI, lightweight impact prompts, and developer/debug mode.
 
-9. Figma next pass
+4. Figma Writers' Room variants
 
-   Decide whether the next Figma pass should focus on the Manuscript Workspace, Writers' Room, or proposal card review flow.
+   Produce multiple Writers' Room page options before selecting the implementation direction.
 
 ## Current Assumptions
 
-- No concrete remote provider is selected yet.
-- The repository keeps a mock provider until the proposal and state pipeline is stable.
+- OpenAI is the first concrete remote provider.
+- Provider code must remain multi-provider by design.
+- API keys use environment variables first.
 - Git remains hidden behind writer-facing snapshot language.
 - Studio Coordinator remains operational and low-emotion-density.
 - Writers' Room can generate proposal cards only through explicit author action.

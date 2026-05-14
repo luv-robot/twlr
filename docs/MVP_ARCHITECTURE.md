@@ -362,9 +362,11 @@ LLMProvider
 
 MVP provider strategy:
 
-1. Implement one remote provider first.
-2. Keep provider interface stable.
-3. Add local model adapters later only if needed.
+1. Implement OpenAI first.
+2. Keep provider interface stable for Anthropic, Gemini, and custom providers.
+3. Use environment variables for API keys during development.
+4. Add desktop keychain support before trial operations if needed.
+5. Add local model adapters later only if needed.
 
 All AI outputs that may affect state must pass schema validation.
 
