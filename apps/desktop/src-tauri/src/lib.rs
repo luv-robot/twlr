@@ -40,6 +40,12 @@ struct SaveSnapshotRequest {
     message: Option<String>,
 }
 
+#[derive(Debug, Deserialize)]
+struct WriteProjectJsonRequest {
+    project_path: String,
+    value: serde_json::Value,
+}
+
 #[derive(Debug, Serialize)]
 struct ProjectSummary {
     project_path: String,
@@ -327,6 +333,16 @@ fn save_snapshot(request: SaveSnapshotRequest) -> Result<SnapshotSummary, String
     })
 }
 
+#[tauri::command]
+fn read_character_state(project_path: String) -> Result<serde_json::Value, String> {
+    read_project_json_file(&project_path, "state/characters.json")
+}
+
+#[tauri::command]
+fn write_character_state(request: WriteProjectJsonRequest) -> Result<(), String> {
+    write_project_json_file(&request.project_path, "state/characters.json", request.value)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -339,7 +355,9 @@ pub fn run() {
             create_chapter,
             append_narrative_events,
             append_state_proposals,
-            save_snapshot
+            save_snapshot,
+            read_character_state,
+            write_character_state
         ])
         .run(tauri::generate_context!())
         .expect("error while running TWLR desktop app");
@@ -389,6 +407,29 @@ fn run_git(project_path: &Path, args: &[&str]) -> Result<String, String> {
 
     let stderr = String::from_utf8_lossy(&output.stderr);
     Err(format!("Git command failed: {stderr}"))
+}
+
+fn read_project_json_file(project_path: &str, relative_path: &str) -> Result<serde_json::Value, String> {
+    let full_path = resolve_project_relative_path(project_path, relative_path)?;
+    let content = fs::read_to_string(&full_path)
+        .map_err(|error| format!("Failed to read {}: {error}", full_path.display()))?;
+    serde_json::from_str(&content).map_err(|error| format!("Invalid JSON in {}: {error}", full_path.display()))
+}
+
+fn write_project_json_file(
+    project_path: &str,
+    relative_path: &str,
+    value: serde_json::Value,
+) -> Result<(), String> {
+    let full_path = resolve_project_relative_path(project_path, relative_path)?;
+    if let Some(parent) = full_path.parent() {
+        fs::create_dir_all(parent).map_err(|error| format!("Failed to create state directory: {error}"))?;
+    }
+
+    let content =
+        serde_json::to_string_pretty(&value).map_err(|error| format!("Failed to serialize state JSON: {error}"))?;
+    fs::write(&full_path, format!("{content}\n"))
+        .map_err(|error| format!("Failed to write {}: {error}", full_path.display()))
 }
 
 fn append_project_jsonl_records(
@@ -600,6 +641,27 @@ mod tests {
         let event_log = fs::read_to_string(project_path.join("events/narrative_events.jsonl"))
             .expect("event log should be readable");
         assert!(event_log.contains("event_test_001"));
+
+        write_character_state(WriteProjectJsonRequest {
+            project_path: project_path_text.clone(),
+            value: json!({
+                "schema_version": 1,
+                "characters": [{
+                    "character_id": "char_mira",
+                    "name": "Mira",
+                    "role": "lead",
+                    "current_status": "testing state writes",
+                    "open_loops": [],
+                    "relationships": [],
+                    "referenced_chapters": [],
+                    "updated_at": "2026-05-14T00:00:00.000Z"
+                }]
+            }),
+        })
+        .expect("character state should be written");
+        let characters = read_character_state(project_path_text.clone())
+            .expect("character state should be readable");
+        assert_eq!(characters["characters"][0]["character_id"], "char_mira");
 
         let snapshot = save_snapshot(SaveSnapshotRequest {
             project_path: project_path_text.clone(),

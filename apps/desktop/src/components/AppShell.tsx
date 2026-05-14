@@ -8,7 +8,7 @@ import {
 } from "@twlr/core";
 import type { CharacterStateFile, NarrativeEvent, StateProposal } from "@twlr/schema";
 import { createMockCharacterProposal, demoChapters } from "../data/demoWorkspace";
-import { persistAcceptedProposal } from "../services/projectPersistence";
+import { persistAcceptedProposal, persistCharacterState } from "../services/projectPersistence";
 import {
   createLocalWorkspace,
   createWorkspaceChapter,
@@ -209,8 +209,9 @@ export function AppShell() {
 
     const reviewedProposal = reviewStateProposal({ proposal, decision: "accepted" });
     const events = proposalToNarrativeEvents(reviewedProposal);
+    const nextCharacterState = applyCharacterEvents(characterState, events);
     setAcceptedEvents((currentEvents) => [...events, ...currentEvents]);
-    setCharacterState((currentState) => applyCharacterEvents(currentState, events));
+    setCharacterState(nextCharacterState);
     setProposals((current) => current.filter((item) => item.proposal_id !== proposalId));
     setStorageStatus("Saving event log...");
 
@@ -220,7 +221,8 @@ export function AppShell() {
         projectPath,
         proposal: reviewedProposal,
       });
-      setStorageStatus(result.message);
+      const stateResult = await persistCharacterState(projectPath, nextCharacterState);
+      setStorageStatus(stateResult.status === "persisted" ? stateResult.message : result.message);
     } catch (error) {
       setStorageStatus(error instanceof Error ? error.message : "Failed to persist event log.");
     }

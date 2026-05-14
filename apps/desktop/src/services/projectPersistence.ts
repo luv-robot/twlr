@@ -1,6 +1,7 @@
 import type { NarrativeEvent, StateProposal } from "@twlr/schema";
+import type { CharacterStateFile } from "@twlr/schema";
 import { isTauriRuntime } from "./tauriRuntime";
-import { appendNarrativeEvents, appendStateProposals } from "./twlrCommands";
+import { appendNarrativeEvents, appendStateProposals, writeCharacterState } from "./twlrCommands";
 
 export type PersistenceResult =
   | {
@@ -45,5 +46,34 @@ export async function persistAcceptedProposal(input: PersistAcceptedProposalInpu
   return {
     status: "persisted",
     message: `${input.events.length} event(s) appended to local project logs.`,
+  };
+}
+
+export async function persistCharacterState(
+  projectPath: string | null,
+  state: CharacterStateFile,
+): Promise<PersistenceResult> {
+  if (!projectPath) {
+    return {
+      status: "skipped",
+      message: "Character state is held in this demo session.",
+    };
+  }
+
+  if (!isTauriRuntime()) {
+    return {
+      status: "skipped",
+      message: "Browser preview only. Character state was not written.",
+    };
+  }
+
+  await writeCharacterState({
+    project_path: projectPath,
+    value: state,
+  });
+
+  return {
+    status: "persisted",
+    message: "Character state updated in local project.",
   };
 }

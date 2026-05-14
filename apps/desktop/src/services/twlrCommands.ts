@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { NarrativeEvent, StateProposal } from "@twlr/schema";
+import type { CharacterStateFile, NarrativeEvent, StateProposal } from "@twlr/schema";
 
 export interface CreateProjectRequest {
   project_path: string;
@@ -28,6 +28,11 @@ export interface AppendProjectRecordsRequest<TRecord> {
 export interface SaveSnapshotRequest {
   project_path: string;
   message?: string;
+}
+
+export interface WriteProjectJsonRequest<TValue> {
+  project_path: string;
+  value: TValue;
 }
 
 export interface ProjectSummary {
@@ -96,4 +101,12 @@ export async function appendStateProposals(request: AppendProjectRecordsRequest<
 
 export async function saveSnapshot(request: SaveSnapshotRequest): Promise<SnapshotSummary> {
   return invoke<SnapshotSummary>("save_snapshot", { request });
+}
+
+export async function readCharacterState(projectPath: string): Promise<CharacterStateFile> {
+  return invoke<CharacterStateFile>("read_character_state", { projectPath });
+}
+
+export async function writeCharacterState(request: WriteProjectJsonRequest<CharacterStateFile>): Promise<void> {
+  return invoke<void>("write_character_state", { request });
 }
