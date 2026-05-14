@@ -299,16 +299,21 @@ export function AppShell() {
       return;
     }
 
+    const isOpenAiFallback = proposal.source.llm_provider === "mock" && result.message.includes("OpenAI");
+
     setProposals((current) => {
       const existingSameSkill = current.find(
-        (item) => item.status === "pending" && item.source.name === proposal.source.name,
+        (item) =>
+          item.status === "pending" &&
+          item.source.kind === proposal.source.kind &&
+          item.source.name === proposal.source.name,
       );
 
       if (existingSameSkill && proposal.source.llm_provider !== "remote") {
         return current;
       }
 
-      void savePendingProposalCards([proposal]);
+      void savePendingProposalCards([proposal], { silent: isOpenAiFallback });
       if (existingSameSkill) {
         return current.map((item) => (item.proposal_id === existingSameSkill.proposal_id ? proposal : item));
       }
@@ -316,7 +321,7 @@ export function AppShell() {
       return [proposal, ...current];
     });
 
-    if (proposal.source.llm_provider === "mock" && result.message.includes("OpenAI")) {
+    if (isOpenAiFallback) {
       setStorageStatus(result.message);
     }
   }
@@ -439,10 +444,10 @@ export function AppShell() {
     setStorageStatus(`${generatedProposalIds.length} Writers' Room proposal card(s) ready for review.`);
   }
 
-  async function savePendingProposalCards(nextProposals: StateProposal[]) {
+  async function savePendingProposalCards(nextProposals: StateProposal[], options?: { silent?: boolean }) {
     try {
       const result = await persistPendingProposals(projectPath, nextProposals);
-      if (result.status === "persisted") {
+      if (result.status === "persisted" && !options?.silent) {
         setStorageStatus(result.message);
       }
     } catch (error) {
