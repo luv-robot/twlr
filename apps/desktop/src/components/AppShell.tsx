@@ -300,13 +300,25 @@ export function AppShell() {
     }
 
     setProposals((current) => {
-      if (current.some((item) => item.status === "pending" && item.source.name === proposal.source.name)) {
+      const existingSameSkill = current.find(
+        (item) => item.status === "pending" && item.source.name === proposal.source.name,
+      );
+
+      if (existingSameSkill && proposal.source.llm_provider !== "remote") {
         return current;
       }
 
       void savePendingProposalCards([proposal]);
+      if (existingSameSkill) {
+        return current.map((item) => (item.proposal_id === existingSameSkill.proposal_id ? proposal : item));
+      }
+
       return [proposal, ...current];
     });
+
+    if (proposal.source.llm_provider === "mock" && result.message.includes("OpenAI")) {
+      setStorageStatus(result.message);
+    }
   }
 
   async function acceptProposal(proposalId: string) {

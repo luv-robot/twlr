@@ -31,6 +31,7 @@ export async function runProductionSkill(
         "Return exactly one StateProposal JSON object.",
         "Do not mutate project state directly.",
         "Only propose durable story-state changes that the author can review.",
+        "Represent proposed event old_value and new_value as concise strings or null.",
         "Use low-emotion, professional language.",
       ].join(" "),
       prompt: JSON.stringify(

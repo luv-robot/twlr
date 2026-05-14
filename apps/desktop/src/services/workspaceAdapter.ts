@@ -69,15 +69,23 @@ export async function loadLocalWorkspace(projectPath: string): Promise<LoadedWor
 }
 
 function latestPendingProposals(proposals: StateProposal[]): StateProposal[] {
-  const latestById = new Map<string, StateProposal>();
+  const latestByIdentity = new Map<string, StateProposal>();
 
   for (const proposal of proposals) {
-    latestById.set(proposal.proposal_id, proposal);
+    latestByIdentity.set(proposalIdentity(proposal), proposal);
   }
 
-  return [...latestById.values()]
+  return [...latestByIdentity.values()]
     .filter((proposal) => proposal.status === "pending")
     .reverse();
+}
+
+function proposalIdentity(proposal: StateProposal): string {
+  if (proposal.source.kind === "skill") {
+    return `${proposal.source.kind}:${proposal.source.name}`;
+  }
+
+  return proposal.proposal_id;
 }
 
 export async function saveWorkspaceChapter(projectPath: string, chapter: DemoChapter): Promise<void> {
