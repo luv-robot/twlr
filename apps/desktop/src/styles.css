@@ -379,6 +379,26 @@ button:disabled {
   color: #2f7d7a;
 }
 
+.state-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.state-line {
+  display: grid;
+  gap: 2px;
+}
+
+.state-line strong {
+  color: #242424;
+  font-size: 13px;
+}
+
+.state-line span {
+  color: #6f6b63;
+}
+
 .proposal-card {
   display: grid;
   gap: 12px;

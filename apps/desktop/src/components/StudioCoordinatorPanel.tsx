@@ -53,6 +53,13 @@ export function StudioCoordinatorPanel({
   roomMeeting,
   snapshotStatus,
 }: StudioCoordinatorPanelProps) {
+  const recentCharacters = [...characterState.characters]
+    .sort((left, right) => right.updated_at.localeCompare(left.updated_at))
+    .slice(0, 3);
+  const recentOpenLoops = [...openLoopState.open_loops]
+    .sort((left, right) => right.updated_at.localeCompare(left.updated_at))
+    .slice(0, 3);
+
   return (
     <aside className="context-panel">
       <div className="panel-header">
@@ -140,10 +147,25 @@ export function StudioCoordinatorPanel({
         <p>{characterState.characters.length} character state records in this session.</p>
         <p>{openLoopState.open_loops.length} open loop records in this session.</p>
         <p>{timelineState.timeline_events.length} timeline event records in this session.</p>
-        {characterState.characters[0] ? (
-          <p className="event-note">
-            {characterState.characters[0].name}: {characterState.characters[0].current_status}
-          </p>
+        {recentCharacters.length > 0 ? (
+          <div className="state-list">
+            {recentCharacters.map((character) => (
+              <p className="event-note state-line" key={character.character_id}>
+                <strong>{character.name}</strong>
+                <span>{character.current_status}</span>
+              </p>
+            ))}
+          </div>
+        ) : null}
+        {recentOpenLoops.length > 0 ? (
+          <div className="state-list">
+            {recentOpenLoops.map((openLoop) => (
+              <p className="state-line" key={openLoop.open_loop_id}>
+                <strong>{openLoop.title}</strong>
+                <span>{openLoop.status}</span>
+              </p>
+            ))}
+          </div>
         ) : null}
       </section>
     </aside>
