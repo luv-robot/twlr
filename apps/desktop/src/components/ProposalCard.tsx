@@ -7,7 +7,7 @@ interface ProposalCardProps {
 }
 
 export function ProposalCard({ proposal, onAccept, onReject }: ProposalCardProps) {
-  const kicker = proposal.affected.timeline_events.length > 0 ? "Timeline Update" : "Character State Update";
+  const kicker = `${proposal.source.name} Proposal`;
 
   return (
     <section className="proposal-card">

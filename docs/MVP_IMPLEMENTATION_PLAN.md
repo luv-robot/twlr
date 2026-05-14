@@ -202,6 +202,7 @@ The first vertical slice is now partially executable with mock AI:
 - official agent registry
 - production skill registry
 - Timeline Compiler mock proposal
+- Foreshadow Tracker mock proposal
 - provider interface with mock provider
 
 Remaining P0 work should focus on replacing hardcoded demo paths and mock outputs with real context projection, provider-backed structured outputs, and more complete production skills.

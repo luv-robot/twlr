@@ -257,6 +257,10 @@ export function AppShell() {
     createSkillProposal("timeline_compiler");
   }
 
+  function createForeshadowProposal() {
+    createSkillProposal("foreshadow_tracker");
+  }
+
   function createSkillProposal(skillId: ProductionSkillId) {
     const selectedText = activeChapter.body.split("\n\n")[0];
     const contextPacket = buildActiveChapterContextProjection("production_skill", selectedText);
@@ -427,6 +431,7 @@ export function AppShell() {
         timelineState={timelineState}
         onAcceptProposal={acceptProposal}
         onCreateRoomProposalCards={createProposalCardsFromRoom}
+        onCreateForeshadowProposal={createForeshadowProposal}
         onCreateMockProposal={createMockProposal}
         onCreateTimelineProposal={createTimelineProposal}
         onOpenWritersRoom={openWritersRoom}

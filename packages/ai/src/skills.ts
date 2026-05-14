@@ -60,6 +60,10 @@ export function runMockProductionSkill(
     return createMockTimelineCompilerProposal(context, now);
   }
 
+  if (skillId === "foreshadow_tracker") {
+    return createMockForeshadowTrackerProposal(context, now);
+  }
+
   return null;
 }
 
@@ -161,6 +165,52 @@ function createMockTimelineCompilerProposal(context: ProductionSkillContext, now
           target_id: "timeline_altered_archive_record",
           field: "summary",
           new_value: "Mira sees evidence that the archive record was changed after the trial.",
+        },
+      },
+    ],
+    review: {
+      reviewed_at: null,
+      reviewed_by: null,
+      decision: null,
+      edited_summary: null,
+    },
+  };
+}
+
+function createMockForeshadowTrackerProposal(context: ProductionSkillContext, now: string): StateProposal {
+  return {
+    proposal_id: `proposal_${Date.now()}_foreshadow`,
+    created_at: now,
+    status: "pending",
+    source: {
+      kind: "skill",
+      name: "Foreshadow Tracker",
+      llm_provider: "mock",
+    },
+    scope: {
+      chapters: [context.chapter_id],
+      selected_text_range: null,
+    },
+    affected: {
+      chapters: [context.chapter_id],
+      characters: [],
+      open_loops: ["loop_altered_archive_record"],
+      timeline_events: [],
+    },
+    summary: "Mark the altered archive record as a setup that needs a later payoff.",
+    evidence: [
+      context.selected_text ??
+        context.context_packet?.current_chapter.body_excerpt ??
+        "Whoever changed the record wanted the lie to look older than the truth.",
+    ],
+    proposed_events: [
+      {
+        event_type: "open_loop_changed",
+        payload: {
+          target_type: "open_loop",
+          target_id: "loop_altered_archive_record",
+          field: "notes",
+          new_value: "Foreshadowing setup: the altered archive record should receive a later payoff.",
         },
       },
     ],

@@ -96,6 +96,7 @@ The current P0 vertical slice includes:
 - official agent registry
 - production skill registry
 - Timeline Compiler mock proposal
+- Foreshadow Tracker mock proposal
 - remote provider interface with mock provider
 - Save Snapshot command
 - snapshot status lite
