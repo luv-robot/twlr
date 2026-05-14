@@ -1,3 +1,4 @@
+import { t } from "@twlr/ui";
 import type { CoordinatorStatusItem } from "../data/demoWorkspace";
 import type {
   CharacterStateFile,
@@ -55,7 +56,7 @@ export function StudioCoordinatorPanel({
   return (
     <aside className="context-panel">
       <div className="panel-header">
-        <h2>Studio Coordinator</h2>
+        <h2>{t("studioCoordinator.title")}</h2>
         <div className="tabs">
           <button className="tab active">Room</button>
           <button className="tab">State</button>
@@ -74,7 +75,7 @@ export function StudioCoordinatorPanel({
       </section>
 
       <section className="coordinator-card">
-        <div className="section-label">Next useful actions</div>
+        <div className="section-label">{t("studioCoordinator.nextUsefulActions")}</div>
         <button className="primary-button" onClick={onCreateMockProposal}>
           Mock Character Sheet
         </button>
@@ -125,7 +126,7 @@ export function StudioCoordinatorPanel({
       </section>
 
       <section className="coordinator-card quiet-card">
-        <div className="section-label">Snapshot status</div>
+        <div className="section-label">Revision check</div>
         <p>{snapshotStatus}</p>
       </section>
 
@@ -160,7 +161,7 @@ function WritersRoomCard({
 
   return (
     <section className="coordinator-card room-card">
-      <div className="section-label">Writers' Room</div>
+      <div className="section-label">{t("writersRoom.title")}</div>
       <h3>{meeting.question}</h3>
       <div className="room-observations">
         {meeting.perspectives.map((perspective) => (

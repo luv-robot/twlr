@@ -42,6 +42,14 @@ export interface WriteProjectJsonRequest<TValue> {
   value: TValue;
 }
 
+export interface OpenAiStructuredRequest {
+  prompt: string;
+  system_prompt?: string;
+  schema_name: string;
+  json_schema: Record<string, unknown>;
+  model?: string;
+}
+
 export interface ProjectSummary {
   project_path: string;
   project_id: string;
@@ -155,4 +163,8 @@ export async function readTimelineState(projectPath: string): Promise<TimelineSt
 
 export async function writeTimelineState(request: WriteProjectJsonRequest<TimelineStateFile>): Promise<void> {
   return invoke<void>("write_timeline_state", { request });
+}
+
+export async function generateOpenAiStructured<TValue>(request: OpenAiStructuredRequest): Promise<TValue> {
+  return invoke<TValue>("generate_openai_structured", { request });
 }

@@ -14,7 +14,6 @@ import {
 import {
   createMockWritersRoomMeeting,
   createWritersRoomProposalCards,
-  runMockProductionSkill,
   type ProductionSkillId,
 } from "@twlr/ai";
 import type {
@@ -26,6 +25,7 @@ import type {
   TimelineStateFile,
 } from "@twlr/schema";
 import { demoChapters } from "../data/demoWorkspace";
+import { runProductionSkill } from "../services/aiSkillRunner";
 import {
   persistAcceptedProposal,
   persistCharacterState,
@@ -65,7 +65,7 @@ export function AppShell() {
   const [projectPathInput, setProjectPathInput] = useState("/private/tmp/twlr-glass-city");
   const [storageStatus, setStorageStatus] = useState("Demo session");
   const [workspaceStatus, setWorkspaceStatus] = useState("Demo workspace");
-  const [snapshotStatus, setSnapshotStatus] = useState("No local snapshot status.");
+  const [snapshotStatus, setSnapshotStatus] = useState("No revision check yet.");
   const [contextProjectionStatus, setContextProjectionStatus] = useState("No context packet built in this session.");
 
   const activeChapter = chapters.find((chapter) => chapter.id === activeChapterId) ?? chapters[0];
@@ -243,9 +243,7 @@ export function AppShell() {
   async function refreshSnapshotStatus(nextProjectPath: string) {
     try {
       const status = await getWorkspaceSnapshotStatus(nextProjectPath);
-      setSnapshotStatus(
-        `${status.changed_files} changed files, ${status.changed_chapters} chapter files, ${status.changed_state_files} state files.`,
-      );
+      setSnapshotStatus(formatRevisionCheck(status.changed_chapters, status.changed_state_files));
     } catch (error) {
       setSnapshotStatus(error instanceof Error ? error.message : "Snapshot status unavailable.");
     }
@@ -264,30 +262,32 @@ export function AppShell() {
   }
 
   function createMockProposal() {
-    createSkillProposal("character_sheet");
+    void createSkillProposal("character_sheet");
   }
 
   function createTimelineProposal() {
-    createSkillProposal("timeline_compiler");
+    void createSkillProposal("timeline_compiler");
   }
 
   function createForeshadowProposal() {
-    createSkillProposal("foreshadow_tracker");
+    void createSkillProposal("foreshadow_tracker");
   }
 
-  function createSkillProposal(skillId: ProductionSkillId) {
+  async function createSkillProposal(skillId: ProductionSkillId) {
     const selectedText = activeChapter.body.split("\n\n")[0];
     const contextPacket = buildActiveChapterContextProjection("production_skill", selectedText);
     setContextProjectionStatus(
       `Projected ${contextPacket.current_chapter.word_count} words, ${contextPacket.characters.length} characters, ${contextPacket.open_loops.length} open loops, ${contextPacket.recent_events.length} events.`,
     );
 
-    const proposal = runMockProductionSkill(skillId, {
+    const result = await runProductionSkill(skillId, {
       chapter_id: activeChapter.filePath?.replace("manuscript/", "").replace(".md", "") ?? `chapter_${activeChapter.id}`,
       chapter_title: activeChapter.title,
       selected_text: selectedText,
       context_packet: contextPacket,
     });
+    const proposal = result.proposal;
+    setStorageStatus(result.message);
 
     if (!proposal) {
       return;
@@ -500,4 +500,11 @@ function formatCompactWordCount(count: number): string {
   }
 
   return String(count);
+}
+
+function formatRevisionCheck(changedChapters: number, changedStateAreas: number): string {
+  const chapterLabel = changedChapters === 1 ? "chapter" : "chapters";
+  const stateLabel = changedStateAreas === 1 ? "state area" : "state areas";
+
+  return `${changedChapters} ${chapterLabel} changed; ${changedStateAreas} ${stateLabel} may need review.`;
 }

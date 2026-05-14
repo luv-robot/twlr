@@ -46,6 +46,15 @@ struct WriteProjectJsonRequest {
     value: serde_json::Value,
 }
 
+#[derive(Debug, Deserialize)]
+struct OpenAiStructuredRequest {
+    prompt: String,
+    system_prompt: Option<String>,
+    schema_name: String,
+    json_schema: serde_json::Value,
+    model: Option<String>,
+}
+
 #[derive(Debug, Serialize)]
 struct ProjectSummary {
     project_path: String,
@@ -413,6 +422,65 @@ fn write_timeline_state(request: WriteProjectJsonRequest) -> Result<(), String> 
     write_project_json_file(&request.project_path, "state/timeline.json", request.value)
 }
 
+#[tauri::command]
+async fn generate_openai_structured(request: OpenAiStructuredRequest) -> Result<serde_json::Value, String> {
+    let api_key = std::env::var("OPENAI_API_KEY")
+        .map_err(|_| "OPENAI_API_KEY is not set.".to_string())?;
+    let mut input = Vec::new();
+
+    if let Some(system_prompt) = request.system_prompt {
+        input.push(json!({
+            "role": "system",
+            "content": system_prompt
+        }));
+    }
+
+    input.push(json!({
+        "role": "user",
+        "content": request.prompt
+    }));
+
+    let body = json!({
+        "model": request.model.unwrap_or_else(|| "gpt-4.1-mini".to_string()),
+        "input": input,
+        "text": {
+            "format": {
+                "type": "json_schema",
+                "name": request.schema_name,
+                "schema": request.json_schema,
+                "strict": true
+            }
+        }
+    });
+
+    let client = reqwest::Client::new();
+    let response = client
+        .post("https://api.openai.com/v1/responses")
+        .header("Authorization", format!("Bearer {api_key}"))
+        .header("Content-Type", "application/json")
+        .body(body.to_string())
+        .send()
+        .await
+        .map_err(|error| format!("OpenAI request failed: {error}"))?;
+    let status = response.status();
+    let response_text = response
+        .text()
+        .await
+        .map_err(|error| format!("OpenAI response body could not be read: {error}"))?;
+
+    if !status.is_success() {
+        return Err(format!("OpenAI request failed with {status}: {response_text}"));
+    }
+
+    let response_json: serde_json::Value = serde_json::from_str(&response_text)
+        .map_err(|error| format!("OpenAI response was not valid JSON: {error}"))?;
+    let output_text = extract_openai_output_text(&response_json)
+        .ok_or_else(|| "OpenAI response did not include structured text output.".to_string())?;
+
+    serde_json::from_str(output_text)
+        .map_err(|error| format!("OpenAI structured output was not valid JSON: {error}"))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -435,7 +503,8 @@ pub fn run() {
             read_open_loop_state,
             write_open_loop_state,
             read_timeline_state,
-            write_timeline_state
+            write_timeline_state,
+            generate_openai_structured
         ])
         .run(tauri::generate_context!())
         .expect("error while running TWLR desktop app");
@@ -573,6 +642,25 @@ fn read_project_jsonl_records(project_path: &str, relative_path: &str) -> Result
     }
 
     Ok(records)
+}
+
+fn extract_openai_output_text(response: &serde_json::Value) -> Option<&str> {
+    if let Some(output_text) = response.get("output_text").and_then(|value| value.as_str()) {
+        return Some(output_text);
+    }
+
+    response
+        .get("output")
+        .and_then(|value| value.as_array())
+        .into_iter()
+        .flatten()
+        .flat_map(|item| {
+            item.get("content")
+                .and_then(|value| value.as_array())
+                .into_iter()
+                .flatten()
+        })
+        .find_map(|content| content.get("text").and_then(|value| value.as_str()))
 }
 
 fn resolve_project_relative_path(project_path: &str, file_path: &str) -> Result<PathBuf, String> {

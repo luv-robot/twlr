@@ -1,3 +1,4 @@
+import { t } from "@twlr/ui";
 import type { StateProposal } from "@twlr/schema";
 
 interface ProposalCardProps {
@@ -27,11 +28,11 @@ export function ProposalCard({ proposal, onAccept, onReject }: ProposalCardProps
       </div>
       <div className="proposal-actions">
         <button className="secondary-button" onClick={() => onReject(proposal.proposal_id)}>
-          Reject
+          {t("proposal.reject")}
         </button>
         <button className="secondary-button">Edit</button>
         <button className="primary-button compact" onClick={() => onAccept(proposal.proposal_id)}>
-          Accept
+          {t("proposal.accept")}
         </button>
       </div>
     </section>

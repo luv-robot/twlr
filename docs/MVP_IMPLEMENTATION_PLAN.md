@@ -188,6 +188,8 @@ The first vertical slice is now partially executable with mock AI:
 - manual Save Snapshot
 - snapshot status lite
 - Character Sheet mock proposal
+- OpenAI Character Sheet proposal path with mock fallback
+- pending proposal card persistence and reopen recovery
 - proposal accept / reject
 - accepted proposal to narrative events
 - local project reopen reads narrative event log

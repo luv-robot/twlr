@@ -370,6 +370,8 @@ MVP provider strategy:
 
 All AI outputs that may affect state must pass schema validation.
 
+In the desktop MVP, API keys should stay outside the webview. The first OpenAI path is routed through a Tauri command that reads `OPENAI_API_KEY` from the desktop process environment and returns structured JSON to the UI. If the key is unavailable or a request fails, the production skill may fall back to mock output during development.
+
 ## Production Skills MVP
 
 Skills are tools, not personalities.

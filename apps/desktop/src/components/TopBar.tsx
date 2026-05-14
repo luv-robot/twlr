@@ -1,3 +1,5 @@
+import { t } from "@twlr/ui";
+
 interface TopBarProps {
   projectTitle: string;
   chapterTitle: string;
@@ -17,7 +19,7 @@ export function TopBar({ autosaveLabel, changedChapterCount, chapterTitle, onSav
         {autosaveLabel}
       </div>
       <button className="secondary-button" disabled={changedChapterCount === 0} onClick={onSaveSnapshot}>
-        Save Snapshot
+        {t("snapshot.save")}
       </button>
       <button className="icon-button" aria-label="Search">
         /

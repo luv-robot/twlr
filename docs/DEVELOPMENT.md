@@ -87,6 +87,7 @@ The current P0 vertical slice includes:
 - Markdown chapter list and editor
 - chapter create and autosave
 - accepted proposal event logging
+- pending proposal card persistence and reopen recovery
 - local project reopen reads narrative event log
 - projected character state
 - projected open-loop state
@@ -99,9 +100,11 @@ The current P0 vertical slice includes:
 - production skill registry
 - Timeline Compiler mock proposal
 - Foreshadow Tracker mock proposal
+- OpenAI Character Sheet proposal path with mock fallback
 - remote provider interface with mock provider
 - Save Snapshot command
-- snapshot status lite
+- revision check lite
+- minimal i18n key usage in high-frequency UI
 
 ## Browser Smoke Check
 
