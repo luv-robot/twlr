@@ -68,7 +68,7 @@ export async function runProductionSkill(
   } catch (error) {
     return {
       proposal: runMockProductionSkill(skillId, context),
-      message: error instanceof Error ? `${error.message} Using mock Character Sheet.` : "Using mock Character Sheet.",
+      message: `OpenAI Character Sheet failed: ${getErrorMessage(error)} Using mock Character Sheet.`,
     };
   }
 }
@@ -81,6 +81,22 @@ export async function getAiProviderStatus(): Promise<string> {
   return (await getOpenAiEnvironmentStatus())
     ? "OpenAI provider ready."
     : "OPENAI_API_KEY is not set. Character Sheet will use mock output.";
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return "Unknown error.";
+  }
 }
 
 function normalizeRemoteCharacterProposal(
