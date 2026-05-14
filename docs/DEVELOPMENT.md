@@ -10,6 +10,7 @@ This document records the current local development entry points, verified check
 - Use SSH for GitHub operations.
 - The first real remote LLM provider is OpenAI.
 - Development API key source is `OPENAI_API_KEY`.
+- Remote provider failures are classified in `@twlr/ai` before being shown in the desktop UI.
 
 ## Frontend
 
@@ -102,6 +103,7 @@ The current P0 vertical slice includes:
 - Foreshadow Tracker mock proposal
 - OpenAI Character Sheet proposal path with mock fallback
 - remote provider interface with mock provider
+- provider failure summaries for missing keys, invalid keys, insufficient quota, unavailable models, schema rejection, and network errors
 - Save Snapshot command
 - revision check lite
 - minimal i18n key usage in high-frequency UI
@@ -111,3 +113,15 @@ The current P0 vertical slice includes:
 The Vite server returned HTTP 200 on `http://127.0.0.1:1420/`.
 
 The in-app browser automation connection timed out during this pass, so no screenshot was captured. This was a browser automation issue, not a frontend build failure.
+
+## Current OpenAI Test Status
+
+The OpenAI Character Sheet path is wired through the Tauri desktop process and returns mock output only when the remote provider fails.
+
+The latest live test reached OpenAI and failed with:
+
+```text
+429 insufficient_quota
+```
+
+This indicates the API key was accepted far enough to receive a provider quota response, but the account/key has no usable quota or billing credits. Retest with a key that has available API credits.

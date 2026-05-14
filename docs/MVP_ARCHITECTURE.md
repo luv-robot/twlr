@@ -360,6 +360,18 @@ LLMProvider
 └── estimateCost()
 ```
 
+Provider failures should be normalized before they reach feature code.
+
+Current failure categories:
+
+- missing API key
+- invalid API key
+- insufficient quota
+- unavailable model
+- rejected structured-output schema
+- network error
+- unknown provider error
+
 MVP provider strategy:
 
 1. Implement OpenAI first.

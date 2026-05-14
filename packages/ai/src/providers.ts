@@ -58,6 +58,25 @@ export interface LlmCostEstimate {
   currency: "USD";
 }
 
+export type LlmProviderFailureCode =
+  | "missing_api_key"
+  | "invalid_api_key"
+  | "insufficient_quota"
+  | "model_unavailable"
+  | "schema_rejected"
+  | "network_error"
+  | "unknown";
+
+export interface LlmProviderFailure {
+  code: LlmProviderFailureCode;
+  rawMessage: string;
+}
+
+export interface LlmProviderErrorSummaryOptions {
+  providerLabel?: string;
+  capabilityLabel?: string;
+}
+
 export const mockProviderConfig: LlmProviderConfig = {
   provider_id: "mock",
   label: "Mock Provider",
@@ -121,6 +140,72 @@ export function isRemoteProviderReady(config: LlmProviderConfig): boolean {
   }
 
   return Boolean(config.vendor && config.model && config.api_key_ref);
+}
+
+export function classifyLlmProviderError(error: unknown): LlmProviderFailure {
+  const rawMessage = getProviderErrorMessage(error);
+
+  if (rawMessage.includes("API key environment variable is not configured") || rawMessage.includes("OPENAI_API_KEY is not set")) {
+    return { code: "missing_api_key", rawMessage };
+  }
+
+  if (rawMessage.includes("invalid_api_key") || rawMessage.includes("Incorrect API key") || rawMessage.includes("401")) {
+    return { code: "invalid_api_key", rawMessage };
+  }
+
+  if (rawMessage.includes("insufficient_quota") || rawMessage.includes("exceeded your current quota")) {
+    return { code: "insufficient_quota", rawMessage };
+  }
+
+  if (rawMessage.includes("model_not_found") || rawMessage.includes("does not have access to model") || rawMessage.includes("404")) {
+    return { code: "model_unavailable", rawMessage };
+  }
+
+  if (rawMessage.includes("schema") || rawMessage.includes("response_format") || rawMessage.includes("json_schema")) {
+    return { code: "schema_rejected", rawMessage };
+  }
+
+  if (rawMessage.includes("Failed to fetch") || rawMessage.includes("network") || rawMessage.includes("dns")) {
+    return { code: "network_error", rawMessage };
+  }
+
+  return { code: "unknown", rawMessage };
+}
+
+export function summarizeLlmProviderError(
+  error: unknown,
+  options: LlmProviderErrorSummaryOptions = {},
+): string {
+  const failure = classifyLlmProviderError(error);
+  const providerLabel = options.providerLabel ?? "Remote provider";
+  const capabilityLabel = options.capabilityLabel ? ` ${options.capabilityLabel}` : "";
+  const prefix = `${providerLabel}${capabilityLabel} failed`;
+
+  if (failure.code === "missing_api_key") {
+    return `${prefix}: API key is not configured.`;
+  }
+
+  if (failure.code === "invalid_api_key") {
+    return `${prefix}: API key is invalid or not authorized.`;
+  }
+
+  if (failure.code === "insufficient_quota") {
+    return `${prefix}: quota is unavailable. Check the API key's plan, billing, or credits.`;
+  }
+
+  if (failure.code === "model_unavailable") {
+    return `${prefix}: the configured model is unavailable for this key.`;
+  }
+
+  if (failure.code === "schema_rejected") {
+    return `${prefix}: structured output schema was rejected. ${failure.rawMessage}`;
+  }
+
+  if (failure.code === "network_error") {
+    return `${prefix}: network request failed.`;
+  }
+
+  return `${prefix}: ${failure.rawMessage}`;
 }
 
 export interface CreateOpenAiProviderOptions {
@@ -286,4 +371,20 @@ function getProcessEnv(): Record<string, string | undefined> {
   };
 
   return maybeGlobal.process?.env ?? {};
+}
+
+function getProviderErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return "Unknown error.";
+  }
 }
