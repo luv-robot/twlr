@@ -158,6 +158,45 @@ button:disabled {
   margin-bottom: 18px;
 }
 
+.workspace-card {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 12px;
+  border: 1px solid #e5e2dc;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.workspace-card .section-label {
+  margin-bottom: 0;
+}
+
+.workspace-card p {
+  margin: 0;
+  color: #6f6b63;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.path-input {
+  width: 100%;
+  min-height: 32px;
+  border: 1px solid #e5e2dc;
+  border-radius: 8px;
+  background: #fafaf8;
+  color: #242424;
+  font: inherit;
+  font-size: 12px;
+  padding: 0 10px;
+}
+
+.workspace-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
 .section-label {
   margin-bottom: 12px;
   color: #9a948b;

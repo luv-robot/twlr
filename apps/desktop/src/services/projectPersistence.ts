@@ -1,4 +1,5 @@
 import type { NarrativeEvent, StateProposal } from "@twlr/schema";
+import { isTauriRuntime } from "./tauriRuntime";
 import { appendNarrativeEvents, appendStateProposals } from "./twlrCommands";
 
 export type PersistenceResult =
@@ -45,8 +46,4 @@ export async function persistAcceptedProposal(input: PersistAcceptedProposalInpu
     status: "persisted",
     message: `${input.events.length} event(s) appended to local project logs.`,
   };
-}
-
-function isTauriRuntime(): boolean {
-  return "__TAURI_INTERNALS__" in window;
 }

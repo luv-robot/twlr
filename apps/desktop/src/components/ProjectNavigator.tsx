@@ -4,13 +4,46 @@ interface ProjectNavigatorProps {
   projectTitle: string;
   chapters: ChapterListItem[];
   activeChapterId: string;
+  projectPathInput: string;
+  workspaceStatus: string;
+  onCreateLocalProject: () => void;
+  onOpenLocalProject: () => void;
+  onProjectPathInput: (value: string) => void;
   onSelectChapter: (chapterId: string) => void;
 }
 
-export function ProjectNavigator({ activeChapterId, chapters, onSelectChapter, projectTitle }: ProjectNavigatorProps) {
+export function ProjectNavigator({
+  activeChapterId,
+  chapters,
+  onCreateLocalProject,
+  onOpenLocalProject,
+  onProjectPathInput,
+  onSelectChapter,
+  projectPathInput,
+  projectTitle,
+  workspaceStatus,
+}: ProjectNavigatorProps) {
   return (
     <aside className="navigator">
       <h1>{projectTitle}</h1>
+      <section className="workspace-card">
+        <div className="section-label">Local workspace</div>
+        <input
+          aria-label="Local project path"
+          className="path-input"
+          onChange={(event) => onProjectPathInput(event.target.value)}
+          value={projectPathInput}
+        />
+        <div className="workspace-actions">
+          <button className="secondary-button" onClick={onOpenLocalProject}>
+            Open
+          </button>
+          <button className="primary-button compact" onClick={onCreateLocalProject}>
+            Create
+          </button>
+        </div>
+        <p>{workspaceStatus}</p>
+      </section>
       <button className="part-pill">Act I</button>
       <div className="section-label">Chapters</div>
       <div className="chapter-list">

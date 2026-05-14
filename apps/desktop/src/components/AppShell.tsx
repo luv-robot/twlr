@@ -3,6 +3,7 @@ import { countWords, proposalToNarrativeEvents, reviewStateProposal } from "@twl
 import type { NarrativeEvent, StateProposal } from "@twlr/schema";
 import { createMockCharacterProposal, demoChapters } from "../data/demoWorkspace";
 import { persistAcceptedProposal } from "../services/projectPersistence";
+import { createLocalWorkspace, loadLocalWorkspace, saveWorkspaceChapter } from "../services/workspaceAdapter";
 import { AppRail } from "./AppRail";
 import { ManuscriptEditor } from "./ManuscriptEditor";
 import { ProjectNavigator } from "./ProjectNavigator";
@@ -12,12 +13,15 @@ import { TopBar } from "./TopBar";
 export function AppShell() {
   const [chapters, setChapters] = useState(demoChapters);
   const [activeChapterId, setActiveChapterId] = useState("03");
+  const [projectTitle, setProjectTitle] = useState("The Glass City");
   const [proposals, setProposals] = useState<StateProposal[]>([]);
   const [autosaveLabel, setAutosaveLabel] = useState("Autosaved locally");
   const [changedChapterIds, setChangedChapterIds] = useState<Set<string>>(() => new Set());
   const [acceptedEvents, setAcceptedEvents] = useState<NarrativeEvent[]>([]);
-  const [projectPath] = useState<string | null>(null);
+  const [projectPath, setProjectPath] = useState<string | null>(null);
+  const [projectPathInput, setProjectPathInput] = useState("/private/tmp/twlr-glass-city");
   const [storageStatus, setStorageStatus] = useState("Demo session");
+  const [workspaceStatus, setWorkspaceStatus] = useState("Demo workspace");
 
   const activeChapter = chapters.find((chapter) => chapter.id === activeChapterId) ?? chapters[0];
   const wordCount = countWords(activeChapter.body);
@@ -39,9 +43,21 @@ export function AppShell() {
       return;
     }
 
-    const saveTimer = window.setTimeout(() => setAutosaveLabel("Autosaved locally"), 500);
+    const saveTimer = window.setTimeout(async () => {
+      if (projectPath && activeChapter.filePath) {
+        try {
+          await saveWorkspaceChapter(projectPath, activeChapter);
+          setAutosaveLabel("Autosaved to project folder");
+        } catch (error) {
+          setAutosaveLabel(error instanceof Error ? error.message : "Autosave failed");
+        }
+        return;
+      }
+
+      setAutosaveLabel("Autosaved locally");
+    }, 500);
     return () => window.clearTimeout(saveTimer);
-  }, [autosaveLabel]);
+  }, [activeChapter, autosaveLabel, projectPath]);
 
   function updateActiveChapter(body: string) {
     setAutosaveLabel("Saving locally...");
@@ -66,6 +82,50 @@ export function AppShell() {
   function saveSnapshot() {
     setChangedChapterIds(new Set());
     setAutosaveLabel("Snapshot saved locally");
+  }
+
+  async function openLocalProject() {
+    const nextProjectPath = projectPathInput.trim();
+    if (!nextProjectPath) {
+      setWorkspaceStatus("Enter a local project path.");
+      return;
+    }
+
+    setWorkspaceStatus("Opening local project...");
+    try {
+      const workspace = await loadLocalWorkspace(nextProjectPath);
+      setProjectPath(nextProjectPath);
+      setProjectTitle(workspace.project.title);
+      setChapters(workspace.chapters);
+      setActiveChapterId(workspace.chapters[0]?.id ?? "01");
+      setChangedChapterIds(new Set());
+      setWorkspaceStatus(`Opened ${workspace.project.title}`);
+      setStorageStatus("Local project logs enabled.");
+    } catch (error) {
+      setWorkspaceStatus(error instanceof Error ? error.message : "Failed to open local project.");
+    }
+  }
+
+  async function createProjectAtPath() {
+    const nextProjectPath = projectPathInput.trim();
+    if (!nextProjectPath) {
+      setWorkspaceStatus("Enter a local project path.");
+      return;
+    }
+
+    setWorkspaceStatus("Creating local project...");
+    try {
+      const workspace = await createLocalWorkspace(nextProjectPath, projectTitle);
+      setProjectPath(nextProjectPath);
+      setProjectTitle(workspace.project.title);
+      setChapters(workspace.chapters);
+      setActiveChapterId(workspace.chapters[0]?.id ?? "01");
+      setChangedChapterIds(new Set());
+      setWorkspaceStatus(`Created ${workspace.project.title}`);
+      setStorageStatus("Local project logs enabled.");
+    } catch (error) {
+      setWorkspaceStatus(error instanceof Error ? error.message : "Failed to create local project.");
+    }
   }
 
   function createMockProposal() {
@@ -113,14 +173,19 @@ export function AppShell() {
         changedChapterCount={changedChapterCount}
         chapterTitle={`Chapter ${activeChapter.id} - ${activeChapter.title}`}
         onSaveSnapshot={saveSnapshot}
-        projectTitle="The Glass City"
+        projectTitle={projectTitle}
       />
       <AppRail />
       <ProjectNavigator
         activeChapterId={activeChapter.id}
         chapters={chapters}
+        onCreateLocalProject={createProjectAtPath}
+        onOpenLocalProject={openLocalProject}
+        onProjectPathInput={setProjectPathInput}
         onSelectChapter={setActiveChapterId}
-        projectTitle="The Glass City"
+        projectPathInput={projectPathInput}
+        projectTitle={projectTitle}
+        workspaceStatus={workspaceStatus}
       />
       <ManuscriptEditor
         metadata={`${wordCount.toLocaleString()} words · Draft`}

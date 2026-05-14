@@ -412,3 +412,72 @@ fn make_project_id(title: &str) -> String {
 
     format!("project_{}", if slug.is_empty() { "untitled" } else { slug })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn creates_project_and_appends_events() {
+        let suffix = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|duration| duration.as_nanos())
+            .unwrap_or(0);
+        let project_path = std::env::temp_dir().join(format!("twlr-command-test-{suffix}"));
+        let project_path_text = project_path.to_string_lossy().to_string();
+        let _ = fs::remove_dir_all(&project_path);
+
+        let summary = create_project(CreateProjectRequest {
+            project_path: project_path_text.clone(),
+            title: "Smoke Test Novel".to_string(),
+            kind: "web_novel".to_string(),
+            language: Some("en".to_string()),
+            created_at: Some("2026-05-14T00:00:00.000Z".to_string()),
+        })
+        .expect("project should be created");
+
+        assert_eq!(summary.title, "Smoke Test Novel");
+        assert_eq!(summary.chapter_count, 1);
+        assert!(project_path.join("twlr.project.json").exists());
+
+        let chapters = list_chapters(project_path_text.clone()).expect("chapters should be listed");
+        assert_eq!(chapters.len(), 1);
+        assert_eq!(chapters[0].file_path, "manuscript/chapter-001.md");
+
+        let updated = write_chapter(WriteChapterRequest {
+            project_path: project_path_text.clone(),
+            file_path: "manuscript/chapter-001.md".to_string(),
+            content: [
+                "---",
+                "id: chapter_001",
+                "title: Revised Chapter",
+                "order: 1",
+                "status: draft",
+                "---",
+                "",
+                "Mira writes one clear line.",
+            ]
+            .join("\n"),
+        })
+        .expect("chapter should be written");
+
+        assert_eq!(updated.title, "Revised Chapter");
+        assert_eq!(updated.word_count, 5);
+
+        let appended = append_narrative_events(AppendProjectRecordsRequest {
+            project_path: project_path_text.clone(),
+            records: vec![json!({
+                "event_id": "event_test_001",
+                "event_type": "chapter_metadata_changed"
+            })],
+        })
+        .expect("event should be appended");
+
+        assert_eq!(appended, 1);
+        let event_log = fs::read_to_string(project_path.join("events/narrative_events.jsonl"))
+            .expect("event log should be readable");
+        assert!(event_log.contains("event_test_001"));
+
+        fs::remove_dir_all(project_path).expect("test project should be removed");
+    }
+}

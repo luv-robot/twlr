@@ -34,3 +34,16 @@ export function parseChapterMarkdown(markdown: string): ParsedChapter {
 
   return { metadata: metadata as Partial<ChapterMetadata>, body };
 }
+
+export function replaceChapterMarkdownBody(markdown: string, body: string): string {
+  if (!markdown.startsWith("---\n")) {
+    return body;
+  }
+
+  const end = markdown.indexOf("\n---", 4);
+  if (end === -1) {
+    return body;
+  }
+
+  return `${markdown.slice(0, end + 4)}\n${body}`;
+}

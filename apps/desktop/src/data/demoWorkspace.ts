@@ -9,6 +9,8 @@ export interface ChapterListItem {
 
 export interface DemoChapter extends ChapterListItem {
   body: string;
+  content: string;
+  filePath: string | null;
 }
 
 export interface CoordinatorStatusItem {
@@ -23,6 +25,8 @@ export const demoChapters: DemoChapter[] = [
     title: "Rain at the South Gate",
     meta: "2.1k",
     state: "saved",
+    content: "",
+    filePath: null,
     body: [
       "The rain at the south gate came down so hard that the old city seemed to lose its edges.",
       "Mira kept her hood low and counted the watchmen by their lanterns. Three at the gatehouse, one under the broken awning, and no one near the archive road.",
@@ -33,6 +37,8 @@ export const demoChapters: DemoChapter[] = [
     title: "The False Receipt",
     meta: "1.8k",
     state: "saved",
+    content: "",
+    filePath: null,
     body: [
       "The receipt should have carried the seal of the North Office.",
       "Instead it bore a red mark from a shop that had burned down nine years earlier.",
@@ -43,6 +49,8 @@ export const demoChapters: DemoChapter[] = [
     title: "A Name Removed",
     meta: "2.4k",
     state: "active",
+    content: "",
+    filePath: null,
     body: [
       "Mira noticed the receipt before anyone else did. The paper was old, but the ink had the faint wet shine of something written in a hurry.",
       "Outside the archive window, the south gate bells started again. Three slow notes, then silence. It was the kind of silence that made every drawer in the room feel watched.",
@@ -55,6 +63,8 @@ export const demoChapters: DemoChapter[] = [
     title: "The Lantern Room",
     meta: "Draft",
     state: "review",
+    content: "",
+    filePath: null,
     body: [
       "The lantern room had no windows, only mirrors.",
       "Each flame showed a different version of the same corridor, and one of them showed Mira arriving too late.",
