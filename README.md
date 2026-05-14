@@ -123,6 +123,7 @@ See also:
 - [Studio Coordinator](docs/STUDIO_COORDINATOR.md)
 - [Client UI Design](docs/CLIENT_UI_DESIGN.md)
 - [UI Wireframe Spec](docs/UI_WIREFRAME_SPEC.md)
+- [Development Notes](docs/DEVELOPMENT.md)
 
 ## Recommended Tech Stack
 
