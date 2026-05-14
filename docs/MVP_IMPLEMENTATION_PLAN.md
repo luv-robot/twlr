@@ -176,6 +176,31 @@ This slice should use mock AI outputs first.
 
 Remote LLM integration should come only after the state proposal pipeline works locally.
 
+## Current Implementation Checkpoint
+
+The first vertical slice is now partially executable with mock AI:
+
+- project creation and reopening
+- portable TWLR folder generation
+- Markdown chapter editor
+- local autosave
+- chapter creation
+- manual Save Snapshot
+- snapshot status lite
+- Character Sheet mock proposal
+- proposal accept / reject
+- accepted proposal to narrative events
+- projected character state
+- projected open-loop state
+- Writers' Room mock meeting
+- Writers' Room meeting log persistence
+- Writers' Room to proposal-card handoff
+- official agent registry
+- production skill registry
+- provider interface with mock provider
+
+Remaining P0 work should focus on replacing hardcoded demo paths and mock outputs with real context projection, provider-backed structured outputs, and more complete production skills.
+
 ## Implementation Phases
 
 ### Phase 1: Repository and App Shell

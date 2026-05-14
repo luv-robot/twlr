@@ -1,6 +1,13 @@
 # Development Notes
 
-This document records the current local development entry points and known environment blockers.
+This document records the current local development entry points, verified checks, and known environment rules.
+
+## Environment Rules
+
+- Prefer `/opt/homebrew/bin` for Homebrew-managed tools on this machine.
+- Do not upgrade Node casually. The Codex environment currently depends on the newer Node chain.
+- Do not use the old `/usr/local` Homebrew Rust toolchain for this project.
+- Use SSH for GitHub operations.
 
 ## Frontend
 
@@ -65,8 +72,28 @@ cargo check
 Current verified Tauri status:
 
 - `cargo check` passes.
+- `cargo test` passes.
 
 Do not use the old `/usr/local` Homebrew Rust toolchain for this project.
+
+## Current Implementation Checkpoint
+
+The current P0 vertical slice includes:
+
+- local project create / open
+- generated TWLR folder structure
+- Markdown chapter list and editor
+- chapter create and autosave
+- accepted proposal event logging
+- projected character state
+- projected open-loop state
+- Writers' Room meeting JSONL persistence
+- Writers' Room to proposal-card handoff
+- official agent registry
+- production skill registry
+- remote provider interface with mock provider
+- Save Snapshot command
+- snapshot status lite
 
 ## Browser Smoke Check
 
