@@ -77,7 +77,12 @@ function applyCharacterEvent(character: CharacterState, event: NarrativeEvent): 
     };
   }
 
-  if (event.payload.field === "current_status") {
+  if (
+    event.payload.field === "current_status" ||
+    event.payload.field === "status" ||
+    event.payload.field === "summary" ||
+    event.payload.field === "description"
+  ) {
     return {
       ...base,
       current_status: event.payload.new_value,
@@ -266,7 +271,7 @@ function applyOpenLoopEvent(openLoop: OpenLoop, event: NarrativeEvent): OpenLoop
 function createUnknownCharacter(characterId: string): CharacterState {
   return {
     character_id: characterId,
-    name: characterId.replace(/^char_/, "").replaceAll("_", " "),
+    name: formatStateLabel(characterId, ["char_", "character_"]),
     role: "unknown",
     current_status: "needs review",
     open_loops: [],
@@ -279,7 +284,7 @@ function createUnknownCharacter(characterId: string): CharacterState {
 function createUnknownOpenLoop(openLoopId: string, event: NarrativeEvent): OpenLoop {
   return {
     open_loop_id: openLoopId,
-    title: openLoopId.replace(/^loop_/, "").replaceAll("_", " "),
+    title: formatStateLabel(openLoopId, ["loop_", "open_loop_"]),
     status: "open",
     introduced_in: event.references.chapters[0] ?? null,
     expected_payoff: "needs review",
@@ -293,7 +298,7 @@ function createUnknownOpenLoop(openLoopId: string, event: NarrativeEvent): OpenL
 function createUnknownTimelineEvent(timelineEventId: string, event: NarrativeEvent): TimelineEvent {
   return {
     timeline_event_id: timelineEventId,
-    label: timelineEventId.replace(/^event_/, "").replaceAll("_", " "),
+    label: formatStateLabel(timelineEventId, ["event_", "timeline_", "timeline_event_"]),
     story_time: "unknown",
     chapter_id: event.references.chapters[0] ?? null,
     scene_id: null,
@@ -323,4 +328,17 @@ function isOpenLoopStatus(value: unknown): value is OpenLoop["status"] {
     value === "dropped" ||
     value === "needs_review"
   );
+}
+
+function formatStateLabel(id: string, prefixes: string[]): string {
+  const withoutPrefix = prefixes.reduce(
+    (value, prefix) => (value.startsWith(prefix) ? value.slice(prefix.length) : value),
+    id,
+  );
+
+  return withoutPrefix
+    .split("_")
+    .filter(Boolean)
+    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .join(" ");
 }

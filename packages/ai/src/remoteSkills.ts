@@ -218,11 +218,11 @@ function ensureCharacterStateEvent(
   affectedCharacters: string[],
   summary: string,
 ): StateProposal["proposed_events"] {
-  if (events.some((event) => event.payload.target_type === "character")) {
+  if (hasCharacterCurrentStatusEvent(events)) {
     return events;
   }
 
-  const characterId = affectedCharacters[0];
+  const characterId = affectedCharacters[0] ?? inferTargetIds(events, "character")[0];
   if (!characterId) {
     return events;
   }
@@ -240,4 +240,10 @@ function ensureCharacterStateEvent(
     },
     ...events,
   ];
+}
+
+function hasCharacterCurrentStatusEvent(events: StateProposal["proposed_events"]): boolean {
+  return events.some(
+    (event) => event.payload.target_type === "character" && event.payload.field === "current_status",
+  );
 }

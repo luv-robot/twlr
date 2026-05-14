@@ -53,12 +53,16 @@ function makeProposalEventId(proposalId: string, index: number): string {
 function proposalEventsForCommit(proposal: StateProposal): StateProposal["proposed_events"] {
   if (
     proposal.source.name !== "Character Sheet" ||
-    proposal.proposed_events.some((event) => event.payload.target_type === "character")
+    proposal.proposed_events.some(
+      (event) => event.payload.target_type === "character" && event.payload.field === "current_status",
+    )
   ) {
     return proposal.proposed_events;
   }
 
-  const characterId = proposal.affected.characters[0];
+  const characterId =
+    proposal.affected.characters[0] ??
+    proposal.proposed_events.find((event) => event.payload.target_type === "character")?.payload.target_id;
   if (!characterId) {
     return proposal.proposed_events;
   }
