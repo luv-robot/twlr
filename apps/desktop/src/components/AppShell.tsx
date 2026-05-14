@@ -3,13 +3,12 @@ import {
   applyCharacterEvents,
   applyOpenLoopEvents,
   countWords,
-  createMockWritersRoomMeeting,
   createEmptyCharacterStateFile,
   createEmptyOpenLoopStateFile,
   proposalToNarrativeEvents,
   reviewStateProposal,
 } from "@twlr/core";
-import { runMockProductionSkill } from "@twlr/ai";
+import { createMockWritersRoomMeeting, runMockProductionSkill } from "@twlr/ai";
 import type { CharacterStateFile, NarrativeEvent, OpenLoopStateFile, RoomMeeting, StateProposal } from "@twlr/schema";
 import { demoChapters } from "../data/demoWorkspace";
 import {
