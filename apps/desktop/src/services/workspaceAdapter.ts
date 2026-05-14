@@ -5,6 +5,7 @@ import {
   listChapters,
   openProject,
   readChapter,
+  saveSnapshot,
   writeChapter,
   type ChapterContent,
   type ProjectSummary,
@@ -51,6 +52,14 @@ export async function saveWorkspaceChapter(projectPath: string, chapter: DemoCha
     project_path: projectPath,
     file_path: chapter.filePath,
     content: replaceChapterMarkdownBody(chapter.content, chapter.body),
+  });
+}
+
+export async function saveWorkspaceSnapshot(projectPath: string, message: string) {
+  assertTauriRuntime();
+  return saveSnapshot({
+    project_path: projectPath,
+    message,
   });
 }
 

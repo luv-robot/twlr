@@ -3,7 +3,12 @@ import { countWords, proposalToNarrativeEvents, reviewStateProposal } from "@twl
 import type { NarrativeEvent, StateProposal } from "@twlr/schema";
 import { createMockCharacterProposal, demoChapters } from "../data/demoWorkspace";
 import { persistAcceptedProposal } from "../services/projectPersistence";
-import { createLocalWorkspace, loadLocalWorkspace, saveWorkspaceChapter } from "../services/workspaceAdapter";
+import {
+  createLocalWorkspace,
+  loadLocalWorkspace,
+  saveWorkspaceChapter,
+  saveWorkspaceSnapshot,
+} from "../services/workspaceAdapter";
 import { AppRail } from "./AppRail";
 import { ManuscriptEditor } from "./ManuscriptEditor";
 import { ProjectNavigator } from "./ProjectNavigator";
@@ -79,9 +84,25 @@ export function AppShell() {
     );
   }
 
-  function saveSnapshot() {
-    setChangedChapterIds(new Set());
-    setAutosaveLabel("Snapshot saved locally");
+  async function saveSnapshot() {
+    if (!projectPath) {
+      setChangedChapterIds(new Set());
+      setAutosaveLabel("Snapshot saved locally");
+      return;
+    }
+
+    setAutosaveLabel("Saving snapshot...");
+    try {
+      const snapshot = await saveWorkspaceSnapshot(projectPath, `TWLR snapshot - ${new Date().toISOString()}`);
+      setChangedChapterIds(new Set());
+      setAutosaveLabel(
+        snapshot.snapshot_id === "none"
+          ? "No changes to snapshot"
+          : `Snapshot saved ${snapshot.snapshot_id}`,
+      );
+    } catch (error) {
+      setAutosaveLabel(error instanceof Error ? error.message : "Snapshot failed");
+    }
   }
 
   async function openLocalProject() {

@@ -20,6 +20,11 @@ export interface AppendProjectRecordsRequest<TRecord> {
   records: TRecord[];
 }
 
+export interface SaveSnapshotRequest {
+  project_path: string;
+  message?: string;
+}
+
 export interface ProjectSummary {
   project_path: string;
   project_id: string;
@@ -42,6 +47,12 @@ export interface ChapterSummary {
 export interface ChapterContent {
   summary: ChapterSummary;
   content: string;
+}
+
+export interface SnapshotSummary {
+  snapshot_id: string;
+  message: string;
+  changed_files: number;
 }
 
 export async function createProject(request: CreateProjectRequest): Promise<ProjectSummary> {
@@ -72,4 +83,8 @@ export async function appendNarrativeEvents(
 
 export async function appendStateProposals(request: AppendProjectRecordsRequest<StateProposal>): Promise<number> {
   return invoke<number>("append_state_proposals", { request });
+}
+
+export async function saveSnapshot(request: SaveSnapshotRequest): Promise<SnapshotSummary> {
+  return invoke<SnapshotSummary>("save_snapshot", { request });
 }

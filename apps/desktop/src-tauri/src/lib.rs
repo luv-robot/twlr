@@ -28,6 +28,12 @@ struct AppendProjectRecordsRequest {
     records: Vec<serde_json::Value>,
 }
 
+#[derive(Debug, Deserialize)]
+struct SaveSnapshotRequest {
+    project_path: String,
+    message: Option<String>,
+}
+
 #[derive(Debug, Serialize)]
 struct ProjectSummary {
     project_path: String,
@@ -53,6 +59,13 @@ struct ChapterSummary {
 struct ChapterContent {
     summary: ChapterSummary,
     content: String,
+}
+
+#[derive(Debug, Serialize)]
+struct SnapshotSummary {
+    snapshot_id: String,
+    message: String,
+    changed_files: usize,
 }
 
 #[tauri::command]
@@ -229,6 +242,53 @@ fn append_state_proposals(request: AppendProjectRecordsRequest) -> Result<usize,
     )
 }
 
+#[tauri::command]
+fn save_snapshot(request: SaveSnapshotRequest) -> Result<SnapshotSummary, String> {
+    let project_path = PathBuf::from(&request.project_path);
+    if !project_path.exists() {
+        return Err("Project folder does not exist.".to_string());
+    }
+
+    init_git(&project_path);
+    run_git(&project_path, &["add", "."])?;
+    let status = run_git(&project_path, &["status", "--short"])?;
+    let changed_files = status.lines().filter(|line| !line.trim().is_empty()).count();
+
+    if changed_files == 0 {
+        return Ok(SnapshotSummary {
+            snapshot_id: "none".to_string(),
+            message: "No changes to snapshot.".to_string(),
+            changed_files,
+        });
+    }
+
+    let message = request
+        .message
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or_else(|| "TWLR save snapshot".to_string());
+    run_git(
+        &project_path,
+        &[
+            "-c",
+            "user.name=TWLR",
+            "-c",
+            "user.email=twlr@local",
+            "commit",
+            "-m",
+            &message,
+        ],
+    )?;
+    let snapshot_id = run_git(&project_path, &["rev-parse", "--short", "HEAD"])?
+        .trim()
+        .to_string();
+
+    Ok(SnapshotSummary {
+        snapshot_id,
+        message,
+        changed_files,
+    })
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -239,7 +299,8 @@ pub fn run() {
             read_chapter,
             write_chapter,
             append_narrative_events,
-            append_state_proposals
+            append_state_proposals,
+            save_snapshot
         ])
         .run(tauri::generate_context!())
         .expect("error while running TWLR desktop app");
@@ -274,6 +335,21 @@ fn init_git(project_path: &Path) -> bool {
         .output()
         .map(|output| output.status.success())
         .unwrap_or(false)
+}
+
+fn run_git(project_path: &Path, args: &[&str]) -> Result<String, String> {
+    let output = Command::new("git")
+        .args(args)
+        .current_dir(project_path)
+        .output()
+        .map_err(|error| format!("Failed to run git: {error}"))?;
+
+    if output.status.success() {
+        return String::from_utf8(output.stdout).map_err(|error| format!("Invalid git output: {error}"));
+    }
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    Err(format!("Git command failed: {stderr}"))
 }
 
 fn append_project_jsonl_records(
@@ -477,6 +553,16 @@ mod tests {
         let event_log = fs::read_to_string(project_path.join("events/narrative_events.jsonl"))
             .expect("event log should be readable");
         assert!(event_log.contains("event_test_001"));
+
+        let snapshot = save_snapshot(SaveSnapshotRequest {
+            project_path: project_path_text.clone(),
+            message: Some("Smoke snapshot".to_string()),
+        })
+        .expect("snapshot should be saved");
+
+        assert_eq!(snapshot.message, "Smoke snapshot");
+        assert!(snapshot.changed_files > 0);
+        assert_ne!(snapshot.snapshot_id, "none");
 
         fs::remove_dir_all(project_path).expect("test project should be removed");
     }
