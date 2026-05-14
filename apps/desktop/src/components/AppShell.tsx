@@ -142,6 +142,11 @@ export function AppShell() {
       setProjectPath(nextProjectPath);
       setProjectTitle(workspace.project.title);
       setChapters(workspace.chapters);
+      setCharacterState(workspace.characterState);
+      setOpenLoopState(workspace.openLoopState);
+      setProposals([]);
+      setRoomMeeting(null);
+      setAcceptedEvents([]);
       setActiveChapterId(workspace.chapters[0]?.id ?? "01");
       setChangedChapterIds(new Set());
       setWorkspaceStatus(`Opened ${workspace.project.title}`);
@@ -165,6 +170,11 @@ export function AppShell() {
       setProjectPath(nextProjectPath);
       setProjectTitle(workspace.project.title);
       setChapters(workspace.chapters);
+      setCharacterState(workspace.characterState);
+      setOpenLoopState(workspace.openLoopState);
+      setProposals([]);
+      setRoomMeeting(null);
+      setAcceptedEvents([]);
       setActiveChapterId(workspace.chapters[0]?.id ?? "01");
       setChangedChapterIds(new Set());
       setWorkspaceStatus(`Created ${workspace.project.title}`);

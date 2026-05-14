@@ -1,4 +1,5 @@
 import { countWords, parseChapterMarkdown, replaceChapterMarkdownBody } from "@twlr/core";
+import type { CharacterStateFile, OpenLoopStateFile } from "@twlr/schema";
 import type { DemoChapter } from "../data/demoWorkspace";
 import {
   createProject,
@@ -7,6 +8,8 @@ import {
   listChapters,
   openProject,
   readChapter,
+  readCharacterState,
+  readOpenLoopState,
   saveSnapshot,
   writeChapter,
   type ChapterContent,
@@ -17,6 +20,8 @@ import { isTauriRuntime } from "./tauriRuntime";
 export interface LoadedWorkspace {
   project: ProjectSummary;
   chapters: DemoChapter[];
+  characterState: CharacterStateFile;
+  openLoopState: OpenLoopStateFile;
 }
 
 export async function createLocalWorkspace(projectPath: string, title: string): Promise<LoadedWorkspace> {
@@ -33,7 +38,12 @@ export async function createLocalWorkspace(projectPath: string, title: string): 
 
 export async function loadLocalWorkspace(projectPath: string): Promise<LoadedWorkspace> {
   assertTauriRuntime();
-  const [project, summaries] = await Promise.all([openProject(projectPath), listChapters(projectPath)]);
+  const [project, summaries, characterState, openLoopState] = await Promise.all([
+    openProject(projectPath),
+    listChapters(projectPath),
+    readCharacterState(projectPath),
+    readOpenLoopState(projectPath),
+  ]);
   const contents = await Promise.all(
     summaries.map((summary) => readChapter(projectPath, summary.file_path)),
   );
@@ -41,6 +51,8 @@ export async function loadLocalWorkspace(projectPath: string): Promise<LoadedWor
   return {
     project,
     chapters: contents.map((content, index) => chapterContentToItem(content, index)),
+    characterState,
+    openLoopState,
   };
 }
 
