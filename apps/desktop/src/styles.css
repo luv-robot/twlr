@@ -1,0 +1,295 @@
+:root {
+  color: #242424;
+  background: #f7f7f5;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 1120px;
+  min-height: 100vh;
+}
+
+button {
+  font: inherit;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-areas:
+    "top top top top"
+    "rail nav editor context";
+  grid-template-columns: 56px 252px minmax(520px, 1fr) 360px;
+  grid-template-rows: 52px calc(100vh - 52px);
+  min-height: 100vh;
+  background: #f7f7f5;
+}
+
+.top-bar {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e2dc;
+}
+
+.project-title {
+  font-weight: 700;
+}
+
+.chapter-title,
+.autosave {
+  color: #6f6b63;
+  font-size: 13px;
+}
+
+.top-spacer {
+  flex: 1;
+}
+
+.autosave {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-dot,
+.chapter-state {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #3c8a5f;
+}
+
+.secondary-button,
+.primary-button,
+.icon-button,
+.part-pill,
+.tab {
+  min-height: 32px;
+  border: 1px solid #e5e2dc;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #6f6b63;
+  padding: 0 12px;
+}
+
+.primary-button {
+  width: 100%;
+  border-color: #2f7d7a;
+  background: #2f7d7a;
+  color: #ffffff;
+}
+
+.secondary-button.wide {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.icon-button {
+  width: 32px;
+  padding: 0;
+}
+
+.app-rail {
+  grid-area: rail;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0;
+  background: #ffffff;
+  border-right: 1px solid #e5e2dc;
+}
+
+.rail-item {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #e5e2dc;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #6f6b63;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.rail-item.active {
+  border-color: #2f7d7a;
+  background: #e8f1ef;
+  color: #2f7d7a;
+}
+
+.rail-settings {
+  margin-top: auto;
+}
+
+.navigator {
+  grid-area: nav;
+  padding: 20px;
+  background: #fafaf8;
+  border-right: 1px solid #e5e2dc;
+}
+
+.navigator h1 {
+  margin: 0 0 18px;
+  font-size: 16px;
+}
+
+.part-pill {
+  min-width: 82px;
+  margin-bottom: 18px;
+}
+
+.section-label {
+  margin-bottom: 12px;
+  color: #9a948b;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.chapter-list {
+  display: grid;
+  gap: 8px;
+}
+
+.chapter-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 12px;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #242424;
+  text-align: left;
+}
+
+.chapter-row.active {
+  border-color: #2f7d7a;
+  background: #ffffff;
+}
+
+.chapter-number {
+  color: #9a948b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.chapter-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.chapter-copy span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chapter-copy small {
+  color: #9a948b;
+}
+
+.chapter-state.review {
+  background: #b7791f;
+}
+
+.editor-region {
+  grid-area: editor;
+  overflow: auto;
+  background: #ffffff;
+}
+
+.writing-column {
+  width: min(760px, calc(100% - 96px));
+  margin: 56px auto;
+}
+
+.writing-column h2 {
+  margin: 0;
+  font-size: 32px;
+  line-height: 1.2;
+}
+
+.chapter-meta {
+  margin: 12px 0 48px;
+  color: #6f6b63;
+  font-size: 13px;
+}
+
+.writing-column p {
+  margin: 0 0 26px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  line-height: 1.78;
+}
+
+.context-panel {
+  grid-area: context;
+  overflow: auto;
+  padding: 24px 20px;
+  background: #fafaf8;
+  border-left: 1px solid #e5e2dc;
+}
+
+.panel-header h2 {
+  margin: 0 0 18px;
+  font-size: 18px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.tab.active {
+  border-color: #2f7d7a;
+  background: #e8f1ef;
+  color: #2f7d7a;
+}
+
+.coordinator-card {
+  margin-bottom: 18px;
+  padding: 16px;
+  border: 1px solid #e5e2dc;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 42px;
+}
+
+.status-row strong {
+  width: 24px;
+  font-size: 20px;
+}
+
+.proposal {
+  color: #5b6ee1;
+}
+
+.warning {
+  color: #b7791f;
+}
+
+.risk {
+  color: #c94a4a;
+}

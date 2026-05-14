@@ -1,0 +1,16 @@
+.DS_Store
+node_modules/
+dist/
+build/
+target/
+.vite/
+.turbo/
+*.log
+
+# TWLR local project caches
+cache/
+*.sqlite
+
+# Environment
+.env
+.env.local

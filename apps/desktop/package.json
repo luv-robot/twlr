@@ -1,0 +1,27 @@
+{
+  "name": "@twlr/desktop",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri dev"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.0.0",
+    "@twlr/core": "0.0.0",
+    "@twlr/schema": "0.0.0",
+    "@twlr/ui": "0.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "vite": "^6.0.0"
+  }
+}
