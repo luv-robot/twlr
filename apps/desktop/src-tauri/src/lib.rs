@@ -423,6 +423,13 @@ fn write_timeline_state(request: WriteProjectJsonRequest) -> Result<(), String> 
 }
 
 #[tauri::command]
+fn openai_environment_status() -> bool {
+    std::env::var("OPENAI_API_KEY")
+        .map(|value| !value.trim().is_empty())
+        .unwrap_or(false)
+}
+
+#[tauri::command]
 async fn generate_openai_structured(request: OpenAiStructuredRequest) -> Result<serde_json::Value, String> {
     let api_key = std::env::var("OPENAI_API_KEY")
         .map_err(|_| "OPENAI_API_KEY is not set.".to_string())?;
@@ -504,6 +511,7 @@ pub fn run() {
             write_open_loop_state,
             read_timeline_state,
             write_timeline_state,
+            openai_environment_status,
             generate_openai_structured
         ])
         .run(tauri::generate_context!())

@@ -168,3 +168,7 @@ export async function writeTimelineState(request: WriteProjectJsonRequest<Timeli
 export async function generateOpenAiStructured<TValue>(request: OpenAiStructuredRequest): Promise<TValue> {
   return invoke<TValue>("generate_openai_structured", { request });
 }
+
+export async function getOpenAiEnvironmentStatus(): Promise<boolean> {
+  return invoke<boolean>("openai_environment_status");
+}

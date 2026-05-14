@@ -25,7 +25,7 @@ import type {
   TimelineStateFile,
 } from "@twlr/schema";
 import { demoChapters } from "../data/demoWorkspace";
-import { runProductionSkill } from "../services/aiSkillRunner";
+import { getAiProviderStatus, runProductionSkill } from "../services/aiSkillRunner";
 import {
   persistAcceptedProposal,
   persistCharacterState,
@@ -82,6 +82,12 @@ export function AppShell() {
     ],
     [changedChapterCount, openLoopState.open_loops.length, proposals.length],
   );
+
+  useEffect(() => {
+    void getAiProviderStatus()
+      .then(setStorageStatus)
+      .catch((error) => setStorageStatus(error instanceof Error ? error.message : "AI provider status unavailable."));
+  }, []);
 
   useEffect(() => {
     if (autosaveLabel !== "Saving locally...") {

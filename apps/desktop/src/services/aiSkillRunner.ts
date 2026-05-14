@@ -1,7 +1,7 @@
 import { runMockProductionSkill, type ProductionSkillContext, type ProductionSkillId } from "@twlr/ai";
 import { stateProposalJsonSchema, type StateProposal } from "@twlr/schema";
 import { isTauriRuntime } from "./tauriRuntime";
-import { generateOpenAiStructured } from "./twlrCommands";
+import { generateOpenAiStructured, getOpenAiEnvironmentStatus } from "./twlrCommands";
 
 export interface RunProductionSkillResult {
   proposal: StateProposal | null;
@@ -70,6 +70,16 @@ export async function runProductionSkill(
       message: error instanceof Error ? `${error.message} Using mock Character Sheet.` : "Using mock Character Sheet.",
     };
   }
+}
+
+export async function getAiProviderStatus(): Promise<string> {
+  if (!isTauriRuntime()) {
+    return "Browser preview. OpenAI runs in the Tauri desktop app.";
+  }
+
+  return (await getOpenAiEnvironmentStatus())
+    ? "OpenAI provider ready."
+    : "OPENAI_API_KEY is not set. Character Sheet will use mock output.";
 }
 
 function normalizeRemoteCharacterProposal(
