@@ -87,10 +87,10 @@ export function StudioCoordinatorPanel({
           Character Sheet
         </button>
         <button className="secondary-button wide" onClick={onCreateTimelineProposal}>
-          Mock Timeline Compiler
+          Timeline Compiler
         </button>
         <button className="secondary-button wide" onClick={onCreateForeshadowProposal}>
-          Mock Foreshadow Tracker
+          Foreshadow Tracker
         </button>
         <button className="secondary-button wide" onClick={onCheckAffectedChapters}>
           Check affected chapters

@@ -45,6 +45,36 @@ const remoteStateProposalSkillDefinitions: Partial<Record<ProductionSkillId, Rem
       "Do not produce broad literary critique or scene advice.",
     ],
   },
+  timeline_compiler: {
+    skillId: "timeline_compiler",
+    skillLabel: "Timeline Compiler",
+    proposalIdSuffix: "remote_timeline",
+    systemFocus: "Focus on concrete story events, sequence, story time, certainty, and chapter-local chronology.",
+    task: "Create a concise Timeline Compiler state proposal from the context packet.",
+    outputRules: [
+      "Summary must be one short event update, 18 to 28 English words when possible.",
+      "Evidence should contain 1 or 2 short observations from the selected text.",
+      "Always include at least one proposed event with target_type timeline_event.",
+      "Prefer timeline_event_created with field label, followed by timeline_event_changed with field summary when useful.",
+      "If characters are involved, include their ids in affected.characters.",
+      "Do not create broad outline advice or rewrite suggestions.",
+    ],
+  },
+  foreshadow_tracker: {
+    skillId: "foreshadow_tracker",
+    skillLabel: "Foreshadow Tracker",
+    proposalIdSuffix: "remote_foreshadow",
+    systemFocus: "Focus on setups, unresolved questions, suspicious details, delayed payoffs, and reader-facing open loops.",
+    task: "Create a concise Foreshadow Tracker state proposal from the context packet.",
+    outputRules: [
+      "Summary must be one short setup or payoff update, 18 to 28 English words when possible.",
+      "Evidence should contain 1 or 2 short observations from the selected text.",
+      "Always include at least one proposed event with target_type open_loop.",
+      "Prefer open_loop_created for a new setup and open_loop_changed for an existing unresolved thread.",
+      "If a likely payoff direction exists, use field expected_payoff.",
+      "Do not create broad literary critique or scene advice.",
+    ],
+  },
 };
 
 export function createRemoteStateProposalSkillRequest(
@@ -82,13 +112,23 @@ export function normalizeRemoteStateProposalSkillResult(
   const affectedCharacters = proposal.affected?.characters?.length
     ? proposal.affected.characters
     : inferTargetIds(rawProposedEvents, "character");
+  const affectedOpenLoops = proposal.affected?.open_loops?.length
+    ? proposal.affected.open_loops
+    : inferTargetIds(rawProposedEvents, "open_loop");
+  const affectedTimelineEvents = proposal.affected?.timeline_events?.length
+    ? proposal.affected.timeline_events
+    : inferTargetIds(rawProposedEvents, "timeline_event");
   const summary = normalizeProposalSummary(
     typeof proposal.summary === "string" ? proposal.summary : "Review character state update.",
   );
-  const proposedEvents =
-    request.skillId === "character_sheet"
-      ? ensureCharacterStateEvent(rawProposedEvents, affectedCharacters, summary)
-      : rawProposedEvents;
+  const proposedEvents = ensureSkillEvents({
+    affectedCharacters,
+    affectedOpenLoops,
+    affectedTimelineEvents,
+    events: rawProposedEvents,
+    skillId: request.skillId,
+    summary,
+  });
 
   return {
     ...proposal,
@@ -107,11 +147,9 @@ export function normalizeRemoteStateProposalSkillResult(
     affected: {
       chapters: proposal.affected?.chapters?.length ? proposal.affected.chapters : [context.chapter_id],
       characters: affectedCharacters.length ? affectedCharacters : inferTargetIds(proposedEvents, "character"),
-      open_loops: proposal.affected?.open_loops?.length
-        ? proposal.affected.open_loops
-        : inferTargetIds(proposedEvents, "open_loop"),
-      timeline_events: proposal.affected?.timeline_events?.length
-        ? proposal.affected.timeline_events
+      open_loops: affectedOpenLoops.length ? affectedOpenLoops : inferTargetIds(proposedEvents, "open_loop"),
+      timeline_events: affectedTimelineEvents.length
+        ? affectedTimelineEvents
         : inferTargetIds(proposedEvents, "timeline_event"),
     },
     summary,
@@ -213,6 +251,29 @@ function inferTargetIds(
   return [...new Set(ids)];
 }
 
+function ensureSkillEvents(input: {
+  affectedCharacters: string[];
+  affectedOpenLoops: string[];
+  affectedTimelineEvents: string[];
+  events: StateProposal["proposed_events"];
+  skillId: ProductionSkillId;
+  summary: string;
+}): StateProposal["proposed_events"] {
+  if (input.skillId === "character_sheet") {
+    return ensureCharacterStateEvent(input.events, input.affectedCharacters, input.summary);
+  }
+
+  if (input.skillId === "timeline_compiler") {
+    return ensureTimelineEvent(input.events, input.affectedTimelineEvents, input.summary);
+  }
+
+  if (input.skillId === "foreshadow_tracker") {
+    return ensureOpenLoopEvent(input.events, input.affectedOpenLoops, input.summary);
+  }
+
+  return input.events;
+}
+
 function ensureCharacterStateEvent(
   events: StateProposal["proposed_events"],
   affectedCharacters: string[],
@@ -246,4 +307,69 @@ function hasCharacterCurrentStatusEvent(events: StateProposal["proposed_events"]
   return events.some(
     (event) => event.payload.target_type === "character" && event.payload.field === "current_status",
   );
+}
+
+function ensureTimelineEvent(
+  events: StateProposal["proposed_events"],
+  affectedTimelineEvents: string[],
+  summary: string,
+): StateProposal["proposed_events"] {
+  if (events.some((event) => event.payload.target_type === "timeline_event")) {
+    return events;
+  }
+
+  const timelineEventId = affectedTimelineEvents[0] ?? makeStateId("timeline", summary);
+
+  return [
+    {
+      event_type: "timeline_event_created",
+      payload: {
+        target_type: "timeline_event",
+        target_id: timelineEventId,
+        field: "label",
+        old_value: null,
+        new_value: summary,
+      },
+    },
+    ...events,
+  ];
+}
+
+function ensureOpenLoopEvent(
+  events: StateProposal["proposed_events"],
+  affectedOpenLoops: string[],
+  summary: string,
+): StateProposal["proposed_events"] {
+  if (events.some((event) => event.payload.target_type === "open_loop")) {
+    return events;
+  }
+
+  const openLoopId = affectedOpenLoops[0] ?? makeStateId("loop", summary);
+
+  return [
+    {
+      event_type: "open_loop_created",
+      payload: {
+        target_type: "open_loop",
+        target_id: openLoopId,
+        field: "title",
+        old_value: null,
+        new_value: summary,
+      },
+    },
+    ...events,
+  ];
+}
+
+function makeStateId(prefix: string, value: string): string {
+  const slug = value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .split("_")
+    .filter(Boolean)
+    .slice(0, 6)
+    .join("_");
+
+  return `${prefix}_${slug || "item"}`;
 }
