@@ -77,7 +77,7 @@ export function StudioCoordinatorPanel({
       <section className="coordinator-card">
         <div className="section-label">{t("studioCoordinator.nextUsefulActions")}</div>
         <button className="primary-button" onClick={onCreateMockProposal}>
-          Mock Character Sheet
+          Character Sheet
         </button>
         <button className="secondary-button wide" onClick={onCreateTimelineProposal}>
           Mock Timeline Compiler

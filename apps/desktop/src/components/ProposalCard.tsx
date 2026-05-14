@@ -8,7 +8,8 @@ interface ProposalCardProps {
 }
 
 export function ProposalCard({ proposal, onAccept, onReject }: ProposalCardProps) {
-  const kicker = `${proposal.source.name} Proposal`;
+  const providerLabel = proposal.source.llm_provider === "remote" ? "Remote" : "Mock";
+  const kicker = `${proposal.source.name} Proposal - ${providerLabel}`;
 
   return (
     <section className="proposal-card">
