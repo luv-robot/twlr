@@ -9,8 +9,9 @@ import {
   proposalToNarrativeEvents,
   reviewStateProposal,
 } from "@twlr/core";
+import { runMockProductionSkill } from "@twlr/ai";
 import type { CharacterStateFile, NarrativeEvent, OpenLoopStateFile, RoomMeeting, StateProposal } from "@twlr/schema";
-import { createMockCharacterProposal, demoChapters } from "../data/demoWorkspace";
+import { demoChapters } from "../data/demoWorkspace";
 import {
   persistAcceptedProposal,
   persistCharacterState,
@@ -225,7 +226,13 @@ export function AppShell() {
         return current;
       }
 
-      return [createMockCharacterProposal(), ...current];
+      const proposal = runMockProductionSkill("character_sheet", {
+        chapter_id: activeChapter.filePath?.replace("manuscript/", "").replace(".md", "") ?? `chapter_${activeChapter.id}`,
+        chapter_title: activeChapter.title,
+        selected_text: activeChapter.body.split("\n\n")[0],
+      });
+
+      return proposal ? [proposal, ...current] : current;
     });
   }
 
