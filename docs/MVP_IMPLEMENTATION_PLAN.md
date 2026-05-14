@@ -189,6 +189,7 @@ The first vertical slice is now partially executable with mock AI:
 - snapshot status lite
 - Character Sheet mock proposal
 - OpenAI Character Sheet proposal path with mock fallback
+- remote state-proposal skill request adapter
 - pending proposal card persistence and reopen recovery
 - proposal accept / reject
 - accepted proposal to narrative events
@@ -330,6 +331,7 @@ Tasks:
 - implement mock outputs for P0 skills
 - implement structured output validation
 - implement remote LLM provider interface
+- move state-proposal prompt/request construction into `@twlr/ai`
 - connect Character Sheet
 - connect Timeline Compiler
 - connect Foreshadow Tracker

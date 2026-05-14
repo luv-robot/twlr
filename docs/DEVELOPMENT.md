@@ -103,6 +103,7 @@ The current P0 vertical slice includes:
 - Foreshadow Tracker mock proposal
 - OpenAI Character Sheet proposal path with mock fallback
 - remote provider interface with mock provider
+- remote state-proposal skill adapter for building structured LLM requests outside the desktop UI layer
 - provider failure summaries for missing keys, invalid keys, insufficient quota, unavailable models, schema rejection, and network errors
 - Save Snapshot command
 - revision check lite

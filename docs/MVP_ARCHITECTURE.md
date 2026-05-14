@@ -384,6 +384,17 @@ All AI outputs that may affect state must pass schema validation.
 
 In the desktop MVP, API keys should stay outside the webview. The first OpenAI path is routed through a Tauri command that reads `OPENAI_API_KEY` from the desktop process environment and returns structured JSON to the UI. If the key is unavailable or a request fails, the production skill may fall back to mock output during development.
 
+Production skills should not hand-build provider prompts inside UI services. The AI package owns the remote state-proposal adapter:
+
+```text
+ProductionSkillContext
+→ RemoteStateProposalSkillRequest
+→ provider generateStructured()
+→ StateProposal normalization
+```
+
+The desktop layer should only supply the context packet, call the provider bridge, and persist the returned proposal.
+
 ## Production Skills MVP
 
 Skills are tools, not personalities.
