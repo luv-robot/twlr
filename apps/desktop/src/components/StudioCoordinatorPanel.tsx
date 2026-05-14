@@ -11,6 +11,7 @@ interface StudioCoordinatorPanelProps {
   latestAcceptedEvent: NarrativeEvent | undefined;
   storageStatus: string;
   onAcceptProposal: (proposalId: string) => void;
+  onCreateRoomProposalCards: () => void;
   onRejectProposal: (proposalId: string) => void;
   onCreateMockProposal: () => void;
   onOpenWritersRoom: () => void;
@@ -26,6 +27,7 @@ export function StudioCoordinatorPanel({
   characterState,
   openLoopState,
   onAcceptProposal,
+  onCreateRoomProposalCards,
   onCreateMockProposal,
   onOpenWritersRoom,
   onRejectProposal,
@@ -65,7 +67,7 @@ export function StudioCoordinatorPanel({
         </button>
       </section>
 
-      {roomMeeting ? <WritersRoomCard meeting={roomMeeting} /> : null}
+      {roomMeeting ? <WritersRoomCard meeting={roomMeeting} onCreateProposalCards={onCreateRoomProposalCards} /> : null}
 
       {proposals.length > 0 ? (
         <section className="coordinator-card">
@@ -116,7 +118,15 @@ export function StudioCoordinatorPanel({
   );
 }
 
-function WritersRoomCard({ meeting }: { meeting: RoomMeeting }) {
+function WritersRoomCard({
+  meeting,
+  onCreateProposalCards,
+}: {
+  meeting: RoomMeeting;
+  onCreateProposalCards: () => void;
+}) {
+  const hasProposalCards = meeting.generated_proposals.length > 0;
+
   return (
     <section className="coordinator-card room-card">
       <div className="section-label">Writers' Room</div>
@@ -134,6 +144,9 @@ function WritersRoomCard({ meeting }: { meeting: RoomMeeting }) {
         <strong>Coordinator summary</strong>
         <p>{meeting.studio_coordinator_summary.summary}</p>
       </div>
+      <button className="primary-button" disabled={hasProposalCards} onClick={onCreateProposalCards}>
+        {hasProposalCards ? "Proposal cards ready" : "Create proposal cards"}
+      </button>
     </section>
   );
 }

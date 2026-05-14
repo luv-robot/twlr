@@ -8,7 +8,7 @@ import {
   proposalToNarrativeEvents,
   reviewStateProposal,
 } from "@twlr/core";
-import { createMockWritersRoomMeeting, runMockProductionSkill } from "@twlr/ai";
+import { createMockWritersRoomMeeting, createWritersRoomProposalCards, runMockProductionSkill } from "@twlr/ai";
 import type { CharacterStateFile, NarrativeEvent, OpenLoopStateFile, RoomMeeting, StateProposal } from "@twlr/schema";
 import { demoChapters } from "../data/demoWorkspace";
 import {
@@ -288,6 +288,30 @@ export function AppShell() {
     }
   }
 
+  function createProposalCardsFromRoom() {
+    if (!roomMeeting) {
+      return;
+    }
+
+    const generatedProposals = createWritersRoomProposalCards(roomMeeting);
+    const generatedProposalIds = generatedProposals.map((proposal) => proposal.proposal_id);
+    setProposals((current) => [
+      ...generatedProposals.filter(
+        (proposal) => !current.some((existingProposal) => existingProposal.proposal_id === proposal.proposal_id),
+      ),
+      ...current,
+    ]);
+    setRoomMeeting({
+      ...roomMeeting,
+      generated_proposals: Array.from(new Set([...roomMeeting.generated_proposals, ...generatedProposalIds])),
+      author_decision: {
+        decision: "create_proposal_cards",
+        decided_at: new Date().toISOString(),
+      },
+    });
+    setStorageStatus(`${generatedProposalIds.length} Writers' Room proposal card(s) ready for review.`);
+  }
+
   return (
     <div className="app-shell">
       <TopBar
@@ -323,6 +347,7 @@ export function AppShell() {
         latestAcceptedEvent={acceptedEvents[0]}
         openLoopState={openLoopState}
         onAcceptProposal={acceptProposal}
+        onCreateRoomProposalCards={createProposalCardsFromRoom}
         onCreateMockProposal={createMockProposal}
         onOpenWritersRoom={openWritersRoom}
         onRejectProposal={rejectProposal}

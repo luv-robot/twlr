@@ -1,4 +1,4 @@
-import type { RoomMeeting } from "@twlr/schema";
+import type { RoomMeeting, StateProposal } from "@twlr/schema";
 import { getOfficialAgent } from "./agents";
 
 export function createMockWritersRoomMeeting(now = new Date().toISOString()): RoomMeeting {
@@ -45,4 +45,54 @@ export function createMockWritersRoomMeeting(now = new Date().toISOString()): Ro
     generated_proposals: [],
     author_decision: null,
   };
+}
+
+export function createWritersRoomProposalCards(
+  meeting: RoomMeeting,
+  now = new Date().toISOString(),
+): StateProposal[] {
+  return [
+    {
+      proposal_id: `proposal_${meeting.meeting_id}_open_loop`,
+      created_at: now,
+      status: "pending",
+      source: {
+        kind: "writers_room",
+        name: "Writers' Room",
+        llm_provider: "mock",
+      },
+      scope: {
+        chapters: meeting.scope.chapters,
+        selected_text_range: null,
+      },
+      affected: {
+        chapters: meeting.scope.chapters,
+        characters: meeting.scope.characters,
+        open_loops: meeting.scope.open_loops,
+        timeline_events: [],
+      },
+      summary: "Track the altered archive record as an active unresolved thread.",
+      evidence: [
+        meeting.studio_coordinator_summary.summary,
+        ...meeting.perspectives.map((perspective) => `${perspective.label}: ${perspective.suggested_check}`),
+      ],
+      proposed_events: [
+        {
+          event_type: "open_loop_created",
+          payload: {
+            target_type: "open_loop",
+            target_id: "loop_altered_archive_record",
+            field: "title",
+            new_value: "Altered archive record",
+          },
+        },
+      ],
+      review: {
+        reviewed_at: null,
+        reviewed_by: null,
+        decision: null,
+        edited_summary: null,
+      },
+    },
+  ];
 }
