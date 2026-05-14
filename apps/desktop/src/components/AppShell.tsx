@@ -249,6 +249,18 @@ export function AppShell() {
     }
   }
 
+  async function checkAffectedChapters() {
+    if (!projectPath) {
+      setSnapshotStatus(`${changedChapterCount} changed chapters in this demo session.`);
+      setStorageStatus("Affected chapter check is local to this demo session.");
+      return;
+    }
+
+    setSnapshotStatus("Checking affected chapters...");
+    await refreshSnapshotStatus(projectPath);
+    setStorageStatus("Affected chapter check refreshed.");
+  }
+
   function createMockProposal() {
     createSkillProposal("character_sheet");
   }
@@ -430,6 +442,7 @@ export function AppShell() {
         openLoopState={openLoopState}
         timelineState={timelineState}
         onAcceptProposal={acceptProposal}
+        onCheckAffectedChapters={checkAffectedChapters}
         onCreateRoomProposalCards={createProposalCardsFromRoom}
         onCreateForeshadowProposal={createForeshadowProposal}
         onCreateMockProposal={createMockProposal}

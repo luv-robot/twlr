@@ -20,6 +20,7 @@ interface StudioCoordinatorPanelProps {
   latestAcceptedEvent: NarrativeEvent | undefined;
   storageStatus: string;
   onAcceptProposal: (proposalId: string) => void;
+  onCheckAffectedChapters: () => void;
   onCreateForeshadowProposal: () => void;
   onCreateRoomProposalCards: () => void;
   onRejectProposal: (proposalId: string) => void;
@@ -40,6 +41,7 @@ export function StudioCoordinatorPanel({
   openLoopState,
   timelineState,
   onAcceptProposal,
+  onCheckAffectedChapters,
   onCreateForeshadowProposal,
   onCreateRoomProposalCards,
   onCreateMockProposal,
@@ -82,7 +84,9 @@ export function StudioCoordinatorPanel({
         <button className="secondary-button wide" onClick={onCreateForeshadowProposal}>
           Mock Foreshadow Tracker
         </button>
-        <button className="secondary-button wide">Check affected chapters</button>
+        <button className="secondary-button wide" onClick={onCheckAffectedChapters}>
+          Check affected chapters
+        </button>
         <button className="secondary-button wide" onClick={onOpenWritersRoom}>
           Open Writers' Room
         </button>
