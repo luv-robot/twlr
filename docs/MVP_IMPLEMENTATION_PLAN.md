@@ -194,6 +194,7 @@ The first vertical slice is now partially executable with mock AI:
 - pending proposal card persistence and reopen recovery
 - proposal accept / reject
 - accepted proposal to narrative events
+- accepted proposal to projected state files
 - local project reopen reads narrative event log
 - projected character state
 - projected open-loop state

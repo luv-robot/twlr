@@ -52,22 +52,67 @@ export function applyCharacterEvents(
 }
 
 function applyCharacterEvent(character: CharacterState, event: NarrativeEvent): CharacterState {
-  if (event.payload.field === "current_status" && typeof event.payload.new_value === "string") {
-    return {
-      ...character,
-      current_status: event.payload.new_value,
-      referenced_chapters: mergeUnique(character.referenced_chapters, event.references.chapters),
-      open_loops: mergeUnique(character.open_loops, event.references.open_loops),
-      updated_at: event.created_at,
-    };
-  }
-
-  return {
+  const base = {
     ...character,
     referenced_chapters: mergeUnique(character.referenced_chapters, event.references.chapters),
     open_loops: mergeUnique(character.open_loops, event.references.open_loops),
     updated_at: event.created_at,
   };
+
+  if (typeof event.payload.new_value !== "string") {
+    return base;
+  }
+
+  if (event.payload.field === "name") {
+    return {
+      ...base,
+      name: event.payload.new_value,
+    };
+  }
+
+  if (event.payload.field === "role") {
+    return {
+      ...base,
+      role: event.payload.new_value,
+    };
+  }
+
+  if (event.payload.field === "current_status") {
+    return {
+      ...base,
+      current_status: event.payload.new_value,
+    };
+  }
+
+  if (event.payload.field === "desire") {
+    return {
+      ...base,
+      desire: event.payload.new_value,
+    };
+  }
+
+  if (event.payload.field === "fear") {
+    return {
+      ...base,
+      fear: event.payload.new_value,
+    };
+  }
+
+  if (event.payload.field === "arc_stage") {
+    return {
+      ...base,
+      arc_stage: event.payload.new_value,
+    };
+  }
+
+  if (event.payload.field === "secret" || event.payload.field === "secrets") {
+    return {
+      ...base,
+      secrets: mergeUnique(character.secrets ?? [], splitStateListValue(event.payload.new_value)),
+    };
+  }
+
+  return base;
 }
 
 export function applyOpenLoopEvents(
@@ -162,43 +207,60 @@ function applyTimelineEvent(timelineEvent: TimelineEvent, event: NarrativeEvent)
 }
 
 function applyOpenLoopEvent(openLoop: OpenLoop, event: NarrativeEvent): OpenLoop {
+  const base = {
+    ...openLoop,
+    status: openLoop.status,
+    related_chapters: mergeUnique(openLoop.related_chapters, event.references.chapters),
+    related_characters: mergeUnique(openLoop.related_characters, event.references.characters),
+    updated_at: event.created_at,
+  };
+
   if (event.event_type === "open_loop_paid_off") {
     return {
-      ...openLoop,
+      ...base,
       status: "paid_off",
-      related_chapters: mergeUnique(openLoop.related_chapters, event.references.chapters),
-      related_characters: mergeUnique(openLoop.related_characters, event.references.characters),
-      updated_at: event.created_at,
     };
   }
 
   if (event.payload.field === "title" && typeof event.payload.new_value === "string") {
     return {
-      ...openLoop,
+      ...base,
       title: event.payload.new_value,
-      related_chapters: mergeUnique(openLoop.related_chapters, event.references.chapters),
-      related_characters: mergeUnique(openLoop.related_characters, event.references.characters),
-      updated_at: event.created_at,
     };
   }
 
   if (event.payload.field === "notes" && typeof event.payload.new_value === "string") {
     return {
-      ...openLoop,
+      ...base,
       notes: event.payload.new_value,
-      related_chapters: mergeUnique(openLoop.related_chapters, event.references.chapters),
-      related_characters: mergeUnique(openLoop.related_characters, event.references.characters),
-      updated_at: event.created_at,
     };
   }
 
-  return {
-    ...openLoop,
-    status: openLoop.status === "paid_off" ? "paid_off" : "open",
-    related_chapters: mergeUnique(openLoop.related_chapters, event.references.chapters),
-    related_characters: mergeUnique(openLoop.related_characters, event.references.characters),
-    updated_at: event.created_at,
-  };
+  if (
+    (event.payload.field === "summary" || event.payload.field === "description") &&
+    typeof event.payload.new_value === "string"
+  ) {
+    return {
+      ...base,
+      notes: event.payload.new_value,
+    };
+  }
+
+  if (event.payload.field === "expected_payoff" && typeof event.payload.new_value === "string") {
+    return {
+      ...base,
+      expected_payoff: event.payload.new_value,
+    };
+  }
+
+  if (event.payload.field === "status" && isOpenLoopStatus(event.payload.new_value)) {
+    return {
+      ...base,
+      status: event.payload.new_value,
+    };
+  }
+
+  return base;
 }
 
 function createUnknownCharacter(characterId: string): CharacterState {
@@ -244,4 +306,21 @@ function createUnknownTimelineEvent(timelineEventId: string, event: NarrativeEve
 
 function mergeUnique(left: string[], right: string[]): string[] {
   return [...new Set([...left, ...right])];
+}
+
+function splitStateListValue(value: string): string[] {
+  return value
+    .split(/[,;\n]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function isOpenLoopStatus(value: unknown): value is OpenLoop["status"] {
+  return (
+    value === "open" ||
+    value === "developing" ||
+    value === "paid_off" ||
+    value === "dropped" ||
+    value === "needs_review"
+  );
 }

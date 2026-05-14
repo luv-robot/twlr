@@ -105,6 +105,7 @@ The current P0 vertical slice includes:
 - projected character state
 - projected open-loop state
 - projected timeline state
+- accepted proposals update projected character, open-loop, and timeline state files
 - local project reopen reads projected state files
 - context projection packet for skills and Writers' Room
 - Writers' Room meeting JSONL persistence

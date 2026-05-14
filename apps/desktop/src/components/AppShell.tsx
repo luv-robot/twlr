@@ -354,13 +354,11 @@ export function AppShell() {
       const openLoopResult = await persistOpenLoopState(projectPath, nextOpenLoopState);
       const timelineResult = await persistTimelineState(projectPath, nextTimelineState);
       setStorageStatus(
-        timelineResult.status === "persisted"
-          ? timelineResult.message
-          : openLoopResult.status === "persisted"
-            ? openLoopResult.message
-            : stateResult.status === "persisted"
-              ? stateResult.message
-              : result.message,
+        timelineResult.status === "persisted" ||
+          openLoopResult.status === "persisted" ||
+          stateResult.status === "persisted"
+          ? `Accepted proposal: ${events.length} event(s) committed; projected state updated.`
+          : result.message,
       );
     } catch (error) {
       setStorageStatus(error instanceof Error ? error.message : "Failed to persist event log.");

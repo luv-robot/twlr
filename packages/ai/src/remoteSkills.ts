@@ -30,7 +30,7 @@ const remoteStateProposalSkillDefinitions: Partial<Record<ProductionSkillId, Rem
   character_sheet: {
     skillId: "character_sheet",
     skillLabel: "Character Sheet",
-    proposalIdSuffix: "openai_character",
+    proposalIdSuffix: "remote_character",
     systemFocus: "Focus on observed character state, motivation signals, secrets, arc stage, and reader-facing function.",
     task: "Create a concise Character Sheet state proposal from the context packet.",
     outputRules: [
@@ -95,11 +95,15 @@ export function normalizeRemoteStateProposalSkillResult(
     },
     affected: {
       chapters: proposal.affected?.chapters?.length ? proposal.affected.chapters : [context.chapter_id],
-      characters: proposal.affected?.characters ?? [],
+      characters: proposal.affected?.characters?.length
+        ? proposal.affected.characters
+        : inferTargetIds(proposedEvents, "character"),
       open_loops: proposal.affected?.open_loops?.length
         ? proposal.affected.open_loops
-        : inferOpenLoopIds(proposedEvents),
-      timeline_events: proposal.affected?.timeline_events ?? [],
+        : inferTargetIds(proposedEvents, "open_loop"),
+      timeline_events: proposal.affected?.timeline_events?.length
+        ? proposal.affected.timeline_events
+        : inferTargetIds(proposedEvents, "timeline_event"),
     },
     summary: normalizeProposalSummary(
       typeof proposal.summary === "string" ? proposal.summary : "Review character state update.",
@@ -188,9 +192,14 @@ function normalizeEvidence(evidence: string[]): string[] {
     .slice(0, 2);
 }
 
-function inferOpenLoopIds(events: StateProposal["proposed_events"]): string[] {
-  return events
-    .filter((event) => event.payload.target_type === "open_loop")
+function inferTargetIds(
+  events: StateProposal["proposed_events"],
+  targetType: StateProposal["proposed_events"][number]["payload"]["target_type"],
+): string[] {
+  const ids = events
+    .filter((event) => event.payload.target_type === targetType)
     .map((event) => event.payload.target_id)
     .filter(Boolean);
+
+  return [...new Set(ids)];
 }
