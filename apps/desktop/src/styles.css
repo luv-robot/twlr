@@ -21,6 +21,11 @@ button {
   font: inherit;
 }
 
+button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
 .app-shell {
   display: grid;
   grid-template-areas:
@@ -234,11 +239,22 @@ button {
   font-size: 13px;
 }
 
-.writing-column p {
-  margin: 0 0 26px;
+.chapter-editor {
+  display: block;
+  width: 100%;
+  min-height: calc(100vh - 220px);
+  border: 0;
+  outline: 0;
+  resize: none;
+  background: transparent;
+  color: #242424;
   font-family: Georgia, "Times New Roman", serif;
   font-size: 18px;
   line-height: 1.78;
+}
+
+.chapter-editor:focus {
+  box-shadow: inset 3px 0 0 #e8f1ef;
 }
 
 .context-panel {
