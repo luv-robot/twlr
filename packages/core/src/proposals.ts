@@ -1,4 +1,5 @@
 import type { NarrativeEvent, ProposalStatus, StateProposal } from "@twlr/schema";
+import { canonicalCharacterId } from "./ids";
 
 export interface ReviewProposalInput {
   proposal: StateProposal;
@@ -34,11 +35,17 @@ export function proposalToNarrativeEvents(proposal: StateProposal, now = new Dat
     },
     references: {
       chapters: proposal.affected.chapters,
-      characters: proposal.affected.characters,
+      characters: proposal.affected.characters.map(canonicalCharacterId),
       open_loops: proposal.affected.open_loops,
       timeline_events: proposal.affected.timeline_events,
     },
-    payload: event.payload,
+    payload:
+      event.payload.target_type === "character"
+        ? {
+            ...event.payload,
+            target_id: canonicalCharacterId(event.payload.target_id),
+          }
+        : event.payload,
   }));
 }
 
@@ -60,12 +67,13 @@ function proposalEventsForCommit(proposal: StateProposal): StateProposal["propos
     return proposal.proposed_events;
   }
 
-  const characterId =
+  const rawCharacterId =
     proposal.affected.characters[0] ??
     proposal.proposed_events.find((event) => event.payload.target_type === "character")?.payload.target_id;
-  if (!characterId) {
+  if (!rawCharacterId) {
     return proposal.proposed_events;
   }
+  const characterId = canonicalCharacterId(rawCharacterId);
 
   return [
     {

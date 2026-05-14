@@ -7,6 +7,7 @@ import type {
   TimelineEvent,
   TimelineStateFile,
 } from "@twlr/schema";
+import { canonicalCharacterId } from "./ids";
 
 export function createEmptyCharacterStateFile(): CharacterStateFile {
   return {
@@ -33,15 +34,29 @@ export function applyCharacterEvents(
   stateFile: CharacterStateFile,
   events: NarrativeEvent[],
 ): CharacterStateFile {
-  const characters = new Map(stateFile.characters.map((character) => [character.character_id, character]));
+  const characters = new Map<string, CharacterState>();
+
+  for (const character of stateFile.characters) {
+    const canonicalId = canonicalCharacterId(character.character_id);
+    const normalizedCharacter = {
+      ...character,
+      character_id: canonicalId,
+      name: character.name === formatStateLabel(character.character_id, ["char_", "character_"])
+        ? formatStateLabel(canonicalId, ["char_"])
+        : character.name,
+    };
+    const existing = characters.get(canonicalId);
+    characters.set(canonicalId, existing ? mergeCharacterState(existing, normalizedCharacter) : normalizedCharacter);
+  }
 
   for (const event of events) {
     if (event.payload.target_type !== "character") {
       continue;
     }
 
-    const existing = characters.get(event.payload.target_id) ?? createUnknownCharacter(event.payload.target_id);
-    const next = applyCharacterEvent(existing, event);
+    const characterId = canonicalCharacterId(event.payload.target_id);
+    const existing = characters.get(characterId) ?? createUnknownCharacter(characterId);
+    const next = applyCharacterEvent(existing, normalizeCharacterEvent(event));
     characters.set(next.character_id, next);
   }
 
@@ -120,11 +135,52 @@ function applyCharacterEvent(character: CharacterState, event: NarrativeEvent): 
   return base;
 }
 
+function normalizeCharacterEvent(event: NarrativeEvent): NarrativeEvent {
+  return {
+    ...event,
+    references: {
+      ...event.references,
+      characters: event.references.characters.map(canonicalCharacterId),
+    },
+    payload: {
+      ...event.payload,
+      target_id: canonicalCharacterId(event.payload.target_id),
+    },
+  };
+}
+
+function mergeCharacterState(left: CharacterState, right: CharacterState): CharacterState {
+  return {
+    ...left,
+    ...right,
+    character_id: left.character_id,
+    name: pickUsefulText(right.name, left.name),
+    role: pickUsefulText(right.role, left.role),
+    current_status: pickUsefulText(right.current_status, left.current_status),
+    desire: right.desire ?? left.desire,
+    fear: right.fear ?? left.fear,
+    arc_stage: right.arc_stage ?? left.arc_stage,
+    secrets: mergeUnique(left.secrets ?? [], right.secrets ?? []),
+    open_loops: mergeUnique(left.open_loops, right.open_loops),
+    relationships: mergeUnique(left.relationships, right.relationships),
+    referenced_chapters: mergeUnique(left.referenced_chapters, right.referenced_chapters),
+    updated_at: right.updated_at > left.updated_at ? right.updated_at : left.updated_at,
+  };
+}
+
 export function applyOpenLoopEvents(
   stateFile: OpenLoopStateFile,
   events: NarrativeEvent[],
 ): OpenLoopStateFile {
-  const openLoops = new Map(stateFile.open_loops.map((openLoop) => [openLoop.open_loop_id, openLoop]));
+  const openLoops = new Map(
+    stateFile.open_loops.map((openLoop) => [
+      openLoop.open_loop_id,
+      {
+        ...openLoop,
+        related_characters: canonicalCharacterIds(openLoop.related_characters),
+      },
+    ]),
+  );
 
   for (const event of events) {
     if (event.payload.target_type !== "open_loop") {
@@ -147,7 +203,13 @@ export function applyTimelineEvents(
   events: NarrativeEvent[],
 ): TimelineStateFile {
   const timelineEvents = new Map(
-    stateFile.timeline_events.map((timelineEvent) => [timelineEvent.timeline_event_id, timelineEvent]),
+    stateFile.timeline_events.map((timelineEvent) => [
+      timelineEvent.timeline_event_id,
+      {
+        ...timelineEvent,
+        characters: canonicalCharacterIds(timelineEvent.characters),
+      },
+    ]),
   );
 
   for (const event of events) {
@@ -169,7 +231,7 @@ export function applyTimelineEvents(
 function applyTimelineEvent(timelineEvent: TimelineEvent, event: NarrativeEvent): TimelineEvent {
   const base = {
     ...timelineEvent,
-    characters: mergeUnique(timelineEvent.characters, event.references.characters),
+    characters: mergeUnique(timelineEvent.characters, canonicalCharacterIds(event.references.characters)),
     chapter_id: timelineEvent.chapter_id ?? event.references.chapters[0] ?? null,
     updated_at: event.created_at,
   };
@@ -216,7 +278,7 @@ function applyOpenLoopEvent(openLoop: OpenLoop, event: NarrativeEvent): OpenLoop
     ...openLoop,
     status: openLoop.status,
     related_chapters: mergeUnique(openLoop.related_chapters, event.references.chapters),
-    related_characters: mergeUnique(openLoop.related_characters, event.references.characters),
+    related_characters: mergeUnique(openLoop.related_characters, canonicalCharacterIds(event.references.characters)),
     updated_at: event.created_at,
   };
 
@@ -269,9 +331,11 @@ function applyOpenLoopEvent(openLoop: OpenLoop, event: NarrativeEvent): OpenLoop
 }
 
 function createUnknownCharacter(characterId: string): CharacterState {
+  const canonicalId = canonicalCharacterId(characterId);
+
   return {
-    character_id: characterId,
-    name: formatStateLabel(characterId, ["char_", "character_"]),
+    character_id: canonicalId,
+    name: formatStateLabel(canonicalId, ["char_"]),
     role: "unknown",
     current_status: "needs review",
     open_loops: [],
@@ -311,6 +375,18 @@ function createUnknownTimelineEvent(timelineEventId: string, event: NarrativeEve
 
 function mergeUnique(left: string[], right: string[]): string[] {
   return [...new Set([...left, ...right])];
+}
+
+function canonicalCharacterIds(ids: string[]): string[] {
+  return ids.map(canonicalCharacterId);
+}
+
+function pickUsefulText(candidate: string, fallback: string): string {
+  if (!candidate || candidate === "unknown" || candidate === "needs review") {
+    return fallback;
+  }
+
+  return candidate;
 }
 
 function splitStateListValue(value: string): string[] {

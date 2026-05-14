@@ -195,6 +195,7 @@ The first vertical slice is now partially executable with mock AI:
 - proposal accept / reject
 - accepted proposal to narrative events
 - accepted proposal to projected state files
+- canonical character id normalization for accepted proposal state updates
 - local project reopen reads narrative event log
 - projected character state
 - projected open-loop state

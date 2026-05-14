@@ -100,6 +100,7 @@ The current P0 vertical slice includes:
 - Markdown chapter list and editor
 - chapter create and autosave
 - accepted proposal event logging
+- accepted proposal character references are normalized to canonical character ids
 - pending proposal card persistence and reopen recovery
 - local project reopen reads narrative event log
 - projected character state
