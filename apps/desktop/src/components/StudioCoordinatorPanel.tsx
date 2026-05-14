@@ -7,6 +7,7 @@ interface StudioCoordinatorPanelProps {
   proposals: StateProposal[];
   acceptedEventCount: number;
   characterState: CharacterStateFile;
+  contextProjectionStatus: string;
   openLoopState: OpenLoopStateFile;
   latestAcceptedEvent: NarrativeEvent | undefined;
   storageStatus: string;
@@ -25,6 +26,7 @@ export function StudioCoordinatorPanel({
   proposals,
   acceptedEventCount,
   characterState,
+  contextProjectionStatus,
   openLoopState,
   onAcceptProposal,
   onCreateRoomProposalCards,
@@ -102,6 +104,11 @@ export function StudioCoordinatorPanel({
       <section className="coordinator-card quiet-card">
         <div className="section-label">Snapshot status</div>
         <p>{snapshotStatus}</p>
+      </section>
+
+      <section className="coordinator-card quiet-card">
+        <div className="section-label">Context projection</div>
+        <p>{contextProjectionStatus}</p>
       </section>
 
       <section className="coordinator-card quiet-card">

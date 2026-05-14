@@ -1,4 +1,5 @@
 export * from "./chapter";
+export * from "./contextProjection";
 export * from "./coordinator";
 export * from "./defaultProject";
 export * from "./ids";

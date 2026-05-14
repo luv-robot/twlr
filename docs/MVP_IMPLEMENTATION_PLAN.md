@@ -192,6 +192,7 @@ The first vertical slice is now partially executable with mock AI:
 - accepted proposal to narrative events
 - projected character state
 - projected open-loop state
+- context projection packet for skills and Writers' Room
 - Writers' Room mock meeting
 - Writers' Room meeting log persistence
 - Writers' Room to proposal-card handoff

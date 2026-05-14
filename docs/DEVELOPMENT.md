@@ -87,6 +87,7 @@ The current P0 vertical slice includes:
 - accepted proposal event logging
 - projected character state
 - projected open-loop state
+- context projection packet for skills and Writers' Room
 - Writers' Room meeting JSONL persistence
 - Writers' Room to proposal-card handoff
 - official agent registry

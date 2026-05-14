@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   applyCharacterEvents,
   applyOpenLoopEvents,
+  buildChapterContextProjection,
   countWords,
   createEmptyCharacterStateFile,
   createEmptyOpenLoopStateFile,
@@ -47,6 +48,7 @@ export function AppShell() {
   const [storageStatus, setStorageStatus] = useState("Demo session");
   const [workspaceStatus, setWorkspaceStatus] = useState("Demo workspace");
   const [snapshotStatus, setSnapshotStatus] = useState("No local snapshot status.");
+  const [contextProjectionStatus, setContextProjectionStatus] = useState("No context packet built in this session.");
 
   const activeChapter = chapters.find((chapter) => chapter.id === activeChapterId) ?? chapters[0];
   const wordCount = countWords(activeChapter.body);
@@ -220,6 +222,12 @@ export function AppShell() {
   }
 
   function createMockProposal() {
+    const selectedText = activeChapter.body.split("\n\n")[0];
+    const contextPacket = buildActiveChapterContextProjection("production_skill", selectedText);
+    setContextProjectionStatus(
+      `Projected ${contextPacket.current_chapter.word_count} words, ${contextPacket.characters.length} characters, ${contextPacket.open_loops.length} open loops, ${contextPacket.recent_events.length} events.`,
+    );
+
     setProposals((current) => {
       if (current.some((proposal) => proposal.status === "pending")) {
         return current;
@@ -228,7 +236,8 @@ export function AppShell() {
       const proposal = runMockProductionSkill("character_sheet", {
         chapter_id: activeChapter.filePath?.replace("manuscript/", "").replace(".md", "") ?? `chapter_${activeChapter.id}`,
         chapter_title: activeChapter.title,
-        selected_text: activeChapter.body.split("\n\n")[0],
+        selected_text: selectedText,
+        context_packet: contextPacket,
       });
 
       return proposal ? [proposal, ...current] : current;
@@ -276,8 +285,12 @@ export function AppShell() {
   }
 
   async function openWritersRoom() {
+    const contextPacket = buildActiveChapterContextProjection("writers_room", null);
     const meeting = createMockWritersRoomMeeting();
     setRoomMeeting(meeting);
+    setContextProjectionStatus(
+      `Projected Writers' Room packet: ${contextPacket.current_chapter.word_count} words, ${contextPacket.characters.length} characters, ${contextPacket.open_loops.length} open loops.`,
+    );
     setStorageStatus("Recording Writers' Room...");
 
     try {
@@ -286,6 +299,29 @@ export function AppShell() {
     } catch (error) {
       setStorageStatus(error instanceof Error ? error.message : "Failed to record Writers' Room.");
     }
+  }
+
+  function buildActiveChapterContextProjection(
+    task: "production_skill" | "writers_room",
+    selectedText: string | null,
+  ) {
+    return buildChapterContextProjection({
+      task,
+      chapter: {
+        chapter_id: activeChapter.filePath?.replace("manuscript/", "").replace(".md", "") ?? `chapter_${activeChapter.id}`,
+        title: activeChapter.title,
+        body: activeChapter.body,
+        file_path: activeChapter.filePath,
+        metadata: {
+          id: activeChapter.id,
+          status: activeChapter.state,
+        },
+      },
+      characterState,
+      openLoopState,
+      events: acceptedEvents,
+      selectedText,
+    });
   }
 
   function createProposalCardsFromRoom() {
@@ -343,6 +379,7 @@ export function AppShell() {
       <StudioCoordinatorPanel
         acceptedEventCount={acceptedEventCount}
         characterState={characterState}
+        contextProjectionStatus={contextProjectionStatus}
         items={coordinatorItems}
         latestAcceptedEvent={acceptedEvents[0]}
         openLoopState={openLoopState}

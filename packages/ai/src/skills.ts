@@ -1,4 +1,4 @@
-import type { StateProposal } from "@twlr/schema";
+import type { ContextProjectionPacket, StateProposal } from "@twlr/schema";
 
 export type ProductionSkillId =
   | "character_sheet"
@@ -17,6 +17,7 @@ export interface ProductionSkillContext {
   chapter_id: string;
   chapter_title: string;
   selected_text?: string;
+  context_packet?: ContextProjectionPacket;
 }
 
 export const productionSkills: ProductionSkillDefinition[] = [
