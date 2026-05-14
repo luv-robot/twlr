@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::fs;
+use std::fs::{self, OpenOptions};
+use std::io::Write;
 use std::path::{Component, Path, PathBuf};
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -19,6 +20,12 @@ struct WriteChapterRequest {
     project_path: String,
     file_path: String,
     content: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct AppendProjectRecordsRequest {
+    project_path: String,
+    records: Vec<serde_json::Value>,
 }
 
 #[derive(Debug, Serialize)]
@@ -204,6 +211,24 @@ fn write_chapter(request: WriteChapterRequest) -> Result<ChapterSummary, String>
     parse_chapter_summary(&content, &full_path)
 }
 
+#[tauri::command]
+fn append_narrative_events(request: AppendProjectRecordsRequest) -> Result<usize, String> {
+    append_project_jsonl_records(
+        &request.project_path,
+        "events/narrative_events.jsonl",
+        request.records,
+    )
+}
+
+#[tauri::command]
+fn append_state_proposals(request: AppendProjectRecordsRequest) -> Result<usize, String> {
+    append_project_jsonl_records(
+        &request.project_path,
+        "proposals/state_proposals.jsonl",
+        request.records,
+    )
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -212,7 +237,9 @@ pub fn run() {
             open_project,
             list_chapters,
             read_chapter,
-            write_chapter
+            write_chapter,
+            append_narrative_events,
+            append_state_proposals
         ])
         .run(tauri::generate_context!())
         .expect("error while running TWLR desktop app");
@@ -247,6 +274,33 @@ fn init_git(project_path: &Path) -> bool {
         .output()
         .map(|output| output.status.success())
         .unwrap_or(false)
+}
+
+fn append_project_jsonl_records(
+    project_path: &str,
+    relative_path: &str,
+    records: Vec<serde_json::Value>,
+) -> Result<usize, String> {
+    let full_path = resolve_project_relative_path(project_path, relative_path)?;
+    if let Some(parent) = full_path.parent() {
+        fs::create_dir_all(parent).map_err(|error| format!("Failed to create log directory: {error}"))?;
+    }
+
+    let mut file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&full_path)
+        .map_err(|error| format!("Failed to open {}: {error}", full_path.display()))?;
+
+    let mut count = 0;
+    for record in records {
+        let line = serde_json::to_string(&record)
+            .map_err(|error| format!("Failed to serialize JSONL record: {error}"))?;
+        writeln!(file, "{line}").map_err(|error| format!("Failed to append JSONL record: {error}"))?;
+        count += 1;
+    }
+
+    Ok(count)
 }
 
 fn resolve_project_relative_path(project_path: &str, file_path: &str) -> Result<PathBuf, String> {

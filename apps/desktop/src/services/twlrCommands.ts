@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import type { NarrativeEvent, StateProposal } from "@twlr/schema";
 
 export interface CreateProjectRequest {
   project_path: string;
@@ -12,6 +13,11 @@ export interface WriteChapterRequest {
   project_path: string;
   file_path: string;
   content: string;
+}
+
+export interface AppendProjectRecordsRequest<TRecord> {
+  project_path: string;
+  records: TRecord[];
 }
 
 export interface ProjectSummary {
@@ -56,4 +62,14 @@ export async function readChapter(projectPath: string, filePath: string): Promis
 
 export async function writeChapter(request: WriteChapterRequest): Promise<ChapterSummary> {
   return invoke<ChapterSummary>("write_chapter", { request });
+}
+
+export async function appendNarrativeEvents(
+  request: AppendProjectRecordsRequest<NarrativeEvent>,
+): Promise<number> {
+  return invoke<number>("append_narrative_events", { request });
+}
+
+export async function appendStateProposals(request: AppendProjectRecordsRequest<StateProposal>): Promise<number> {
+  return invoke<number>("append_state_proposals", { request });
 }
