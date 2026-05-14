@@ -5,3 +5,4 @@ export * from "./ids";
 export * from "./proposals";
 export * from "./projectLayout";
 export * from "./stateProjection";
+export * from "./writersRoom";

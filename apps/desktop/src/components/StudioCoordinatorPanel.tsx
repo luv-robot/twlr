@@ -1,5 +1,5 @@
 import type { CoordinatorStatusItem } from "../data/demoWorkspace";
-import type { CharacterStateFile, NarrativeEvent, StateProposal } from "@twlr/schema";
+import type { CharacterStateFile, NarrativeEvent, RoomMeeting, StateProposal } from "@twlr/schema";
 import { ProposalCard } from "./ProposalCard";
 
 interface StudioCoordinatorPanelProps {
@@ -12,6 +12,8 @@ interface StudioCoordinatorPanelProps {
   onAcceptProposal: (proposalId: string) => void;
   onRejectProposal: (proposalId: string) => void;
   onCreateMockProposal: () => void;
+  onOpenWritersRoom: () => void;
+  roomMeeting: RoomMeeting | null;
 }
 
 export function StudioCoordinatorPanel({
@@ -22,8 +24,10 @@ export function StudioCoordinatorPanel({
   characterState,
   onAcceptProposal,
   onCreateMockProposal,
+  onOpenWritersRoom,
   onRejectProposal,
   storageStatus,
+  roomMeeting,
 }: StudioCoordinatorPanelProps) {
   return (
     <aside className="context-panel">
@@ -52,8 +56,12 @@ export function StudioCoordinatorPanel({
           Mock Character Sheet
         </button>
         <button className="secondary-button wide">Check affected chapters</button>
-        <button className="secondary-button wide">Open Writers' Room</button>
+        <button className="secondary-button wide" onClick={onOpenWritersRoom}>
+          Open Writers' Room
+        </button>
       </section>
+
+      {roomMeeting ? <WritersRoomCard meeting={roomMeeting} /> : null}
 
       {proposals.length > 0 ? (
         <section className="coordinator-card">
@@ -95,5 +103,27 @@ export function StudioCoordinatorPanel({
         ) : null}
       </section>
     </aside>
+  );
+}
+
+function WritersRoomCard({ meeting }: { meeting: RoomMeeting }) {
+  return (
+    <section className="coordinator-card room-card">
+      <div className="section-label">Writers' Room</div>
+      <h3>{meeting.question}</h3>
+      <div className="room-observations">
+        {meeting.perspectives.map((perspective) => (
+          <article className="room-observation" key={perspective.agent_id}>
+            <strong>{perspective.label}</strong>
+            <p>{perspective.observation}</p>
+            <small>{perspective.suggested_check}</small>
+          </article>
+        ))}
+      </div>
+      <div className="coordinator-summary">
+        <strong>Coordinator summary</strong>
+        <p>{meeting.studio_coordinator_summary.summary}</p>
+      </div>
+    </section>
   );
 }

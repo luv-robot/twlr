@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import {
   applyCharacterEvents,
   countWords,
+  createMockWritersRoomMeeting,
   createEmptyCharacterStateFile,
   proposalToNarrativeEvents,
   reviewStateProposal,
 } from "@twlr/core";
-import type { CharacterStateFile, NarrativeEvent, StateProposal } from "@twlr/schema";
+import type { CharacterStateFile, NarrativeEvent, RoomMeeting, StateProposal } from "@twlr/schema";
 import { createMockCharacterProposal, demoChapters } from "../data/demoWorkspace";
 import { persistAcceptedProposal, persistCharacterState } from "../services/projectPersistence";
 import {
@@ -31,6 +32,7 @@ export function AppShell() {
   const [changedChapterIds, setChangedChapterIds] = useState<Set<string>>(() => new Set());
   const [acceptedEvents, setAcceptedEvents] = useState<NarrativeEvent[]>([]);
   const [characterState, setCharacterState] = useState<CharacterStateFile>(() => createEmptyCharacterStateFile());
+  const [roomMeeting, setRoomMeeting] = useState<RoomMeeting | null>(null);
   const [projectPath, setProjectPath] = useState<string | null>(null);
   const [projectPathInput, setProjectPathInput] = useState("/private/tmp/twlr-glass-city");
   const [storageStatus, setStorageStatus] = useState("Demo session");
@@ -232,6 +234,10 @@ export function AppShell() {
     setProposals((current) => current.filter((proposal) => proposal.proposal_id !== proposalId));
   }
 
+  function openWritersRoom() {
+    setRoomMeeting(createMockWritersRoomMeeting());
+  }
+
   return (
     <div className="app-shell">
       <TopBar
@@ -267,8 +273,10 @@ export function AppShell() {
         latestAcceptedEvent={acceptedEvents[0]}
         onAcceptProposal={acceptProposal}
         onCreateMockProposal={createMockProposal}
+        onOpenWritersRoom={openWritersRoom}
         onRejectProposal={rejectProposal}
         proposals={proposals}
+        roomMeeting={roomMeeting}
         storageStatus={storageStatus}
       />
     </div>
