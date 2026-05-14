@@ -1,11 +1,12 @@
 import type { CoordinatorStatusItem } from "../data/demoWorkspace";
-import type { NarrativeEvent, StateProposal } from "@twlr/schema";
+import type { CharacterStateFile, NarrativeEvent, StateProposal } from "@twlr/schema";
 import { ProposalCard } from "./ProposalCard";
 
 interface StudioCoordinatorPanelProps {
   items: CoordinatorStatusItem[];
   proposals: StateProposal[];
   acceptedEventCount: number;
+  characterState: CharacterStateFile;
   latestAcceptedEvent: NarrativeEvent | undefined;
   storageStatus: string;
   onAcceptProposal: (proposalId: string) => void;
@@ -18,6 +19,7 @@ export function StudioCoordinatorPanel({
   latestAcceptedEvent,
   proposals,
   acceptedEventCount,
+  characterState,
   onAcceptProposal,
   onCreateMockProposal,
   onRejectProposal,
@@ -79,6 +81,16 @@ export function StudioCoordinatorPanel({
         {latestAcceptedEvent ? (
           <p className="event-note">
             Latest: {latestAcceptedEvent.event_type} on {latestAcceptedEvent.payload.target_type}.
+          </p>
+        ) : null}
+      </section>
+
+      <section className="coordinator-card quiet-card">
+        <div className="section-label">Projected state</div>
+        <p>{characterState.characters.length} character state records in this session.</p>
+        {characterState.characters[0] ? (
+          <p className="event-note">
+            {characterState.characters[0].name}: {characterState.characters[0].current_status}
           </p>
         ) : null}
       </section>

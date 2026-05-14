@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { countWords, proposalToNarrativeEvents, reviewStateProposal } from "@twlr/core";
-import type { NarrativeEvent, StateProposal } from "@twlr/schema";
+import {
+  applyCharacterEvents,
+  countWords,
+  createEmptyCharacterStateFile,
+  proposalToNarrativeEvents,
+  reviewStateProposal,
+} from "@twlr/core";
+import type { CharacterStateFile, NarrativeEvent, StateProposal } from "@twlr/schema";
 import { createMockCharacterProposal, demoChapters } from "../data/demoWorkspace";
 import { persistAcceptedProposal } from "../services/projectPersistence";
 import {
@@ -24,6 +30,7 @@ export function AppShell() {
   const [autosaveLabel, setAutosaveLabel] = useState("Autosaved locally");
   const [changedChapterIds, setChangedChapterIds] = useState<Set<string>>(() => new Set());
   const [acceptedEvents, setAcceptedEvents] = useState<NarrativeEvent[]>([]);
+  const [characterState, setCharacterState] = useState<CharacterStateFile>(() => createEmptyCharacterStateFile());
   const [projectPath, setProjectPath] = useState<string | null>(null);
   const [projectPathInput, setProjectPathInput] = useState("/private/tmp/twlr-glass-city");
   const [storageStatus, setStorageStatus] = useState("Demo session");
@@ -203,6 +210,7 @@ export function AppShell() {
     const reviewedProposal = reviewStateProposal({ proposal, decision: "accepted" });
     const events = proposalToNarrativeEvents(reviewedProposal);
     setAcceptedEvents((currentEvents) => [...events, ...currentEvents]);
+    setCharacterState((currentState) => applyCharacterEvents(currentState, events));
     setProposals((current) => current.filter((item) => item.proposal_id !== proposalId));
     setStorageStatus("Saving event log...");
 
@@ -252,6 +260,7 @@ export function AppShell() {
       />
       <StudioCoordinatorPanel
         acceptedEventCount={acceptedEventCount}
+        characterState={characterState}
         items={coordinatorItems}
         latestAcceptedEvent={acceptedEvents[0]}
         onAcceptProposal={acceptProposal}

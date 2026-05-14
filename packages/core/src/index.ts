@@ -4,3 +4,4 @@ export * from "./defaultProject";
 export * from "./ids";
 export * from "./proposals";
 export * from "./projectLayout";
+export * from "./stateProjection";
