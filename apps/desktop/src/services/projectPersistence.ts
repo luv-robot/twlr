@@ -1,7 +1,13 @@
-import type { NarrativeEvent, RoomMeeting, StateProposal } from "@twlr/schema";
+import type { NarrativeEvent, OpenLoopStateFile, RoomMeeting, StateProposal } from "@twlr/schema";
 import type { CharacterStateFile } from "@twlr/schema";
 import { isTauriRuntime } from "./tauriRuntime";
-import { appendNarrativeEvents, appendRoomMeetings, appendStateProposals, writeCharacterState } from "./twlrCommands";
+import {
+  appendNarrativeEvents,
+  appendRoomMeetings,
+  appendStateProposals,
+  writeCharacterState,
+  writeOpenLoopState,
+} from "./twlrCommands";
 
 export type PersistenceResult =
   | {
@@ -75,6 +81,35 @@ export async function persistCharacterState(
   return {
     status: "persisted",
     message: "Character state updated in local project.",
+  };
+}
+
+export async function persistOpenLoopState(
+  projectPath: string | null,
+  state: OpenLoopStateFile,
+): Promise<PersistenceResult> {
+  if (!projectPath) {
+    return {
+      status: "skipped",
+      message: "Open loop state is held in this demo session.",
+    };
+  }
+
+  if (!isTauriRuntime()) {
+    return {
+      status: "skipped",
+      message: "Browser preview only. Open loop state was not written.",
+    };
+  }
+
+  await writeOpenLoopState({
+    project_path: projectPath,
+    value: state,
+  });
+
+  return {
+    status: "persisted",
+    message: "Open loop state updated in local project.",
   };
 }
 

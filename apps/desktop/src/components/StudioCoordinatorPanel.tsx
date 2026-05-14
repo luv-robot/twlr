@@ -1,5 +1,5 @@
 import type { CoordinatorStatusItem } from "../data/demoWorkspace";
-import type { CharacterStateFile, NarrativeEvent, RoomMeeting, StateProposal } from "@twlr/schema";
+import type { CharacterStateFile, NarrativeEvent, OpenLoopStateFile, RoomMeeting, StateProposal } from "@twlr/schema";
 import { ProposalCard } from "./ProposalCard";
 
 interface StudioCoordinatorPanelProps {
@@ -7,6 +7,7 @@ interface StudioCoordinatorPanelProps {
   proposals: StateProposal[];
   acceptedEventCount: number;
   characterState: CharacterStateFile;
+  openLoopState: OpenLoopStateFile;
   latestAcceptedEvent: NarrativeEvent | undefined;
   storageStatus: string;
   onAcceptProposal: (proposalId: string) => void;
@@ -22,6 +23,7 @@ export function StudioCoordinatorPanel({
   proposals,
   acceptedEventCount,
   characterState,
+  openLoopState,
   onAcceptProposal,
   onCreateMockProposal,
   onOpenWritersRoom,
@@ -96,6 +98,7 @@ export function StudioCoordinatorPanel({
       <section className="coordinator-card quiet-card">
         <div className="section-label">Projected state</div>
         <p>{characterState.characters.length} character state records in this session.</p>
+        <p>{openLoopState.open_loops.length} open loop records in this session.</p>
         {characterState.characters[0] ? (
           <p className="event-note">
             {characterState.characters[0].name}: {characterState.characters[0].current_status}

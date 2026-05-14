@@ -352,6 +352,16 @@ fn write_character_state(request: WriteProjectJsonRequest) -> Result<(), String>
     write_project_json_file(&request.project_path, "state/characters.json", request.value)
 }
 
+#[tauri::command]
+fn read_open_loop_state(project_path: String) -> Result<serde_json::Value, String> {
+    read_project_json_file(&project_path, "state/open_loops.json")
+}
+
+#[tauri::command]
+fn write_open_loop_state(request: WriteProjectJsonRequest) -> Result<(), String> {
+    write_project_json_file(&request.project_path, "state/open_loops.json", request.value)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -367,7 +377,9 @@ pub fn run() {
             append_room_meetings,
             save_snapshot,
             read_character_state,
-            write_character_state
+            write_character_state,
+            read_open_loop_state,
+            write_open_loop_state
         ])
         .run(tauri::generate_context!())
         .expect("error while running TWLR desktop app");
@@ -685,6 +697,28 @@ mod tests {
         let characters = read_character_state(project_path_text.clone())
             .expect("character state should be readable");
         assert_eq!(characters["characters"][0]["character_id"], "char_mira");
+
+        write_open_loop_state(WriteProjectJsonRequest {
+            project_path: project_path_text.clone(),
+            value: json!({
+                "schema_version": 1,
+                "open_loops": [{
+                    "open_loop_id": "loop_test",
+                    "title": "Test unresolved thread",
+                    "status": "open",
+                    "introduced_in": "chapter_001",
+                    "expected_payoff": "later",
+                    "related_characters": [],
+                    "related_chapters": ["chapter_001"],
+                    "notes": "testing state writes",
+                    "updated_at": "2026-05-14T00:00:00.000Z"
+                }]
+            }),
+        })
+        .expect("open loop state should be written");
+        let open_loops = read_open_loop_state(project_path_text.clone())
+            .expect("open loop state should be readable");
+        assert_eq!(open_loops["open_loops"][0]["open_loop_id"], "loop_test");
 
         let snapshot = save_snapshot(SaveSnapshotRequest {
             project_path: project_path_text.clone(),

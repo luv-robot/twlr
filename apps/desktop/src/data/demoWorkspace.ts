@@ -111,6 +111,15 @@ export function createMockCharacterProposal(now = new Date().toISOString()): Sta
           new_value: "suspects the archive record was changed",
         },
       },
+      {
+        event_type: "open_loop_created",
+        payload: {
+          target_type: "open_loop",
+          target_id: "loop_altered_archive_record",
+          field: "title",
+          new_value: "Altered archive record",
+        },
+      },
     ],
     review: {
       reviewed_at: null,

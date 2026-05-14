@@ -1,15 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   applyCharacterEvents,
+  applyOpenLoopEvents,
   countWords,
   createMockWritersRoomMeeting,
   createEmptyCharacterStateFile,
+  createEmptyOpenLoopStateFile,
   proposalToNarrativeEvents,
   reviewStateProposal,
 } from "@twlr/core";
-import type { CharacterStateFile, NarrativeEvent, RoomMeeting, StateProposal } from "@twlr/schema";
+import type { CharacterStateFile, NarrativeEvent, OpenLoopStateFile, RoomMeeting, StateProposal } from "@twlr/schema";
 import { createMockCharacterProposal, demoChapters } from "../data/demoWorkspace";
-import { persistAcceptedProposal, persistCharacterState, persistRoomMeeting } from "../services/projectPersistence";
+import {
+  persistAcceptedProposal,
+  persistCharacterState,
+  persistOpenLoopState,
+  persistRoomMeeting,
+} from "../services/projectPersistence";
 import {
   createLocalWorkspace,
   createWorkspaceChapter,
@@ -32,6 +39,7 @@ export function AppShell() {
   const [changedChapterIds, setChangedChapterIds] = useState<Set<string>>(() => new Set());
   const [acceptedEvents, setAcceptedEvents] = useState<NarrativeEvent[]>([]);
   const [characterState, setCharacterState] = useState<CharacterStateFile>(() => createEmptyCharacterStateFile());
+  const [openLoopState, setOpenLoopState] = useState<OpenLoopStateFile>(() => createEmptyOpenLoopStateFile());
   const [roomMeeting, setRoomMeeting] = useState<RoomMeeting | null>(null);
   const [projectPath, setProjectPath] = useState<string | null>(null);
   const [projectPathInput, setProjectPathInput] = useState("/private/tmp/twlr-glass-city");
@@ -47,10 +55,10 @@ export function AppShell() {
     () => [
       { count: String(proposals.length), label: "pending updates", tone: "proposal" as const },
       { count: String(changedChapterCount), label: "changed chapters", tone: "warning" as const },
-      { count: "2", label: "unresolved threads", tone: "warning" as const },
+      { count: String(openLoopState.open_loops.length), label: "unresolved threads", tone: "warning" as const },
       { count: "1", label: "possible timeline issue", tone: "risk" as const },
     ],
-    [changedChapterCount, proposals.length],
+    [changedChapterCount, openLoopState.open_loops.length, proposals.length],
   );
 
   useEffect(() => {
@@ -212,8 +220,10 @@ export function AppShell() {
     const reviewedProposal = reviewStateProposal({ proposal, decision: "accepted" });
     const events = proposalToNarrativeEvents(reviewedProposal);
     const nextCharacterState = applyCharacterEvents(characterState, events);
+    const nextOpenLoopState = applyOpenLoopEvents(openLoopState, events);
     setAcceptedEvents((currentEvents) => [...events, ...currentEvents]);
     setCharacterState(nextCharacterState);
+    setOpenLoopState(nextOpenLoopState);
     setProposals((current) => current.filter((item) => item.proposal_id !== proposalId));
     setStorageStatus("Saving event log...");
 
@@ -224,7 +234,14 @@ export function AppShell() {
         proposal: reviewedProposal,
       });
       const stateResult = await persistCharacterState(projectPath, nextCharacterState);
-      setStorageStatus(stateResult.status === "persisted" ? stateResult.message : result.message);
+      const openLoopResult = await persistOpenLoopState(projectPath, nextOpenLoopState);
+      setStorageStatus(
+        openLoopResult.status === "persisted"
+          ? openLoopResult.message
+          : stateResult.status === "persisted"
+            ? stateResult.message
+            : result.message,
+      );
     } catch (error) {
       setStorageStatus(error instanceof Error ? error.message : "Failed to persist event log.");
     }
@@ -280,6 +297,7 @@ export function AppShell() {
         characterState={characterState}
         items={coordinatorItems}
         latestAcceptedEvent={acceptedEvents[0]}
+        openLoopState={openLoopState}
         onAcceptProposal={acceptProposal}
         onCreateMockProposal={createMockProposal}
         onOpenWritersRoom={openWritersRoom}

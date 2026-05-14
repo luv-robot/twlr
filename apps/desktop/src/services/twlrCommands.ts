@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { CharacterStateFile, NarrativeEvent, RoomMeeting, StateProposal } from "@twlr/schema";
+import type { CharacterStateFile, NarrativeEvent, OpenLoopStateFile, RoomMeeting, StateProposal } from "@twlr/schema";
 
 export interface CreateProjectRequest {
   project_path: string;
@@ -113,4 +113,12 @@ export async function readCharacterState(projectPath: string): Promise<Character
 
 export async function writeCharacterState(request: WriteProjectJsonRequest<CharacterStateFile>): Promise<void> {
   return invoke<void>("write_character_state", { request });
+}
+
+export async function readOpenLoopState(projectPath: string): Promise<OpenLoopStateFile> {
+  return invoke<OpenLoopStateFile>("read_open_loop_state", { projectPath });
+}
+
+export async function writeOpenLoopState(request: WriteProjectJsonRequest<OpenLoopStateFile>): Promise<void> {
+  return invoke<void>("write_open_loop_state", { request });
 }
