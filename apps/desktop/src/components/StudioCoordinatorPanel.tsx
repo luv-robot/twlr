@@ -59,6 +59,9 @@ export function StudioCoordinatorPanel({
   const recentOpenLoops = [...openLoopState.open_loops]
     .sort((left, right) => right.updated_at.localeCompare(left.updated_at))
     .slice(0, 3);
+  const recentTimelineEvents = [...timelineState.timeline_events]
+    .sort((left, right) => right.updated_at.localeCompare(left.updated_at))
+    .slice(0, 3);
 
   return (
     <aside className="context-panel">
@@ -148,7 +151,8 @@ export function StudioCoordinatorPanel({
         <p>{openLoopState.open_loops.length} open loop records in this session.</p>
         <p>{timelineState.timeline_events.length} timeline event records in this session.</p>
         {recentCharacters.length > 0 ? (
-          <div className="state-list">
+          <div className="state-list" aria-label="Recent character state">
+            <div className="state-list-heading">Characters</div>
             {recentCharacters.map((character) => (
               <p className="event-note state-line" key={character.character_id}>
                 <strong>{character.name}</strong>
@@ -158,11 +162,23 @@ export function StudioCoordinatorPanel({
           </div>
         ) : null}
         {recentOpenLoops.length > 0 ? (
-          <div className="state-list">
+          <div className="state-list" aria-label="Recent open loop state">
+            <div className="state-list-heading">Open loops</div>
             {recentOpenLoops.map((openLoop) => (
               <p className="state-line" key={openLoop.open_loop_id}>
                 <strong>{openLoop.title}</strong>
                 <span>{openLoop.status}</span>
+              </p>
+            ))}
+          </div>
+        ) : null}
+        {recentTimelineEvents.length > 0 ? (
+          <div className="state-list" aria-label="Recent timeline state">
+            <div className="state-list-heading">Timeline</div>
+            {recentTimelineEvents.map((timelineEvent) => (
+              <p className="state-line" key={timelineEvent.timeline_event_id}>
+                <strong>{timelineEvent.label}</strong>
+                <span>{timelineEvent.summary}</span>
               </p>
             ))}
           </div>
