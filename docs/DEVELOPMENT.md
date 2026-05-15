@@ -129,7 +129,7 @@ The current P0 vertical slice includes:
 - provider failure summaries for missing keys, invalid keys, insufficient quota, unavailable models, schema rejection, and network errors
 - Save Snapshot command
 - revision check lite with writer-facing affected areas
-- minimal i18n key usage in high-frequency UI
+- expanded i18n key usage in high-frequency UI controls
 
 ## Browser Smoke Check
 

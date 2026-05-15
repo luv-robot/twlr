@@ -95,7 +95,7 @@ export function StudioCoordinatorPanel({
       </div>
 
       <section className="coordinator-card">
-        <div className="section-label">Project status</div>
+        <div className="section-label">{t("studioCoordinator.projectStatus")}</div>
         {items.map((item) => (
           <div className="status-row" key={item.label}>
             <strong className={item.tone}>{item.count}</strong>
@@ -107,22 +107,22 @@ export function StudioCoordinatorPanel({
       <section className="coordinator-card">
         <div className="section-label">{t("studioCoordinator.nextUsefulActions")}</div>
         <button className="primary-button" disabled={Boolean(runningSkillId)} onClick={onCreateMockProposal}>
-          {runningSkillId === "character_sheet" ? "Running Character Sheet..." : "Character Sheet"}
+          {runningSkillId === "character_sheet" ? t("skill.runningCharacterSheet") : t("skill.characterSheet")}
         </button>
         <button className="secondary-button wide" disabled={Boolean(runningSkillId)} onClick={onCreateOutlineProposal}>
-          {runningSkillId === "outline_builder" ? "Running Outline Builder..." : "Outline Builder"}
+          {runningSkillId === "outline_builder" ? t("skill.runningOutlineBuilder") : t("skill.outlineBuilder")}
         </button>
         <button className="secondary-button wide" disabled={Boolean(runningSkillId)} onClick={onCreateTimelineProposal}>
-          {runningSkillId === "timeline_compiler" ? "Running Timeline Compiler..." : "Timeline Compiler"}
+          {runningSkillId === "timeline_compiler" ? t("skill.runningTimelineCompiler") : t("skill.timelineCompiler")}
         </button>
         <button className="secondary-button wide" disabled={Boolean(runningSkillId)} onClick={onCreateForeshadowProposal}>
-          {runningSkillId === "foreshadow_tracker" ? "Running Foreshadow Tracker..." : "Foreshadow Tracker"}
+          {runningSkillId === "foreshadow_tracker" ? t("skill.runningForeshadowTracker") : t("skill.foreshadowTracker")}
         </button>
         <button className="secondary-button wide" disabled={isCheckingImpact} onClick={onCheckAffectedChapters}>
-          {isCheckingImpact ? "Checking affected chapters..." : "Check affected chapters"}
+          {isCheckingImpact ? t("studioCoordinator.checkingAffectedChapters") : t("studioCoordinator.checkAffectedChapters")}
         </button>
         <button className="secondary-button wide" disabled={Boolean(roomAction)} onClick={onOpenWritersRoom}>
-          {roomAction === "opening" ? "Opening Writers' Room..." : "Open Writers' Room"}
+          {roomAction === "opening" ? t("studioCoordinator.openingWritersRoom") : t("studioCoordinator.openWritersRoom")}
         </button>
       </section>
 
@@ -136,7 +136,7 @@ export function StudioCoordinatorPanel({
 
       {proposals.length > 0 ? (
         <section className="coordinator-card">
-          <div className="section-label">Pending updates</div>
+          <div className="section-label">{t("studioCoordinator.pendingUpdates")}</div>
           {proposals.map((proposal) => (
             <ProposalCard
               busyAction={
@@ -152,13 +152,13 @@ export function StudioCoordinatorPanel({
         </section>
       ) : (
         <section className="coordinator-card quiet-card">
-          <div className="section-label">Pending updates</div>
+          <div className="section-label">{t("studioCoordinator.pendingUpdates")}</div>
           <p>No pending state updates.</p>
         </section>
       )}
 
       <section className="coordinator-card quiet-card">
-        <div className="section-label">Durable events</div>
+        <div className="section-label">{t("studioCoordinator.durableEvents")}</div>
         <p>{acceptedEventCount} accepted narrative events available.</p>
         <p className="event-note">{storageStatus}</p>
         {latestAcceptedEvent ? (
@@ -169,17 +169,17 @@ export function StudioCoordinatorPanel({
       </section>
 
       <section className="coordinator-card quiet-card">
-        <div className="section-label">Revision check</div>
+        <div className="section-label">{t("studioCoordinator.revisionCheck")}</div>
         <p>{snapshotStatus}</p>
       </section>
 
       <section className="coordinator-card quiet-card">
-        <div className="section-label">Context projection</div>
+        <div className="section-label">{t("studioCoordinator.contextProjection")}</div>
         <p>{contextProjectionStatus}</p>
       </section>
 
       <section className="coordinator-card quiet-card">
-        <div className="section-label">Projected state</div>
+        <div className="section-label">{t("studioCoordinator.projectedState")}</div>
         <p>{characterState.characters.length} character state records in this session.</p>
         <p>{openLoopState.open_loops.length} open loop records in this session.</p>
         <p>{timelineState.timeline_events.length} timeline event records in this session.</p>
@@ -251,7 +251,11 @@ function WritersRoomCard({
         <p>{meeting.studio_coordinator_summary.summary}</p>
       </div>
       <button className="primary-button" disabled={hasProposalCards || isCreatingCards} onClick={onCreateProposalCards}>
-        {isCreatingCards ? "Creating proposal cards..." : hasProposalCards ? "Proposal cards ready" : "Create proposal cards"}
+        {isCreatingCards
+          ? t("writersRoom.creatingProposalCards")
+          : hasProposalCards
+            ? t("writersRoom.proposalCardsReady")
+            : t("writersRoom.createProposalCards")}
       </button>
     </section>
   );

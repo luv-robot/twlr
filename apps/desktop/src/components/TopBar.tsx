@@ -27,7 +27,7 @@ export function TopBar({
         {autosaveLabel}
       </div>
       <button className="secondary-button" disabled={changedItemCount === 0 || isSavingSnapshot} onClick={onSaveSnapshot}>
-        {isSavingSnapshot ? "Saving..." : t("snapshot.save")}
+        {isSavingSnapshot ? t("snapshot.saving") : t("snapshot.save")}
       </button>
       <button className="icon-button" aria-label="Search">
         /

@@ -53,7 +53,7 @@ export function ProposalCard({ busyAction, proposal, onAccept, onEdit, onReject 
         ) : null}
       </div>
       <div className="proposal-evidence">
-        <strong>Evidence</strong>
+        <strong>{t("proposal.evidence")}</strong>
         {isEditing ? (
           <textarea
             className="proposal-edit-field evidence"
@@ -68,22 +68,22 @@ export function ProposalCard({ busyAction, proposal, onAccept, onEdit, onReject 
         {isEditing ? (
           <>
             <button className="secondary-button" disabled={isBusy} onClick={() => setIsEditing(false)}>
-              Cancel
+              {t("proposal.cancel")}
             </button>
             <button className="primary-button compact" disabled={!canSaveEdit} onClick={saveEdit}>
-              Save
+              {t("proposal.save")}
             </button>
           </>
         ) : (
           <>
             <button className="secondary-button" disabled={isBusy} onClick={() => onReject(proposal.proposal_id)}>
-              {busyAction === "reject" ? "Rejecting..." : t("proposal.reject")}
+              {busyAction === "reject" ? t("proposal.rejecting") : t("proposal.reject")}
             </button>
             <button className="secondary-button" disabled={isBusy} onClick={() => setIsEditing(true)}>
-              Edit
+              {t("proposal.edit")}
             </button>
             <button className="primary-button compact" disabled={isBusy} onClick={() => onAccept(proposal.proposal_id)}>
-              {busyAction === "accept" ? "Accepting..." : t("proposal.accept")}
+              {busyAction === "accept" ? t("proposal.accepting") : t("proposal.accept")}
             </button>
           </>
         )}

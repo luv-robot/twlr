@@ -1,3 +1,4 @@
+import { t } from "@twlr/ui";
 import type { ChapterListItem } from "../data/demoWorkspace";
 
 export type WorkspaceAction = "creating" | "creating_chapter" | "opening" | null;
@@ -38,7 +39,7 @@ export function ProjectNavigator({
     <aside className="navigator">
       <h1>{projectTitle}</h1>
       <section className="workspace-card">
-        <div className="section-label">Local workspace</div>
+        <div className="section-label">{t("project.localWorkspace")}</div>
         <input
           aria-label="Local project path"
           className="path-input"
@@ -48,19 +49,19 @@ export function ProjectNavigator({
         />
         <div className="workspace-actions">
           <button className="secondary-button" disabled={isWorking} onClick={onOpenLocalProject}>
-            {isOpening ? "Opening..." : "Open"}
+            {isOpening ? t("project.opening") : t("project.open")}
           </button>
           <button className="primary-button compact" disabled={isWorking} onClick={onCreateLocalProject}>
-            {isCreating ? "Creating..." : "Create"}
+            {isCreating ? t("project.creating") : t("project.create")}
           </button>
         </div>
         <p>{workspaceStatus}</p>
       </section>
-      <button className="part-pill">Act I</button>
+      <button className="part-pill">{t("part.actOne")}</button>
       <div className="section-heading">
-        <div className="section-label">Chapters</div>
-        <button className="icon-button" aria-label="Create chapter" disabled={isWorking} onClick={onCreateChapter}>
-          {isCreatingChapter ? "..." : "+"}
+        <div className="section-label">{t("chapter.listTitle")}</div>
+        <button className="icon-button" aria-label={t("chapter.create")} disabled={isWorking} onClick={onCreateChapter}>
+          {isCreatingChapter ? t("chapter.creating") : "+"}
         </button>
       </div>
       <div className="chapter-list">

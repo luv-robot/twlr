@@ -69,6 +69,13 @@ function t(key: MessageKey, locale: Locale): string;
 
 The first implementation can be small. The important part is not to spread permanent English-only copy through state engines, providers, prompts, or schema logic.
 
+Current P0 implementation:
+
+- `packages/ui/src/i18n.ts` defines the first stable `Locale` and `MessageKey` model.
+- High-frequency project, snapshot, proposal, production skill, Studio Coordinator, and Writers' Room control labels use `t(...)`.
+- Runtime locale switching is still deferred.
+- Long-form status messages and generated creative content are not fully localized yet.
+
 ## AI Prompt Rule
 
 Provider adapters should not decide output language by themselves.
