@@ -46,9 +46,16 @@ import {
 } from "../services/workspaceAdapter";
 import { AppRail } from "./AppRail";
 import { ManuscriptEditor } from "./ManuscriptEditor";
-import { ProjectNavigator } from "./ProjectNavigator";
+import { ProjectNavigator, type WorkspaceAction } from "./ProjectNavigator";
 import { StudioCoordinatorPanel } from "./StudioCoordinatorPanel";
 import { TopBar } from "./TopBar";
+
+type ProposalReviewAction = {
+  action: "accept" | "reject";
+  proposalId: string;
+} | null;
+
+type RoomAction = "creating_cards" | "opening" | null;
 
 export function AppShell() {
   const [chapters, setChapters] = useState(demoChapters);
@@ -69,7 +76,12 @@ export function AppShell() {
   const [workspaceStatus, setWorkspaceStatus] = useState("Demo workspace");
   const [snapshotStatus, setSnapshotStatus] = useState("No revision check yet.");
   const [contextProjectionStatus, setContextProjectionStatus] = useState("No context packet built in this session.");
+  const [isCheckingImpact, setIsCheckingImpact] = useState(false);
+  const [isSavingSnapshot, setIsSavingSnapshot] = useState(false);
+  const [proposalReviewAction, setProposalReviewAction] = useState<ProposalReviewAction>(null);
+  const [roomAction, setRoomAction] = useState<RoomAction>(null);
   const [runningSkillId, setRunningSkillId] = useState<ProductionSkillId | null>(null);
+  const [workspaceAction, setWorkspaceAction] = useState<WorkspaceAction>(null);
 
   const activeChapter = chapters.find((chapter) => chapter.id === activeChapterId) ?? chapters[0];
   const wordCount = countWords(activeChapter.body);
@@ -139,10 +151,16 @@ export function AppShell() {
   }
 
   async function saveSnapshot() {
+    if (isSavingSnapshot) {
+      return;
+    }
+
+    setIsSavingSnapshot(true);
     if (!projectPath) {
       setChangedChapterIds(new Set());
       setChangedProjectFileCount(0);
       setAutosaveLabel("Snapshot saved locally");
+      setIsSavingSnapshot(false);
       return;
     }
 
@@ -158,16 +176,23 @@ export function AppShell() {
       refreshSnapshotStatus(projectPath);
     } catch (error) {
       setAutosaveLabel(error instanceof Error ? error.message : "Snapshot failed");
+    } finally {
+      setIsSavingSnapshot(false);
     }
   }
 
   async function openLocalProject() {
+    if (workspaceAction) {
+      return;
+    }
+
     const nextProjectPath = projectPathInput.trim();
     if (!nextProjectPath) {
       setWorkspaceStatus("Enter a local project path.");
       return;
     }
 
+    setWorkspaceAction("opening");
     setWorkspaceStatus("Opening local project...");
     try {
       const workspace = await loadLocalWorkspace(nextProjectPath);
@@ -188,16 +213,23 @@ export function AppShell() {
       refreshSnapshotStatus(nextProjectPath);
     } catch (error) {
       setWorkspaceStatus(error instanceof Error ? error.message : "Failed to open local project.");
+    } finally {
+      setWorkspaceAction(null);
     }
   }
 
   async function createProjectAtPath() {
+    if (workspaceAction) {
+      return;
+    }
+
     const nextProjectPath = projectPathInput.trim();
     if (!nextProjectPath) {
       setWorkspaceStatus("Enter a local project path.");
       return;
     }
 
+    setWorkspaceAction("creating");
     setWorkspaceStatus("Creating local project...");
     try {
       const workspace = await createLocalWorkspace(nextProjectPath, projectTitle);
@@ -218,10 +250,17 @@ export function AppShell() {
       refreshSnapshotStatus(nextProjectPath);
     } catch (error) {
       setWorkspaceStatus(error instanceof Error ? error.message : "Failed to create local project.");
+    } finally {
+      setWorkspaceAction(null);
     }
   }
 
   async function createChapter() {
+    if (workspaceAction) {
+      return;
+    }
+
+    setWorkspaceAction("creating_chapter");
     const nextIndex = chapters.length + 1;
     const title = `Untitled Chapter ${nextIndex}`;
 
@@ -241,6 +280,7 @@ export function AppShell() {
       ]);
       setActiveChapterId(id);
       setWorkspaceStatus("Created demo chapter.");
+      setWorkspaceAction(null);
       return;
     }
 
@@ -253,6 +293,8 @@ export function AppShell() {
       refreshSnapshotStatus(projectPath);
     } catch (error) {
       setWorkspaceStatus(error instanceof Error ? error.message : "Failed to create chapter.");
+    } finally {
+      setWorkspaceAction(null);
     }
   }
 
@@ -267,15 +309,25 @@ export function AppShell() {
   }
 
   async function checkAffectedChapters() {
+    if (isCheckingImpact) {
+      return;
+    }
+
+    setIsCheckingImpact(true);
     if (!projectPath) {
       setSnapshotStatus(`${changedChapterCount} changed chapters in this demo session.`);
       setStorageStatus("Affected chapter check is local to this demo session.");
+      setIsCheckingImpact(false);
       return;
     }
 
     setSnapshotStatus("Checking affected chapters...");
-    await refreshSnapshotStatus(projectPath);
-    setStorageStatus("Affected chapter check refreshed.");
+    try {
+      await refreshSnapshotStatus(projectPath);
+      setStorageStatus("Affected chapter check refreshed.");
+    } finally {
+      setIsCheckingImpact(false);
+    }
   }
 
   function createMockProposal() {
@@ -351,11 +403,16 @@ export function AppShell() {
   }
 
   async function acceptProposal(proposalId: string) {
+    if (proposalReviewAction) {
+      return;
+    }
+
     const proposal = proposals.find((item) => item.proposal_id === proposalId);
     if (!proposal) {
       return;
     }
 
+    setProposalReviewAction({ action: "accept", proposalId });
     const reviewedProposal = reviewStateProposal({ proposal, decision: "accepted" });
     const events = proposalToNarrativeEvents(reviewedProposal);
     const nextCharacterState = applyCharacterEvents(characterState, events);
@@ -389,18 +446,29 @@ export function AppShell() {
       }
     } catch (error) {
       setStorageStatus(error instanceof Error ? error.message : "Failed to persist event log.");
+    } finally {
+      setProposalReviewAction(null);
     }
   }
 
-  function rejectProposal(proposalId: string) {
+  async function rejectProposal(proposalId: string) {
+    if (proposalReviewAction) {
+      return;
+    }
+
     const proposal = proposals.find((item) => item.proposal_id === proposalId);
     if (!proposal) {
       return;
     }
 
+    setProposalReviewAction({ action: "reject", proposalId });
     const reviewedProposal = reviewStateProposal({ proposal, decision: "rejected" });
     setProposals((current) => current.filter((item) => item.proposal_id !== proposalId));
-    void saveReviewedProposal(reviewedProposal);
+    try {
+      await saveReviewedProposal(reviewedProposal);
+    } finally {
+      setProposalReviewAction(null);
+    }
   }
 
   function editProposal(proposalId: string, draft: { evidence: string; summary: string }) {
@@ -420,6 +488,11 @@ export function AppShell() {
   }
 
   async function openWritersRoom() {
+    if (roomAction) {
+      return;
+    }
+
+    setRoomAction("opening");
     const contextPacket = buildActiveChapterContextProjection("writers_room", null);
     const meeting = createMockWritersRoomMeeting();
     setRoomMeeting(meeting);
@@ -436,6 +509,8 @@ export function AppShell() {
       }
     } catch (error) {
       setStorageStatus(error instanceof Error ? error.message : "Failed to record Writers' Room.");
+    } finally {
+      setRoomAction(null);
     }
   }
 
@@ -462,11 +537,12 @@ export function AppShell() {
     });
   }
 
-  function createProposalCardsFromRoom() {
-    if (!roomMeeting) {
+  async function createProposalCardsFromRoom() {
+    if (!roomMeeting || roomAction) {
       return;
     }
 
+    setRoomAction("creating_cards");
     const generatedProposals = createWritersRoomProposalCards(roomMeeting);
     const generatedProposalIds = generatedProposals.map((proposal) => proposal.proposal_id);
     let proposalsToPersist: StateProposal[] = [];
@@ -484,8 +560,12 @@ export function AppShell() {
         decided_at: new Date().toISOString(),
       },
     });
-    void savePendingProposalCards(proposalsToPersist);
-    setStorageStatus(`${generatedProposalIds.length} Writers' Room proposal card(s) ready for review.`);
+    try {
+      await savePendingProposalCards(proposalsToPersist);
+      setStorageStatus(`${generatedProposalIds.length} Writers' Room proposal card(s) ready for review.`);
+    } finally {
+      setRoomAction(null);
+    }
   }
 
   async function savePendingProposalCards(nextProposals: StateProposal[], options?: { silent?: boolean }) {
@@ -520,6 +600,7 @@ export function AppShell() {
         autosaveLabel={autosaveLabel}
         changedItemCount={changedItemCount}
         chapterTitle={`Chapter ${activeChapter.id} - ${activeChapter.title}`}
+        isSavingSnapshot={isSavingSnapshot}
         onSaveSnapshot={saveSnapshot}
         projectTitle={projectTitle}
       />
@@ -534,6 +615,7 @@ export function AppShell() {
         onSelectChapter={setActiveChapterId}
         projectPathInput={projectPathInput}
         projectTitle={projectTitle}
+        workspaceAction={workspaceAction}
         workspaceStatus={workspaceStatus}
       />
       <ManuscriptEditor
@@ -546,11 +628,14 @@ export function AppShell() {
         acceptedEventCount={acceptedEventCount}
         characterState={characterState}
         contextProjectionStatus={contextProjectionStatus}
+        isCheckingImpact={isCheckingImpact}
         items={coordinatorItems}
         latestAcceptedEvent={acceptedEvents[0]}
         openLoopState={openLoopState}
+        proposalReviewAction={proposalReviewAction}
         timelineState={timelineState}
         runningSkillId={runningSkillId}
+        roomAction={roomAction}
         onAcceptProposal={acceptProposal}
         onCheckAffectedChapters={checkAffectedChapters}
         onCreateRoomProposalCards={createProposalCardsFromRoom}

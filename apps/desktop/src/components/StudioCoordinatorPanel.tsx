@@ -17,9 +17,15 @@ interface StudioCoordinatorPanelProps {
   acceptedEventCount: number;
   characterState: CharacterStateFile;
   contextProjectionStatus: string;
+  isCheckingImpact: boolean;
   openLoopState: OpenLoopStateFile;
+  proposalReviewAction: {
+    action: "accept" | "reject";
+    proposalId: string;
+  } | null;
   timelineState: TimelineStateFile;
   latestAcceptedEvent: NarrativeEvent | undefined;
+  roomAction: "creating_cards" | "opening" | null;
   storageStatus: string;
   onAcceptProposal: (proposalId: string) => void;
   onCheckAffectedChapters: () => void;
@@ -43,7 +49,9 @@ export function StudioCoordinatorPanel({
   acceptedEventCount,
   characterState,
   contextProjectionStatus,
+  isCheckingImpact,
   openLoopState,
+  proposalReviewAction,
   timelineState,
   onAcceptProposal,
   onCheckAffectedChapters,
@@ -56,6 +64,7 @@ export function StudioCoordinatorPanel({
   onOpenWritersRoom,
   onRejectProposal,
   storageStatus,
+  roomAction,
   roomMeeting,
   runningSkillId,
   snapshotStatus,
@@ -109,21 +118,30 @@ export function StudioCoordinatorPanel({
         <button className="secondary-button wide" disabled={Boolean(runningSkillId)} onClick={onCreateForeshadowProposal}>
           {runningSkillId === "foreshadow_tracker" ? "Running Foreshadow Tracker..." : "Foreshadow Tracker"}
         </button>
-        <button className="secondary-button wide" onClick={onCheckAffectedChapters}>
-          Check affected chapters
+        <button className="secondary-button wide" disabled={isCheckingImpact} onClick={onCheckAffectedChapters}>
+          {isCheckingImpact ? "Checking affected chapters..." : "Check affected chapters"}
         </button>
-        <button className="secondary-button wide" onClick={onOpenWritersRoom}>
-          Open Writers' Room
+        <button className="secondary-button wide" disabled={Boolean(roomAction)} onClick={onOpenWritersRoom}>
+          {roomAction === "opening" ? "Opening Writers' Room..." : "Open Writers' Room"}
         </button>
       </section>
 
-      {roomMeeting ? <WritersRoomCard meeting={roomMeeting} onCreateProposalCards={onCreateRoomProposalCards} /> : null}
+      {roomMeeting ? (
+        <WritersRoomCard
+          meeting={roomMeeting}
+          roomAction={roomAction}
+          onCreateProposalCards={onCreateRoomProposalCards}
+        />
+      ) : null}
 
       {proposals.length > 0 ? (
         <section className="coordinator-card">
           <div className="section-label">Pending updates</div>
           {proposals.map((proposal) => (
             <ProposalCard
+              busyAction={
+                proposalReviewAction?.proposalId === proposal.proposal_id ? proposalReviewAction.action : null
+              }
               key={proposal.proposal_id}
               onAccept={onAcceptProposal}
               onEdit={onEditProposal}
@@ -205,15 +223,18 @@ export function StudioCoordinatorPanel({
 
 function WritersRoomCard({
   meeting,
+  roomAction,
   onCreateProposalCards,
 }: {
   meeting: RoomMeeting;
+  roomAction: "creating_cards" | "opening" | null;
   onCreateProposalCards: () => void;
 }) {
   const hasProposalCards = meeting.generated_proposals.length > 0;
+  const isCreatingCards = roomAction === "creating_cards";
 
   return (
-    <section className="coordinator-card room-card">
+    <section className="coordinator-card room-card" aria-busy={isCreatingCards}>
       <div className="section-label">{t("writersRoom.title")}</div>
       <h3>{meeting.question}</h3>
       <div className="room-observations">
@@ -229,8 +250,8 @@ function WritersRoomCard({
         <strong>Coordinator summary</strong>
         <p>{meeting.studio_coordinator_summary.summary}</p>
       </div>
-      <button className="primary-button" disabled={hasProposalCards} onClick={onCreateProposalCards}>
-        {hasProposalCards ? "Proposal cards ready" : "Create proposal cards"}
+      <button className="primary-button" disabled={hasProposalCards || isCreatingCards} onClick={onCreateProposalCards}>
+        {isCreatingCards ? "Creating proposal cards..." : hasProposalCards ? "Proposal cards ready" : "Create proposal cards"}
       </button>
     </section>
   );

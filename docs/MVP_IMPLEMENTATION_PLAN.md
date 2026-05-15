@@ -217,6 +217,7 @@ The first vertical slice is now partially executable with mock AI:
 - Foreshadow Tracker mock proposal
 - Outline Builder mock proposal
 - provider interface with mock provider
+- first-pass UI response states for high-frequency project, skill, proposal, room, impact, and snapshot actions
 
 Remaining P0 work should focus on replacing hardcoded demo paths and mock outputs with real context projection, provider-backed structured outputs, and more complete production skills.
 
@@ -437,8 +438,8 @@ UI tests:
 
 Queued UI response work:
 
-- add consistent loading, disabled, empty, success, and error states across high-frequency frontend components
-- keep the current execution order; do this as a focused UI reliability pass after the current P0 state loop tasks
+- first pass complete for loading and disabled states across high-frequency frontend components
+- remaining work: tighten empty, success, and error presentation after the P0 state loop stays stable
 
 Avoid over-testing visual details in P0.
 

@@ -125,6 +125,7 @@ The current P0 vertical slice includes:
 - remote Timeline Compiler and Foreshadow Tracker proposal paths with mock fallback
 - remote provider interface with mock provider
 - remote state-proposal skill adapter for building structured LLM requests outside the desktop UI layer
+- first-pass loading / disabled states for project actions, production skills, proposal review, Writers' Room, impact check, and snapshots
 - provider failure summaries for missing keys, invalid keys, insufficient quota, unavailable models, schema rejection, and network errors
 - Save Snapshot command
 - revision check lite

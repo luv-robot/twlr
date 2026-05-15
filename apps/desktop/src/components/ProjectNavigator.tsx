@@ -1,10 +1,13 @@
 import type { ChapterListItem } from "../data/demoWorkspace";
 
+export type WorkspaceAction = "creating" | "creating_chapter" | "opening" | null;
+
 interface ProjectNavigatorProps {
   projectTitle: string;
   chapters: ChapterListItem[];
   activeChapterId: string;
   projectPathInput: string;
+  workspaceAction: WorkspaceAction;
   workspaceStatus: string;
   onCreateChapter: () => void;
   onCreateLocalProject: () => void;
@@ -23,8 +26,14 @@ export function ProjectNavigator({
   onSelectChapter,
   projectPathInput,
   projectTitle,
+  workspaceAction,
   workspaceStatus,
 }: ProjectNavigatorProps) {
+  const isWorking = Boolean(workspaceAction);
+  const isOpening = workspaceAction === "opening";
+  const isCreating = workspaceAction === "creating";
+  const isCreatingChapter = workspaceAction === "creating_chapter";
+
   return (
     <aside className="navigator">
       <h1>{projectTitle}</h1>
@@ -33,15 +42,16 @@ export function ProjectNavigator({
         <input
           aria-label="Local project path"
           className="path-input"
+          disabled={isWorking}
           onChange={(event) => onProjectPathInput(event.target.value)}
           value={projectPathInput}
         />
         <div className="workspace-actions">
-          <button className="secondary-button" onClick={onOpenLocalProject}>
-            Open
+          <button className="secondary-button" disabled={isWorking} onClick={onOpenLocalProject}>
+            {isOpening ? "Opening..." : "Open"}
           </button>
-          <button className="primary-button compact" onClick={onCreateLocalProject}>
-            Create
+          <button className="primary-button compact" disabled={isWorking} onClick={onCreateLocalProject}>
+            {isCreating ? "Creating..." : "Create"}
           </button>
         </div>
         <p>{workspaceStatus}</p>
@@ -49,8 +59,8 @@ export function ProjectNavigator({
       <button className="part-pill">Act I</button>
       <div className="section-heading">
         <div className="section-label">Chapters</div>
-        <button className="icon-button" aria-label="Create chapter" onClick={onCreateChapter}>
-          +
+        <button className="icon-button" aria-label="Create chapter" disabled={isWorking} onClick={onCreateChapter}>
+          {isCreatingChapter ? "..." : "+"}
         </button>
       </div>
       <div className="chapter-list">

@@ -4,17 +4,20 @@ import type { StateProposal } from "@twlr/schema";
 
 interface ProposalCardProps {
   proposal: StateProposal;
+  busyAction: "accept" | "reject" | null;
   onAccept: (proposalId: string) => void;
   onEdit: (proposalId: string, draft: { evidence: string; summary: string }) => void;
   onReject: (proposalId: string) => void;
 }
 
-export function ProposalCard({ proposal, onAccept, onEdit, onReject }: ProposalCardProps) {
+export function ProposalCard({ busyAction, proposal, onAccept, onEdit, onReject }: ProposalCardProps) {
   const providerLabel = proposal.source.llm_provider === "remote" ? "Remote" : "Mock";
   const kicker = `${proposal.source.name} Proposal - ${providerLabel}`;
   const [isEditing, setIsEditing] = useState(false);
   const [draftSummary, setDraftSummary] = useState(proposal.summary);
   const [draftEvidence, setDraftEvidence] = useState(proposal.evidence[0] ?? "");
+  const isBusy = Boolean(busyAction);
+  const canSaveEdit = draftSummary.trim().length > 0 && !isBusy;
 
   useEffect(() => {
     setDraftSummary(proposal.summary);
@@ -30,7 +33,7 @@ export function ProposalCard({ proposal, onAccept, onEdit, onReject }: ProposalC
   }
 
   return (
-    <section className="proposal-card">
+    <section className="proposal-card" aria-busy={isBusy}>
       <div className="proposal-kicker">{kicker}</div>
       {isEditing ? (
         <textarea
@@ -64,23 +67,23 @@ export function ProposalCard({ proposal, onAccept, onEdit, onReject }: ProposalC
       <div className="proposal-actions">
         {isEditing ? (
           <>
-            <button className="secondary-button" onClick={() => setIsEditing(false)}>
+            <button className="secondary-button" disabled={isBusy} onClick={() => setIsEditing(false)}>
               Cancel
             </button>
-            <button className="primary-button compact" onClick={saveEdit}>
+            <button className="primary-button compact" disabled={!canSaveEdit} onClick={saveEdit}>
               Save
             </button>
           </>
         ) : (
           <>
-            <button className="secondary-button" onClick={() => onReject(proposal.proposal_id)}>
-              {t("proposal.reject")}
+            <button className="secondary-button" disabled={isBusy} onClick={() => onReject(proposal.proposal_id)}>
+              {busyAction === "reject" ? "Rejecting..." : t("proposal.reject")}
             </button>
-            <button className="secondary-button" onClick={() => setIsEditing(true)}>
+            <button className="secondary-button" disabled={isBusy} onClick={() => setIsEditing(true)}>
               Edit
             </button>
-            <button className="primary-button compact" onClick={() => onAccept(proposal.proposal_id)}>
-              {t("proposal.accept")}
+            <button className="primary-button compact" disabled={isBusy} onClick={() => onAccept(proposal.proposal_id)}>
+              {busyAction === "accept" ? "Accepting..." : t("proposal.accept")}
             </button>
           </>
         )}
