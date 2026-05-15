@@ -786,6 +786,14 @@ npm run short-drama:extract-keyframes -- --case ./short-drama-cases/drama-title/
 
 The first extractor only creates timestamped frame placeholders in `visual_context.json`. Multimodal visual description is a separate next step, because visual interpretation should remain inspectable and correctable.
 
+Current visual-description prompt builder:
+
+```bash
+npm run short-drama:build-prompt -- --case ./short-drama-cases/drama-title/episode_001 --kind visual
+```
+
+This writes `prompts/visual_prompt.md`. Upload the listed keyframes to a multimodal model with this prompt, then paste the model's corrected JSON back into `visual_context.json`.
+
 ### Step 5: Script Reconstruction
 
 LLM combines:

@@ -13,15 +13,20 @@ if (args.help || !args.case || !args.kind) {
 const caseDir = resolve(String(args.case));
 const kind = String(args.kind);
 
-if (!["reconstruction", "diagnosis"].includes(kind)) {
-  throw new Error("--kind must be reconstruction or diagnosis.");
+if (!["visual", "reconstruction", "diagnosis"].includes(kind)) {
+  throw new Error("--kind must be visual, reconstruction, or diagnosis.");
 }
 
 if (!existsSync(caseDir)) {
   throw new Error(`Case folder does not exist: ${caseDir}`);
 }
 
-const prompt = kind === "reconstruction" ? buildReconstructionPrompt(caseDir) : buildDiagnosisPrompt(caseDir);
+const prompt =
+  kind === "visual"
+    ? buildVisualPrompt(caseDir)
+    : kind === "reconstruction"
+      ? buildReconstructionPrompt(caseDir)
+      : buildDiagnosisPrompt(caseDir);
 const defaultOut = join(caseDir, "prompts", `${kind}_prompt.md`);
 const outPath = args.out ? resolve(String(args.out)) : defaultOut;
 
@@ -29,6 +34,103 @@ mkdirSync(dirname(outPath), { recursive: true });
 writeFileSync(outPath, prompt, "utf8");
 
 console.log(`Wrote ${kind} prompt: ${outPath}`);
+
+function buildVisualPrompt(caseDirPath) {
+  const metadata = readJson(join(caseDirPath, "source_metadata.json"));
+  const visualContext = readJson(join(caseDirPath, "visual_context.json"));
+
+  return `# Short Drama Visual Context Prompt
+
+You are describing short-drama keyframes for a writer/director peer-review workflow.
+
+You are not doing visual criticism.
+You are not judging beauty, atmosphere, or cinematic quality.
+
+## Task
+
+For each uploaded frame, output structured visual evidence that can help later scene reconstruction and director-side diagnosis.
+
+Focus on:
+
+- location
+- visible characters
+- posture / body position
+- obvious action
+- props
+- emotional state
+- shot type
+- spatial power relation
+- possible scene-function hint
+
+Do not infer hidden plot facts unless the frame visibly supports them.
+If unsure, use null or an empty array.
+
+## Output Rules
+
+Return JSON only.
+Preserve the frame IDs and timecodes below.
+
+\`\`\`json
+{
+  "series_title": "",
+  "episode_number": 1,
+  "frames": [
+    {
+      "frame_id": "frame_0001",
+      "timecode": "00:00:00",
+      "image_path": "keyframes/frame_0001.jpg",
+      "location": null,
+      "characters_visible": [],
+      "body_position": null,
+      "obvious_action": null,
+      "action_tags": [],
+      "props": [],
+      "emotional_state": null,
+      "shot_type": null,
+      "power_relation": null,
+      "scene_function_hint": null,
+      "confidence": null
+    }
+  ],
+  "scene_level_notes": []
+}
+\`\`\`
+
+## Allowed Action Tags
+
+\`\`\`text
+enter
+exit
+block_path
+reveal_object
+hide_object
+grab
+push_away
+kneel
+slap
+turn_away
+watch_silently
+threaten
+protect
+humiliate
+counterattack
+\`\`\`
+
+## Source Metadata
+
+\`\`\`json
+${JSON.stringify(metadata, null, 2)}
+\`\`\`
+
+## Frame Manifest
+
+Upload or inspect the images listed here, then return the updated JSON:
+
+\`\`\`json
+${JSON.stringify(visualContext, null, 2)}
+\`\`\`
+`;
+}
 
 function buildReconstructionPrompt(caseDirPath) {
   const metadata = readJson(join(caseDirPath, "source_metadata.json"));
@@ -329,12 +431,13 @@ function parseArgs(argv) {
 
 function printHelp() {
   console.log(`Usage:
+  npm run short-drama:build-prompt -- --case ./short-drama-cases/demo/episode_001 --kind visual
   npm run short-drama:build-prompt -- --case ./short-drama-cases/demo/episode_001 --kind reconstruction
   npm run short-drama:build-prompt -- --case ./short-drama-cases/demo/episode_001 --kind diagnosis
 
 Options:
   --case  Required. Existing short-drama case folder.
-  --kind  Required. reconstruction or diagnosis.
+  --kind  Required. visual, reconstruction, or diagnosis.
   --out   Optional. Output markdown path. Defaults to ./prompts/{kind}_prompt.md inside the case.
 `);
 }
