@@ -36,7 +36,7 @@ The first Figma pass should answer six questions:
 2. Do the navigator and context panel support writing without making the app feel like a file manager?
 3. Do AI proposal cards feel lightweight and understandable?
 4. Does the Studio Coordinator feel like a stable operational presence, not a chat persona?
-5. Does Writers' Room feel like a professional meeting workspace rather than an unstructured chat stream?
+5. Does Writers' Room separate the live meeting from the after-meeting record?
 6. Does the app avoid Obsidian, Scrivener, Win32, IDE, and markdown-vault visual cues?
 
 ## Figma Deliverables
@@ -48,7 +48,7 @@ Create these frames first:
 | F01 | Manuscript Workspace - Default | 1440 x 960 | Primary writing screen |
 | F02 | Manuscript Workspace - Focus | 1440 x 960 | Writing-first mode with panels collapsed |
 | F03 | Proposal Review | 1440 x 960 | AI state change card review flow |
-| F04 | Writers' Room Meeting | 1440 x 960 | Structured multi-perspective meeting |
+| F04 | Writers' Room Meeting | 1440 x 960 | Live consultation room and Assistant meeting record |
 | F05 | State Panel - Characters | 1440 x 960 | Inspectable story state |
 | F06 | Snapshot Impact | 1440 x 960 | Changed chapters and affected elements |
 | F07 | Compact Desktop | 1280 x 800 | Medium-width layout behavior |
@@ -357,67 +357,73 @@ Success criteria:
 
 ## F04: Writers' Room Meeting
 
-Purpose: validate a professional meeting-style interaction for author and agents.
+Purpose: validate Writers' Room as TWLR's core consultation scene.
+
+The meeting interaction has two states:
+
+1. Live meeting: a restrained professional group chat.
+2. After meeting: an Assistant-authored meeting record.
 
 Design reference:
 
-- closer to Zoom, an editorial review call, or a structured product review
-- not a roleplay room
-- not an endless chat stream
-- not a loose agent group chat
-
-Layout:
-
-- Context panel or main panel shows meeting setup/results
-- Editor remains available as the reference surface
-- meeting structure remains visible: question, participants/perspectives, observations, summary, author decision
-
-Meeting setup:
-
-- Question field:
-  - `Does Mira's reaction in Chapter 03 feel too passive?`
-- Context scope:
-  - `Current chapter`
-  - `Related character state`
-  - `Open threads`
-- Perspective selector:
-  - Development Editor
-  - Reader Agent
-  - Character Editor
-  - Continuity Editor
-- Author role:
-  - author owns the question
-  - author decides whether observations become proposal cards
-
-Meeting result:
-
-- Each perspective appears as a structured section:
-  - `Observation`
-  - `Risk`
-  - `Suggested check`
-- Studio Coordinator summary appears after agent observations.
-- Studio Coordinator keeps the meeting structured and turns outcomes into follow-up actions.
-- Author decision area appears after the summary:
-  - `Create proposal cards`
-  - `Keep as meeting note`
-  - `Ask follow-up`
-  - `Dismiss`
-- Proposal cards appear in a separate section if generated.
+- professional group chat
+- editorial consultation transcript
+- meeting minutes
+- research interview notes
+- document comments with citations
 
 Avoid:
 
-- playful avatars
-- casual banter
-- chat bubbles as the dominant structure
-- simulated personalities
-- endless chat transcript
+- project management boards
+- decision queues
+- voice/video controls
+- roleplay room aesthetics
+- agent banter
+- noisy brainstorming streams
+
+Live meeting layout:
+
+- participant count: 3-8 people including Author and Assistant
+- central transcript, chat-like and easy to follow
+- compact participant roster
+- current context scope, if available
+- simple composer
+- `End meeting` command
+
+Live meeting behavior:
+
+- Author owns the question.
+- Assistant may clarify scope.
+- Agents answer only when asked or explicitly invited.
+- Agents should be professional, restrained, precise, and concise.
+- No agent-to-agent banter as a default behavior.
+- No automatic state changes during the meeting.
+
+After-meeting record:
+
+- Sent under the Assistant / Studio Coordinator voice.
+- Starts with concise summary.
+- Includes key observations and cited manuscript passages or chapter links when relevant.
+- Lets author save selected parts into project memory / story state.
+- Uses calm wording:
+  - `Save selected notes`
+  - `Add to project memory`
+  - `Link to Chapter 18`
+  - `Keep as meeting record`
+  - `Do not save`
+
+Do not use normal-user labels such as:
+
+- `decision queue`
+- `production board`
+- `pending actions requiring approval`
 
 Success criteria:
 
-- feels like a chaired editorial meeting or professional review call
-- writer can scan observations quickly
-- output can lead to proposal cards without forcing changes
-- author decision remains visually explicit
+- live meeting feels familiar enough that most writers understand it immediately
+- after-meeting record feels durable and useful
+- agents feel high-quality and restrained, not chatty
+- author can save selected meeting output without feeling managed
 
 ## F05: State Panel - Characters
 

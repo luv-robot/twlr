@@ -125,8 +125,32 @@ Examples:
 Examples:
 
 - `A character review meeting may be useful before continuing Chapter 13.`
-- `The last Writers' Room meeting produced 2 unreviewed proposal cards.`
+- `The last Writers' Room meeting produced 4 notes that can be saved if you choose.`
 - `Continuity Editor can review the timeline conflict if you choose.`
+
+### Meeting Records
+
+The Coordinator is also the Assistant voice that closes a Writers' Room meeting.
+
+During the live meeting, it should keep the room scoped and orderly without dominating the discussion.
+
+After the meeting, it should produce a meeting record that includes:
+
+- the author question
+- participants
+- concise summary
+- key observations
+- cited manuscript passages or chapter links when relevant
+- optional notes that can be saved into project state
+
+The Coordinator should not present the meeting record as a task queue. It should not use pressure-heavy language such as `decision queue` in normal user-facing UI.
+
+Better wording:
+
+- `Meeting record ready.`
+- `4 notes can be saved if you choose.`
+- `2 notes reference Chapter 03.`
+- `No project state has been changed.`
 
 ## Interaction Principles
 
@@ -139,6 +163,8 @@ Rules:
 - prefer counts, scope, and status over encouragement
 - do not praise, comfort, or psychoanalyze the author by default
 - do not interrupt active writing unless the user asks or a high-impact risk appears
+- do not make agents feel constantly present outside meetings
+- outside meetings, use low-volume reminders only; optional email summaries may be appropriate if the user opts in
 - never mutate story state without confirmation
 - never present itself as the author, co-author, muse, friend, or therapist
 
@@ -197,6 +223,7 @@ Primary surfaces:
 - right context panel
 - snapshot / impact view
 - Writers' Room meeting summary
+- Writers' Room after-meeting record
 
 The UI should avoid making the Coordinator feel like another chat persona. It should feel like the desk, console, or operations layer of the studio.
 

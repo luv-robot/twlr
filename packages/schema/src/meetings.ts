@@ -20,7 +20,7 @@ export interface RoomMeeting {
   };
   generated_proposals: string[];
   author_decision: {
-    decision: "create_proposal_cards" | "keep_as_meeting_note" | "ask_follow_up" | "dismiss";
+    decision: "save_selected_notes" | "keep_as_meeting_note" | "ask_follow_up" | "dismiss";
     decided_at: string;
   } | null;
 }

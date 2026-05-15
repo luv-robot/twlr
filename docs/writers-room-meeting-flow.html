@@ -1,0 +1,692 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TWLR Writers' Room Meeting Flow</title>
+    <style>
+      :root {
+        --ink: #242424;
+        --muted: #6f6b63;
+        --soft: #9a948b;
+        --line: #e5e2dc;
+        --paper: #ffffff;
+        --wash: #f7f7f5;
+        --panel: #fafaf8;
+        --teal: #2f7d7a;
+        --teal-soft: #e8f1ef;
+        --blue: #5b6ee1;
+        --blue-soft: #eef0ff;
+        --amber: #b7791f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: #eceae5;
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      .board {
+        display: grid;
+        gap: 48px;
+        padding: 48px;
+      }
+
+      .frame {
+        width: 1440px;
+        height: 960px;
+        overflow: hidden;
+        background: var(--wash);
+        border: 1px solid #d8d3cb;
+        box-shadow: 0 18px 60px rgba(40, 35, 24, 0.12);
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        height: 52px;
+        padding: 0 28px;
+        background: var(--paper);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .brand {
+        width: 176px;
+        font-weight: 700;
+      }
+
+      .title,
+      .status {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .spacer {
+        flex: 1;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: var(--teal);
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 32px;
+        padding: 0 13px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--paper);
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .button.primary {
+        border-color: var(--teal);
+        background: var(--teal);
+        color: #fff;
+      }
+
+      .button.soft {
+        border-color: var(--teal);
+        background: var(--teal-soft);
+        color: var(--teal);
+      }
+
+      .shell {
+        display: grid;
+        grid-template-columns: 56px 252px 1fr;
+        height: calc(100% - 52px);
+      }
+
+      .rail {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        padding: 20px 0;
+        background: var(--paper);
+        border-right: 1px solid var(--line);
+      }
+
+      .rail-item {
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .rail-item.active {
+        border-color: var(--teal);
+        background: var(--teal-soft);
+        color: var(--teal);
+      }
+
+      .nav {
+        padding: 20px;
+        background: var(--panel);
+        border-right: 1px solid var(--line);
+      }
+
+      .nav h1 {
+        margin: 0 0 18px;
+        font-size: 16px;
+      }
+
+      .nav-card,
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--paper);
+      }
+
+      .nav-card {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 12px;
+        padding: 12px;
+      }
+
+      .label {
+        color: var(--soft);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      .nav-card p,
+      .side-card p,
+      .minute-card p,
+      .save-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .participant {
+        display: grid;
+        gap: 4px;
+        padding: 11px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--paper);
+      }
+
+      .participant.active {
+        border-color: var(--teal);
+        background: var(--teal-soft);
+      }
+
+      .participant strong {
+        font-size: 13px;
+      }
+
+      .participant span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .main {
+        min-width: 0;
+        padding: 28px;
+      }
+
+      .screen-title {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 18px;
+      }
+
+      .screen-title h2 {
+        margin: 0;
+        font-size: 24px;
+      }
+
+      .screen-title p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .meeting-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 330px;
+        gap: 18px;
+      }
+
+      .chat-panel {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        min-height: 728px;
+        overflow: hidden;
+      }
+
+      .question {
+        display: grid;
+        gap: 6px;
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .question h3 {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .question p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .transcript {
+        display: grid;
+        align-content: start;
+        gap: 14px;
+        padding: 18px;
+        overflow: hidden;
+      }
+
+      .message {
+        display: grid;
+        grid-template-columns: 112px minmax(0, 1fr);
+        gap: 12px;
+        align-items: start;
+      }
+
+      .speaker {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .bubble {
+        display: grid;
+        gap: 7px;
+        max-width: 720px;
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--paper);
+      }
+
+      .message.author .bubble {
+        border-color: var(--teal);
+        background: var(--teal-soft);
+      }
+
+      .bubble p {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      .bubble small {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .quote {
+        padding: 10px;
+        border-left: 3px solid var(--teal);
+        background: var(--panel);
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .composer {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        padding: 14px;
+        border-top: 1px solid var(--line);
+        background: var(--panel);
+      }
+
+      .input {
+        min-height: 38px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--paper);
+        color: var(--muted);
+        padding: 10px 12px;
+        font-size: 13px;
+      }
+
+      .side-stack,
+      .record-stack,
+      .save-stack {
+        display: grid;
+        gap: 12px;
+        align-content: start;
+      }
+
+      .side-card,
+      .minute-card,
+      .save-card {
+        display: grid;
+        gap: 10px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--paper);
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        min-height: 26px;
+        padding: 0 9px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--paper);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .chip.active {
+        border-color: var(--teal);
+        background: var(--teal-soft);
+        color: var(--teal);
+      }
+
+      .record-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 330px;
+        gap: 18px;
+      }
+
+      .record-header {
+        display: grid;
+        gap: 8px;
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--teal-soft);
+      }
+
+      .record-header strong {
+        color: var(--teal);
+        font-size: 13px;
+      }
+
+      .record-header h3 {
+        margin: 0;
+        font-size: 20px;
+      }
+
+      .record-header p {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      .minute-card h4,
+      .save-card h4 {
+        margin: 0;
+        font-size: 15px;
+      }
+
+      .minute-grid {
+        display: grid;
+        grid-template-columns: 24px minmax(0, 1fr);
+        gap: 10px;
+      }
+
+      .checkbox {
+        width: 18px;
+        height: 18px;
+        border: 1px solid var(--teal);
+        border-radius: 5px;
+        background: var(--teal-soft);
+      }
+
+      .destination {
+        display: grid;
+        gap: 8px;
+        padding: 12px;
+        border-radius: 8px;
+        background: var(--blue-soft);
+        color: var(--blue);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .save-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        gap: 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="board">
+      <section class="frame">
+        <div class="topbar">
+          <div class="brand">The Glass City</div>
+          <div class="title">Writers' Room - Live Consultation</div>
+          <div class="spacer"></div>
+          <div class="status"><span class="dot"></span> Live meeting</div>
+          <div class="button">End meeting</div>
+        </div>
+        <div class="shell">
+          <aside class="rail">
+            <div class="rail-item">M</div>
+            <div class="rail-item active">R</div>
+            <div class="rail-item">S</div>
+            <div class="rail-item">P</div>
+          </aside>
+          <aside class="nav">
+            <h1>Writers' Room</h1>
+            <div class="nav-card"><div class="label">Participants</div><p>5 people in this meeting.</p></div>
+            <div class="participant active"><strong>Author</strong><span>Decision maker</span></div>
+            <div class="participant active"><strong>Assistant</strong><span>Meeting record</span></div>
+            <div class="participant"><strong>Reader Agent</strong><span>Expectation</span></div>
+            <div class="participant"><strong>Character Editor</strong><span>Motivation</span></div>
+            <div class="participant"><strong>Continuity Editor</strong><span>Timeline</span></div>
+          </aside>
+          <section class="main">
+            <div class="screen-title">
+              <h2>Live Consultation Room</h2>
+              <p>In-meeting view: restrained group chat</p>
+            </div>
+            <div class="meeting-grid">
+              <section class="card chat-panel">
+                <div class="question">
+                  <div class="label">Author question</div>
+                  <h3>Does Mira's reaction in Chapter 03 feel too passive?</h3>
+                  <p>Scope: Chapter 03 selection, Mira, altered archive record.</p>
+                </div>
+                <div class="transcript">
+                  <div class="message author"><div class="speaker">Author</div><div class="bubble"><p>I want Mira to stay cautious, but I do not want the scene to make her feel inert.</p></div></div>
+                  <div class="message"><div class="speaker">Assistant</div><div class="bubble"><p>I will keep this scoped to Mira's agency in Chapter 03. No project state will be changed during the meeting.</p></div></div>
+                  <div class="message"><div class="speaker">Reader Agent</div><div class="bubble"><p>The clue creates curiosity. The risk is not caution itself, but the absence of a visible choice after she notices the receipt.</p><small>Suggested direction: give her one private action that costs something.</small></div></div>
+                  <div class="message"><div class="speaker">Character Editor</div><div class="bubble"><p>Her restraint is plausible if the archive feels socially dangerous. The scene needs one signal that she is choosing caution, not merely failing to act.</p></div></div>
+                  <div class="message"><div class="speaker">Author</div><div class="bubble"><p>Continuity Editor, would making the receipt an active thread damage the later reveal?</p></div></div>
+                  <div class="message"><div class="speaker">Continuity Editor</div><div class="bubble"><p>Not if the thread is framed as suspicion rather than proof. Chapter 18 still works if the payoff depends on why the record was changed.</p></div></div>
+                </div>
+                <div class="composer">
+                  <div class="input">Ask a follow-up or end the meeting to generate a record.</div>
+                  <div class="button primary">Send</div>
+                </div>
+              </section>
+              <aside class="side-stack">
+                <div class="side-card"><div class="label">Meeting rule</div><p>Agents answer when asked. No open-ended brainstorming stream.</p></div>
+                <div class="side-card"><div class="label">Context</div><p>Chapter 03 - A Name Removed</p><div class="quote">Mira noticed the receipt before anyone else did. The paper was old, but the ink had the faint wet shine of something written in a hurry.</div></div>
+                <div class="side-card"><div class="label">After meeting</div><p>The Assistant will create a meeting record. The author can save selected notes into project memory.</p></div>
+              </aside>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="frame">
+        <div class="topbar">
+          <div class="brand">The Glass City</div>
+          <div class="title">Writers' Room - With Source References</div>
+          <div class="spacer"></div>
+          <div class="status"><span class="dot"></span> Source-linked discussion</div>
+          <div class="button">End meeting</div>
+        </div>
+        <div class="shell">
+          <aside class="rail">
+            <div class="rail-item">M</div>
+            <div class="rail-item active">R</div>
+            <div class="rail-item">S</div>
+            <div class="rail-item">P</div>
+          </aside>
+          <aside class="nav">
+            <h1>Writers' Room</h1>
+            <div class="nav-card"><div class="label">Meeting type</div><p>Chapter review</p></div>
+            <div class="participant active"><strong>Author</strong><span>Asking</span></div>
+            <div class="participant active"><strong>Assistant</strong><span>Scope</span></div>
+            <div class="participant"><strong>Development Editor</strong><span>Scene movement</span></div>
+            <div class="participant"><strong>Reader Agent</strong><span>Reader trust</span></div>
+            <div class="participant"><strong>Continuity Editor</strong><span>Payoff timing</span></div>
+          </aside>
+          <section class="main">
+            <div class="screen-title">
+              <h2>Live Room With Source References</h2>
+              <p>Quotes appear only when useful</p>
+            </div>
+            <div class="meeting-grid">
+              <section class="card chat-panel">
+                <div class="question">
+                  <div class="label">Author question</div>
+                  <h3>Where should the scene show Mira making a choice?</h3>
+                  <p>Agents can cite the manuscript when the answer depends on a passage.</p>
+                </div>
+                <div class="transcript">
+                  <div class="message author"><div class="speaker">Author</div><div class="bubble"><p>I do not want to add a dramatic confrontation. Where can I add a small but decisive action?</p></div></div>
+                  <div class="message"><div class="speaker">Development Editor</div><div class="bubble"><p>Use the moment after she notices the wet ink. She can hide the receipt, copy the changed name, or decide not to ask Shen Yao in front of others.</p><div class="quote">Source: Chapter 03, receipt passage</div></div></div>
+                  <div class="message"><div class="speaker">Reader Agent</div><div class="bubble"><p>The smallest reader-visible action is enough. The reader needs to see her decide, not solve the mystery.</p></div></div>
+                  <div class="message"><div class="speaker">Assistant</div><div class="bubble"><p>I have marked two possible meeting notes: Mira chooses caution, and the altered record remains an unresolved thread. Nothing has been saved yet.</p></div></div>
+                </div>
+                <div class="composer">
+                  <div class="input">Ask one agent, all agents, or end the meeting.</div>
+                  <div class="button primary">Send</div>
+                </div>
+              </section>
+              <aside class="side-stack">
+                <div class="side-card"><div class="label">Source links</div><p>Chapter 03: receipt passage</p><p>Character: Mira</p><p>Open loop: Altered Record</p></div>
+                <div class="side-card"><div class="label">Meeting discipline</div><p>Agents do not speak unless addressed by the author or invited by the Assistant.</p></div>
+                <div class="side-card"><div class="label">Possible record items</div><div class="chips"><span class="chip active">Agency note</span><span class="chip active">Open loop</span><span class="chip">Chapter link</span></div></div>
+              </aside>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="frame">
+        <div class="topbar">
+          <div class="brand">The Glass City</div>
+          <div class="title">Writers' Room - Assistant Meeting Record</div>
+          <div class="spacer"></div>
+          <div class="status"><span class="dot"></span> Meeting completed</div>
+          <div class="button">Reopen thread</div>
+          <div class="button primary">Save selected notes</div>
+        </div>
+        <div class="shell">
+          <aside class="rail">
+            <div class="rail-item">M</div>
+            <div class="rail-item active">R</div>
+            <div class="rail-item">S</div>
+            <div class="rail-item">P</div>
+          </aside>
+          <aside class="nav">
+            <h1>Meeting Record</h1>
+            <div class="nav-card"><div class="label">Participants</div><p>Author, Assistant, Development Editor, Reader Agent, Continuity Editor.</p></div>
+            <div class="nav-card"><div class="label">Status</div><p>4 notes can be saved if you choose.</p></div>
+            <div class="nav-card"><div class="label">State</div><p>No project state has been changed.</p></div>
+          </aside>
+          <section class="main">
+            <div class="screen-title">
+              <h2>Assistant Meeting Record</h2>
+              <p>After-meeting view: durable notes, not a task queue</p>
+            </div>
+            <div class="record-layout">
+              <section class="record-stack">
+                <div class="record-header">
+                  <strong>Assistant</strong>
+                  <h3>Meeting record ready</h3>
+                  <p>The group agreed that Mira can remain cautious, but the scene should show one visible choice after she notices the altered receipt.</p>
+                </div>
+                <div class="minute-card">
+                  <div class="minute-grid"><div class="checkbox"></div><div><h4>Mira's agency note</h4><p>Reader Agent and Character Editor both read the scene as plausible, but the current draft does not yet show Mira choosing caution.</p></div></div>
+                </div>
+                <div class="minute-card">
+                  <div class="minute-grid"><div class="checkbox"></div><div><h4>Chapter 03 source passage</h4><p>The relevant passage is the receipt moment: "the ink had the faint wet shine of something written in a hurry."</p><div class="quote">Link: Chapter 03 - A Name Removed</div></div></div>
+                </div>
+                <div class="minute-card">
+                  <div class="minute-grid"><div class="checkbox"></div><div><h4>Altered Record open thread</h4><p>Continuity Editor recommends treating the altered receipt as suspicion, not proof, so the later reveal remains available.</p></div></div>
+                </div>
+                <div class="minute-card">
+                  <div class="minute-grid"><div class="checkbox"></div><div><h4>Unresolved question</h4><p>Before Chapter 18, review whether the payoff depends on who changed the record or why it was changed.</p></div></div>
+                </div>
+              </section>
+              <aside class="side-stack">
+                <div class="side-card"><div class="label">Available actions</div><div class="button primary">Save selected notes</div><div class="button">Keep as meeting record</div><div class="button">Do not save</div></div>
+                <div class="side-card"><div class="label">Tone rule</div><p>The Assistant reports the meeting. It does not assign tasks or pressure the author.</p></div>
+                <div class="side-card"><div class="label">Project memory</div><p>Saved notes can link to chapters, characters, open loops, timeline, or general notes.</p></div>
+              </aside>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="frame">
+        <div class="topbar">
+          <div class="brand">The Glass City</div>
+          <div class="title">Writers' Room - Save Selected Notes</div>
+          <div class="spacer"></div>
+          <div class="status"><span class="dot"></span> Author confirmation required</div>
+          <div class="button">Back to record</div>
+          <div class="button primary">Save selected</div>
+        </div>
+        <div class="shell">
+          <aside class="rail">
+            <div class="rail-item">M</div>
+            <div class="rail-item active">R</div>
+            <div class="rail-item">S</div>
+            <div class="rail-item">P</div>
+          </aside>
+          <aside class="nav">
+            <h1>Save Notes</h1>
+            <div class="nav-card"><div class="label">Selected</div><p>3 meeting notes selected.</p></div>
+            <div class="nav-card"><div class="label">Not selected</div><p>1 note remains in the meeting record only.</p></div>
+            <div class="nav-card"><div class="label">Confirmation</div><p>The author decides what becomes project memory.</p></div>
+          </aside>
+          <section class="main">
+            <div class="screen-title">
+              <h2>Save Selected Notes</h2>
+              <p>Lightweight human-in-the-loop state update</p>
+            </div>
+            <div class="save-layout">
+              <section class="save-stack">
+                <div class="save-card">
+                  <h4>Mira's agency note</h4>
+                  <p>Save as character note for Mira and link to Chapter 03.</p>
+                  <div class="destination"><span>Destination: Character - Mira</span><span>Link: Chapter 03 - A Name Removed</span></div>
+                </div>
+                <div class="save-card">
+                  <h4>Altered Record open thread</h4>
+                  <p>Save as an open loop. Current status: suspicion, not proof.</p>
+                  <div class="destination"><span>Destination: Open Loop - Altered Record</span><span>Evidence: receipt passage</span></div>
+                </div>
+                <div class="save-card">
+                  <h4>Chapter 18 review note</h4>
+                  <p>Keep a future review reminder about payoff timing.</p>
+                  <div class="destination"><span>Destination: Notes - Chapter 18 review</span><span>Linked from meeting record</span></div>
+                </div>
+              </section>
+              <aside class="side-stack">
+                <div class="record-header">
+                  <strong>Assistant</strong>
+                  <h3>Ready to save</h3>
+                  <p>These notes will be added to project memory. Manuscript text will not be changed.</p>
+                </div>
+                <div class="side-card"><div class="label">Controls</div><div class="button primary">Save selected</div><div class="button">Keep as meeting record</div><div class="button">Do not save</div></div>
+                <div class="side-card"><div class="label">Plain-language scope</div><p>This affects 1 character note, 1 open loop, and 1 chapter review note.</p></div>
+              </aside>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

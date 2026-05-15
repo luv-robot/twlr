@@ -30,7 +30,7 @@ interface StudioCoordinatorPanelProps {
   onAcceptProposal: (proposalId: string) => void;
   onCheckAffectedChapters: () => void;
   onCreateForeshadowProposal: () => void;
-  onCreateRoomProposalCards: () => void;
+  onSaveRoomNotes: () => void;
   onEditProposal: (proposalId: string, draft: { evidence: string; summary: string }) => void;
   onRejectProposal: (proposalId: string) => void;
   onCreateMockProposal: () => void;
@@ -56,7 +56,7 @@ export function StudioCoordinatorPanel({
   onAcceptProposal,
   onCheckAffectedChapters,
   onCreateForeshadowProposal,
-  onCreateRoomProposalCards,
+  onSaveRoomNotes,
   onEditProposal,
   onCreateMockProposal,
   onCreateOutlineProposal,
@@ -130,7 +130,7 @@ export function StudioCoordinatorPanel({
         <WritersRoomCard
           meeting={roomMeeting}
           roomAction={roomAction}
-          onCreateProposalCards={onCreateRoomProposalCards}
+          onSaveSelectedNotes={onSaveRoomNotes}
         />
       ) : null}
 
@@ -224,39 +224,92 @@ export function StudioCoordinatorPanel({
 function WritersRoomCard({
   meeting,
   roomAction,
-  onCreateProposalCards,
+  onSaveSelectedNotes,
 }: {
   meeting: RoomMeeting;
   roomAction: "creating_cards" | "opening" | null;
-  onCreateProposalCards: () => void;
+  onSaveSelectedNotes: () => void;
 }) {
-  const hasProposalCards = meeting.generated_proposals.length > 0;
-  const isCreatingCards = roomAction === "creating_cards";
+  const hasSavedNotes = meeting.generated_proposals.length > 0;
+  const isSavingNotes = roomAction === "creating_cards";
+  const visibleParticipants = [
+    { agent_id: "author", label: "Author", role: "Chair" },
+    { agent_id: "assistant", label: "Assistant", role: "Meeting record" },
+    ...meeting.perspectives.map((perspective) => ({
+      agent_id: perspective.agent_id,
+      label: perspective.label,
+      role: "Invited perspective",
+    })),
+  ].slice(0, 8);
 
   return (
-    <section className="coordinator-card room-card" aria-busy={isCreatingCards}>
-      <div className="section-label">{t("writersRoom.title")}</div>
-      <h3>{meeting.question}</h3>
-      <div className="room-observations">
+    <section className="coordinator-card room-card" aria-busy={isSavingNotes}>
+      <div className="room-card-header">
+        <div>
+          <div className="section-label">{t("writersRoom.title")}</div>
+          <h3>{meeting.question}</h3>
+        </div>
+        <span className="room-state-pill">
+          {hasSavedNotes ? t("writersRoom.notesSaved") : t("writersRoom.meetingCompleted")}
+        </span>
+      </div>
+
+      <div className="room-participants" aria-label="Meeting participants">
+        {visibleParticipants.map((participant) => (
+          <span className={participant.agent_id === "assistant" ? "participant-pill assistant" : "participant-pill"} key={participant.agent_id}>
+            <span>{participant.label}</span>
+            <small>{participant.role}</small>
+          </span>
+        ))}
+      </div>
+
+      <div className="room-transcript" aria-label="Meeting transcript">
+        <article className="room-message author-message">
+          <strong>Author</strong>
+          <p>{meeting.question}</p>
+        </article>
+        <article className="room-message assistant-message">
+          <strong>Assistant</strong>
+          <p>
+            I will keep this focused on the active chapter, Mira's agency, and any continuity notes worth saving.
+          </p>
+        </article>
         {meeting.perspectives.map((perspective) => (
-          <article className="room-observation" key={perspective.agent_id}>
+          <article className="room-message agent-message" key={perspective.agent_id}>
             <strong>{perspective.label}</strong>
             <p>{perspective.observation}</p>
             <small>{perspective.suggested_check}</small>
           </article>
         ))}
       </div>
-      <div className="coordinator-summary">
-        <strong>Coordinator summary</strong>
+
+      <div className="meeting-record">
+        <div className="meeting-record-header">
+          <strong>{t("writersRoom.meetingRecord")}</strong>
+          <span>{meeting.scope.chapters.length} linked chapter</span>
+        </div>
         <p>{meeting.studio_coordinator_summary.summary}</p>
+        <div className="record-note-list">
+          {meeting.studio_coordinator_summary.follow_up_actions.map((action) => (
+            <label className="record-note" key={action}>
+              <input defaultChecked disabled type="checkbox" />
+              <span>{action}</span>
+            </label>
+          ))}
+        </div>
+        <div className="meeting-record-actions">
+          <button className="secondary-button" disabled>
+            {t("writersRoom.keepAsRecord")}
+          </button>
+          <button className="primary-button compact" disabled={hasSavedNotes || isSavingNotes} onClick={onSaveSelectedNotes}>
+            {isSavingNotes
+              ? t("writersRoom.savingSelectedNotes")
+              : hasSavedNotes
+                ? t("writersRoom.notesSaved")
+                : t("writersRoom.saveSelectedNotes")}
+          </button>
+        </div>
       </div>
-      <button className="primary-button" disabled={hasProposalCards || isCreatingCards} onClick={onCreateProposalCards}>
-        {isCreatingCards
-          ? t("writersRoom.creatingProposalCards")
-          : hasProposalCards
-            ? t("writersRoom.proposalCardsReady")
-            : t("writersRoom.createProposalCards")}
-      </button>
     </section>
   );
 }

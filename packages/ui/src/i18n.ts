@@ -37,9 +37,16 @@ export type MessageKey =
   | "skill.runningForeshadowTracker"
   | "skill.runningOutlineBuilder"
   | "skill.runningTimelineCompiler"
-  | "writersRoom.createProposalCards"
-  | "writersRoom.creatingProposalCards"
-  | "writersRoom.proposalCardsReady"
+  | "writersRoom.keepAsRecord"
+  | "writersRoom.backToManuscript"
+  | "writersRoom.linkedChapter"
+  | "writersRoom.meetingCompleted"
+  | "writersRoom.meetingInProgress"
+  | "writersRoom.meetingRecord"
+  | "writersRoom.notesSaved"
+  | "writersRoom.participants"
+  | "writersRoom.saveSelectedNotes"
+  | "writersRoom.savingSelectedNotes"
   | "writersRoom.title"
   | "proposal.accept"
   | "proposal.reject"
@@ -79,9 +86,16 @@ const messages: Record<Locale, Record<MessageKey, string>> = {
     "skill.runningForeshadowTracker": "Running Foreshadow Tracker...",
     "skill.runningOutlineBuilder": "Running Outline Builder...",
     "skill.runningTimelineCompiler": "Running Timeline Compiler...",
-    "writersRoom.createProposalCards": "Create proposal cards",
-    "writersRoom.creatingProposalCards": "Creating proposal cards...",
-    "writersRoom.proposalCardsReady": "Proposal cards ready",
+    "writersRoom.keepAsRecord": "Keep as meeting record",
+    "writersRoom.backToManuscript": "Back to manuscript",
+    "writersRoom.linkedChapter": "linked chapter",
+    "writersRoom.meetingCompleted": "Meeting completed",
+    "writersRoom.meetingInProgress": "Meeting in progress",
+    "writersRoom.meetingRecord": "Assistant meeting record",
+    "writersRoom.notesSaved": "Notes saved to project memory",
+    "writersRoom.participants": "participants",
+    "writersRoom.saveSelectedNotes": "Save selected notes",
+    "writersRoom.savingSelectedNotes": "Saving selected notes...",
     "writersRoom.title": "Writers' Room",
     "proposal.accept": "Accept",
     "proposal.cancel": "Cancel",
@@ -124,9 +138,16 @@ const messages: Record<Locale, Record<MessageKey, string>> = {
     "skill.runningForeshadowTracker": "正在追踪伏笔...",
     "skill.runningOutlineBuilder": "正在构建大纲...",
     "skill.runningTimelineCompiler": "正在编译时间线...",
-    "writersRoom.createProposalCards": "创建变更卡片",
-    "writersRoom.creatingProposalCards": "正在创建变更卡片...",
-    "writersRoom.proposalCardsReady": "变更卡片已就绪",
+    "writersRoom.keepAsRecord": "保留为会议纪要",
+    "writersRoom.backToManuscript": "返回正文",
+    "writersRoom.linkedChapter": "关联章节",
+    "writersRoom.meetingCompleted": "会议已完成",
+    "writersRoom.meetingInProgress": "会议进行中",
+    "writersRoom.meetingRecord": "助理会议纪要",
+    "writersRoom.notesSaved": "纪要已保存到项目记忆",
+    "writersRoom.participants": "位参会者",
+    "writersRoom.saveSelectedNotes": "保存选中纪要",
+    "writersRoom.savingSelectedNotes": "正在保存纪要...",
     "writersRoom.title": "创作会议室",
     "proposal.accept": "接受",
     "proposal.cancel": "取消",

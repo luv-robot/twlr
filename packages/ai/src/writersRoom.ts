@@ -19,28 +19,32 @@ export function createMockWritersRoomMeeting(now = new Date().toISOString()): Ro
       {
         agent_id: developmentEditor.agent_id,
         label: developmentEditor.label,
-        observation: "The clue is strong, but the scene needs one visible decision after Mira notices it.",
+        observation: "The clue is strong. Mira needs one visible decision after she notices it.",
         risk: "The chapter may feel like setup without movement.",
         suggested_check: "Give Mira one small irreversible action.",
       },
       {
         agent_id: readerAgent.agent_id,
         label: readerAgent.label,
-        observation: "The altered record creates curiosity. A private decision would help readers trust her as active.",
+        observation: "The altered record creates curiosity. A private choice would help readers trust her as active.",
         risk: "Readers may read her caution as passivity.",
         suggested_check: "Show the cost of acting now.",
       },
       {
         agent_id: continuityEditor.agent_id,
         label: continuityEditor.label,
-        observation: "If the record is already altered, this becomes an active unresolved thread.",
+        observation: "If the record has already been altered, it should become an active unresolved thread.",
         risk: "The payoff timing may move earlier than planned.",
         suggested_check: "Track the altered archive record as an open loop.",
       },
     ],
     studio_coordinator_summary: {
-      summary: "Mira can remain cautious, but the scene needs one visible choice and one tracked open loop.",
-      follow_up_actions: ["Create proposal card for altered archive record", "Review Chapter 18 payoff timing"],
+      summary:
+        "Assistant meeting record: Mira can remain cautious, but the scene should preserve one visible choice and one tracked open loop.",
+      follow_up_actions: [
+        "Save the altered archive record as a project-memory note.",
+        "Keep Chapter 18 payoff timing under review.",
+      ],
     },
     generated_proposals: [],
     author_decision: null,
@@ -58,7 +62,7 @@ export function createWritersRoomProposalCards(
       status: "pending",
       source: {
         kind: "writers_room",
-        name: "Writers' Room",
+        name: "Assistant Meeting Record",
         llm_provider: "mock",
       },
       scope: {

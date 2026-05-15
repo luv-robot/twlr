@@ -12,7 +12,9 @@ interface ProposalCardProps {
 
 export function ProposalCard({ busyAction, proposal, onAccept, onEdit, onReject }: ProposalCardProps) {
   const providerLabel = proposal.source.llm_provider === "remote" ? "Remote" : "Mock";
-  const kicker = `${proposal.source.name} Proposal - ${providerLabel}`;
+  const sourceLabel =
+    proposal.source.kind === "writers_room" ? proposal.source.name : `${proposal.source.name} Proposal`;
+  const kicker = `${sourceLabel} - ${providerLabel}`;
   const [isEditing, setIsEditing] = useState(false);
   const [draftSummary, setDraftSummary] = useState(proposal.summary);
   const [draftEvidence, setDraftEvidence] = useState(proposal.evidence[0] ?? "");

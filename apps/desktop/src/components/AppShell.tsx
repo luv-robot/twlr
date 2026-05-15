@@ -49,6 +49,7 @@ import { ManuscriptEditor } from "./ManuscriptEditor";
 import { ProjectNavigator, type WorkspaceAction } from "./ProjectNavigator";
 import { StudioCoordinatorPanel } from "./StudioCoordinatorPanel";
 import { TopBar } from "./TopBar";
+import { WritersRoomWorkspace } from "./WritersRoomWorkspace";
 
 type ProposalReviewAction = {
   action: "accept" | "reject";
@@ -82,6 +83,7 @@ export function AppShell() {
   const [roomAction, setRoomAction] = useState<RoomAction>(null);
   const [runningSkillId, setRunningSkillId] = useState<ProductionSkillId | null>(null);
   const [workspaceAction, setWorkspaceAction] = useState<WorkspaceAction>(null);
+  const [isWritersRoomVisible, setIsWritersRoomVisible] = useState(false);
 
   const activeChapter = chapters.find((chapter) => chapter.id === activeChapterId) ?? chapters[0];
   const wordCount = countWords(activeChapter.body);
@@ -148,6 +150,11 @@ export function AppShell() {
           : chapter,
       ),
     );
+  }
+
+  function selectChapter(chapterId: string) {
+    setActiveChapterId(chapterId);
+    setIsWritersRoomVisible(false);
   }
 
   async function saveSnapshot() {
@@ -494,14 +501,20 @@ export function AppShell() {
       return;
     }
 
+    if (roomMeeting) {
+      setIsWritersRoomVisible(true);
+      return;
+    }
+
     setRoomAction("opening");
     const contextPacket = buildActiveChapterContextProjection("writers_room", null);
     const meeting = createMockWritersRoomMeeting();
     setRoomMeeting(meeting);
+    setIsWritersRoomVisible(true);
     setContextProjectionStatus(
       `Projected Writers' Room packet: ${contextPacket.current_chapter.word_count} words, ${contextPacket.characters.length} characters, ${contextPacket.open_loops.length} open loops.`,
     );
-    setStorageStatus("Recording Writers' Room...");
+    setStorageStatus("Recording Writers' Room meeting...");
 
     try {
       const result = await persistRoomMeeting(projectPath, meeting);
@@ -539,7 +552,7 @@ export function AppShell() {
     });
   }
 
-  async function createProposalCardsFromRoom() {
+  async function saveSelectedRoomNotes() {
     if (!roomMeeting || roomAction) {
       return;
     }
@@ -558,13 +571,13 @@ export function AppShell() {
       ...roomMeeting,
       generated_proposals: Array.from(new Set([...roomMeeting.generated_proposals, ...generatedProposalIds])),
       author_decision: {
-        decision: "create_proposal_cards",
+        decision: "save_selected_notes",
         decided_at: new Date().toISOString(),
       },
     });
     try {
       await savePendingProposalCards(proposalsToPersist);
-      setStorageStatus(`${generatedProposalIds.length} Writers' Room proposal card(s) ready for review.`);
+      setStorageStatus(`${generatedProposalIds.length} Writers' Room note(s) saved for review.`);
     } finally {
       setRoomAction(null);
     }
@@ -580,7 +593,7 @@ export function AppShell() {
         await refreshSnapshotStatus(projectPath);
       }
     } catch (error) {
-      setStorageStatus(error instanceof Error ? error.message : "Failed to persist proposal cards.");
+      setStorageStatus(error instanceof Error ? error.message : "Failed to persist pending review items.");
     }
   }
 
@@ -596,12 +609,14 @@ export function AppShell() {
     }
   }
 
+  const activeChapterTitle = `Chapter ${activeChapter.id} - ${activeChapter.title}`;
+
   return (
     <div className="app-shell">
       <TopBar
         autosaveLabel={autosaveLabel}
         changedItemCount={changedItemCount}
-        chapterTitle={`Chapter ${activeChapter.id} - ${activeChapter.title}`}
+        chapterTitle={isWritersRoomVisible ? `Writers' Room - ${activeChapterTitle}` : activeChapterTitle}
         isSavingSnapshot={isSavingSnapshot}
         onSaveSnapshot={saveSnapshot}
         projectTitle={projectTitle}
@@ -614,18 +629,28 @@ export function AppShell() {
         onCreateLocalProject={createProjectAtPath}
         onOpenLocalProject={openLocalProject}
         onProjectPathInput={setProjectPathInput}
-        onSelectChapter={setActiveChapterId}
+        onSelectChapter={selectChapter}
         projectPathInput={projectPathInput}
         projectTitle={projectTitle}
         workspaceAction={workspaceAction}
         workspaceStatus={workspaceStatus}
       />
-      <ManuscriptEditor
-        metadata={`${wordCount.toLocaleString()} words · Draft`}
-        onChange={updateActiveChapter}
-        title={`Chapter ${activeChapter.id} - ${activeChapter.title}`}
-        value={activeChapter.body}
-      />
+      {isWritersRoomVisible && roomMeeting ? (
+        <WritersRoomWorkspace
+          chapterTitle={activeChapterTitle}
+          meeting={roomMeeting}
+          onBackToManuscript={() => setIsWritersRoomVisible(false)}
+          onSaveSelectedNotes={saveSelectedRoomNotes}
+          roomAction={roomAction}
+        />
+      ) : (
+        <ManuscriptEditor
+          metadata={`${wordCount.toLocaleString()} words · Draft`}
+          onChange={updateActiveChapter}
+          title={activeChapterTitle}
+          value={activeChapter.body}
+        />
+      )}
       <StudioCoordinatorPanel
         acceptedEventCount={acceptedEventCount}
         characterState={characterState}
@@ -640,7 +665,6 @@ export function AppShell() {
         roomAction={roomAction}
         onAcceptProposal={acceptProposal}
         onCheckAffectedChapters={checkAffectedChapters}
-        onCreateRoomProposalCards={createProposalCardsFromRoom}
         onCreateForeshadowProposal={createForeshadowProposal}
         onCreateMockProposal={createMockProposal}
         onCreateOutlineProposal={createOutlineProposal}
@@ -648,6 +672,7 @@ export function AppShell() {
         onEditProposal={editProposal}
         onOpenWritersRoom={openWritersRoom}
         onRejectProposal={rejectProposal}
+        onSaveRoomNotes={saveSelectedRoomNotes}
         proposals={proposals}
         roomMeeting={roomMeeting}
         snapshotStatus={snapshotStatus}
