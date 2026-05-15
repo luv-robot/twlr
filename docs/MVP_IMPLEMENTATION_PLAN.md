@@ -10,6 +10,7 @@ It should be read alongside:
 - `docs/DATA_MODEL.md`
 - `docs/CLIENT_UI_DESIGN.md`
 - `docs/UI_WIREFRAME_SPEC.md`
+- `docs/SMOKE_TEST.md`
 
 ## MVP Objective
 
@@ -205,7 +206,7 @@ The first vertical slice is now partially executable with mock AI:
 - projected character state
 - projected open-loop state
 - projected timeline state
-- local project reopen reads projected state files
+- local project reopen rebuilds projected state from narrative events when available
 - context projection packet for skills and Writers' Room
 - Writers' Room mock meeting
 - Writers' Room meeting log persistence

@@ -1,4 +1,14 @@
-import { countWords, parseChapterMarkdown, replaceChapterMarkdownBody } from "@twlr/core";
+import {
+  applyCharacterEvents,
+  applyOpenLoopEvents,
+  applyTimelineEvents,
+  countWords,
+  createEmptyCharacterStateFile,
+  createEmptyOpenLoopStateFile,
+  createEmptyTimelineStateFile,
+  parseChapterMarkdown,
+  replaceChapterMarkdownBody,
+} from "@twlr/core";
 import type { CharacterStateFile, NarrativeEvent, OpenLoopStateFile, StateProposal, TimelineStateFile } from "@twlr/schema";
 import type { DemoChapter } from "../data/demoWorkspace";
 import {
@@ -56,13 +66,19 @@ export async function loadLocalWorkspace(projectPath: string): Promise<LoadedWor
   const contents = await Promise.all(
     summaries.map((summary) => readChapter(projectPath, summary.file_path)),
   );
+  const projectedCharacterState =
+    events.length > 0 ? applyCharacterEvents(createEmptyCharacterStateFile(), events) : characterState;
+  const projectedOpenLoopState =
+    events.length > 0 ? applyOpenLoopEvents(createEmptyOpenLoopStateFile(), events) : openLoopState;
+  const projectedTimelineState =
+    events.length > 0 ? applyTimelineEvents(createEmptyTimelineStateFile(), events) : timelineState;
 
   return {
     project,
     chapters: contents.map((content, index) => chapterContentToItem(content, index)),
-    characterState,
-    openLoopState,
-    timelineState,
+    characterState: projectedCharacterState,
+    openLoopState: projectedOpenLoopState,
+    timelineState: projectedTimelineState,
     events: [...events].reverse(),
     proposals: latestPendingProposals(proposals),
   };

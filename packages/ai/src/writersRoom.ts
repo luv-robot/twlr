@@ -83,6 +83,7 @@ export function createWritersRoomProposalCards(
             target_type: "open_loop",
             target_id: "loop_altered_archive_record",
             field: "title",
+            old_value: null,
             new_value: "Altered archive record",
           },
         },

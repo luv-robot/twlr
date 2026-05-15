@@ -123,7 +123,7 @@ export function normalizeRemoteStateProposalSkillResult(
   request: RemoteStateProposalSkillRequest,
   context: ProductionSkillContext,
 ): StateProposal {
-  const rawProposedEvents = proposal.proposed_events ?? [];
+  const rawProposedEvents = normalizeProposedEvents(proposal.proposed_events ?? []);
   const affectedCharacters = proposal.affected?.characters?.length
     ? proposal.affected.characters
     : inferTargetIds(rawProposedEvents, "character");
@@ -272,6 +272,18 @@ function normalizeEvidence(evidence: string[]): string[] {
     .map((entry) => entry.trim())
     .filter(Boolean)
     .slice(0, 2);
+}
+
+function normalizeProposedEvents(events: StateProposal["proposed_events"]): StateProposal["proposed_events"] {
+  return events.map((event) => ({
+    ...event,
+    payload: {
+      ...event.payload,
+      field: event.payload.field ?? "summary",
+      old_value: event.payload.old_value ?? null,
+      new_value: event.payload.new_value ?? null,
+    },
+  }));
 }
 
 function inferTargetIds(

@@ -2,6 +2,8 @@
 
 This document records the current local development entry points, verified checks, and known environment rules.
 
+For the current P0 verification checklist, see `docs/SMOKE_TEST.md`.
+
 ## Environment Rules
 
 - Prefer `/opt/homebrew/bin` for Homebrew-managed tools on this machine.
@@ -108,7 +110,7 @@ The current P0 vertical slice includes:
 - projected open-loop state
 - projected timeline state
 - accepted proposals update projected character, open-loop, and timeline state files
-- local project reopen reads projected state files
+- local project reopen rebuilds projected character, open-loop, and timeline state from narrative events when available
 - context projection packet for skills and Writers' Room
 - Writers' Room meeting JSONL persistence
 - Writers' Room to proposal-card handoff
