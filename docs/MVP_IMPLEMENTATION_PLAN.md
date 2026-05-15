@@ -190,6 +190,7 @@ The first vertical slice is now partially executable with mock AI:
 - Character Sheet mock proposal
 - OpenAI Character Sheet proposal path with mock fallback
 - DeepSeek Character Sheet proposal path with mock fallback
+- Outline Builder remote proposal path with mock fallback
 - Timeline Compiler remote proposal path with mock fallback
 - Foreshadow Tracker remote proposal path with mock fallback
 - production skill running / disabled state during remote calls
@@ -213,6 +214,7 @@ The first vertical slice is now partially executable with mock AI:
 - production skill registry
 - Timeline Compiler mock proposal
 - Foreshadow Tracker mock proposal
+- Outline Builder mock proposal
 - provider interface with mock provider
 
 Remaining P0 work should focus on replacing hardcoded demo paths and mock outputs with real context projection, provider-backed structured outputs, and more complete production skills.

@@ -18,6 +18,7 @@ export interface EditProposalDraftInput {
 const characterStatusFields = new Set(["current_status", "status", "summary", "description"]);
 const timelineSummaryFields = new Set(["label", "summary"]);
 const openLoopSummaryFields = new Set(["title", "notes", "summary", "description", "expected_payoff"]);
+const chapterSummaryFields = new Set(["outline", "outline_beats", "summary", "description"]);
 
 export function reviewStateProposal(input: ReviewProposalInput): StateProposal {
   const reviewedAt = input.reviewedAt ?? new Date().toISOString();
@@ -52,6 +53,10 @@ export function editProposalDraft(input: EditProposalDraftInput): StateProposal 
       }
 
       if (event.payload.target_type === "open_loop" && openLoopSummaryFields.has(event.payload.field ?? "")) {
+        return updateProposalEventValue(event, summary);
+      }
+
+      if (event.payload.target_type === "chapter" && chapterSummaryFields.has(event.payload.field ?? "")) {
         return updateProposalEventValue(event, summary);
       }
 

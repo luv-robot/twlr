@@ -36,21 +36,21 @@ This document tracks product and implementation decisions that should wait for a
 
    Decision: prioritize the Writers' Room page, with several style options.
 
+9. Proposal persistence semantics
+
+   Decision: persist pending proposal cards to `proposals/state_proposals.jsonl` so a reopened local project can recover the author's review queue. Persist reviewed proposals again after accept / reject.
+
+10. Theme Analyst P0 scope
+
+   Decision: do not include Theme Analyst as a default P0 participant. Keep it available for later advanced/debug usage after the core state loop is stable.
+
 ## Open Decisions
 
-1. Proposal persistence semantics
-
-   Decide whether pending proposal cards should be written to `proposals/state_proposals.jsonl` immediately or only after accept / reject.
-
-2. P0 official agent scope
-
-   Analyze the cost of including Theme Analyst in P0 before making the final call.
-
-3. Snapshot / impact information architecture
+1. Snapshot / impact information architecture
 
    Define the exact boundary between normal writing UI, lightweight impact prompts, and developer/debug mode.
 
-4. Figma Writers' Room variants
+2. Figma Writers' Room variants
 
    Produce multiple Writers' Room page options before selecting the implementation direction.
 

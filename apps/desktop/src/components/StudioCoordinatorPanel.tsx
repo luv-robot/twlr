@@ -28,6 +28,7 @@ interface StudioCoordinatorPanelProps {
   onEditProposal: (proposalId: string, draft: { evidence: string; summary: string }) => void;
   onRejectProposal: (proposalId: string) => void;
   onCreateMockProposal: () => void;
+  onCreateOutlineProposal: () => void;
   onCreateTimelineProposal: () => void;
   onOpenWritersRoom: () => void;
   roomMeeting: RoomMeeting | null;
@@ -50,6 +51,7 @@ export function StudioCoordinatorPanel({
   onCreateRoomProposalCards,
   onEditProposal,
   onCreateMockProposal,
+  onCreateOutlineProposal,
   onCreateTimelineProposal,
   onOpenWritersRoom,
   onRejectProposal,
@@ -97,6 +99,9 @@ export function StudioCoordinatorPanel({
         <div className="section-label">{t("studioCoordinator.nextUsefulActions")}</div>
         <button className="primary-button" disabled={Boolean(runningSkillId)} onClick={onCreateMockProposal}>
           {runningSkillId === "character_sheet" ? "Running Character Sheet..." : "Character Sheet"}
+        </button>
+        <button className="secondary-button wide" disabled={Boolean(runningSkillId)} onClick={onCreateOutlineProposal}>
+          {runningSkillId === "outline_builder" ? "Running Outline Builder..." : "Outline Builder"}
         </button>
         <button className="secondary-button wide" disabled={Boolean(runningSkillId)} onClick={onCreateTimelineProposal}>
           {runningSkillId === "timeline_compiler" ? "Running Timeline Compiler..." : "Timeline Compiler"}

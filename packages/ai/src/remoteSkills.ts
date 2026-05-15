@@ -45,6 +45,21 @@ const remoteStateProposalSkillDefinitions: Partial<Record<ProductionSkillId, Rem
       "Do not produce broad literary critique or scene advice.",
     ],
   },
+  outline_builder: {
+    skillId: "outline_builder",
+    skillLabel: "Outline Builder",
+    proposalIdSuffix: "remote_outline",
+    systemFocus: "Focus on chapter outline beats, scene purpose, turning point, and transition into the next beat.",
+    task: "Create a concise Outline Builder chapter-state proposal from the context packet.",
+    outputRules: [
+      "Summary must be one short chapter outline update, 18 to 28 English words when possible.",
+      "Evidence should contain 1 or 2 short observations from the selected text.",
+      "Always include at least one proposed event with event_type chapter_metadata_changed and target_type chapter.",
+      "Use field outline_beats for the primary chapter outline update.",
+      "Do not create rewrite prose or broad craft advice.",
+      "Do not mutate character, timeline, or open-loop state unless the selected text directly requires it.",
+    ],
+  },
   timeline_compiler: {
     skillId: "timeline_compiler",
     skillLabel: "Timeline Compiler",
@@ -125,6 +140,7 @@ export function normalizeRemoteStateProposalSkillResult(
     affectedCharacters,
     affectedOpenLoops,
     affectedTimelineEvents,
+    chapterId: context.chapter_id,
     events: rawProposedEvents,
     skillId: request.skillId,
     summary,
@@ -207,8 +223,7 @@ function createStateProposalPrompt(input: {
       output_contract: {
         summary: "One short state update, not an explanation paragraph.",
         evidence: "1 or 2 short entries.",
-        character_state_policy:
-          "Character Sheet must include at least one proposed event with event_type character_state_changed and target_type character.",
+        state_event_policy: stateEventPolicyForSkill(input.definition.skillId),
         open_loop_policy:
           "Create an open loop when the selected text suggests a secret, cover-up, unexplained motive, suspicious silence, or altered record.",
         proposal_card_reader: "The author should be able to decide accept/reject from the card without reading a long essay.",
@@ -217,6 +232,26 @@ function createStateProposalPrompt(input: {
     null,
     2,
   );
+}
+
+function stateEventPolicyForSkill(skillId: ProductionSkillId): string {
+  if (skillId === "character_sheet") {
+    return "Character Sheet must include at least one proposed event with event_type character_state_changed and target_type character.";
+  }
+
+  if (skillId === "outline_builder") {
+    return "Outline Builder must include at least one proposed event with event_type chapter_metadata_changed and target_type chapter.";
+  }
+
+  if (skillId === "timeline_compiler") {
+    return "Timeline Compiler must include at least one proposed event with event_type timeline_event_created or timeline_event_changed and target_type timeline_event.";
+  }
+
+  if (skillId === "foreshadow_tracker") {
+    return "Foreshadow Tracker must include at least one proposed event with event_type open_loop_created, open_loop_changed, or open_loop_paid_off and target_type open_loop.";
+  }
+
+  return "Include only durable story-state events relevant to the selected production skill.";
 }
 
 function normalizeProposalSummary(summary: string): string {
@@ -255,6 +290,7 @@ function ensureSkillEvents(input: {
   affectedCharacters: string[];
   affectedOpenLoops: string[];
   affectedTimelineEvents: string[];
+  chapterId: string;
   events: StateProposal["proposed_events"];
   skillId: ProductionSkillId;
   summary: string;
@@ -265,6 +301,10 @@ function ensureSkillEvents(input: {
 
   if (input.skillId === "timeline_compiler") {
     return ensureTimelineEvent(input.events, input.affectedTimelineEvents, input.summary);
+  }
+
+  if (input.skillId === "outline_builder") {
+    return ensureChapterOutlineEvent(input.events, input.chapterId, input.summary);
   }
 
   if (input.skillId === "foreshadow_tracker") {
@@ -327,6 +367,37 @@ function ensureTimelineEvent(
         target_type: "timeline_event",
         target_id: timelineEventId,
         field: "label",
+        old_value: null,
+        new_value: summary,
+      },
+    },
+    ...events,
+  ];
+}
+
+function ensureChapterOutlineEvent(
+  events: StateProposal["proposed_events"],
+  chapterId: string,
+  summary: string,
+): StateProposal["proposed_events"] {
+  if (
+    events.some(
+      (event) => event.payload.target_type === "chapter" && event.payload.field === "outline_beats",
+    )
+  ) {
+    return events;
+  }
+
+  const targetChapterId =
+    events.find((event) => event.payload.target_type === "chapter")?.payload.target_id ?? chapterId;
+
+  return [
+    {
+      event_type: "chapter_metadata_changed",
+      payload: {
+        target_type: "chapter",
+        target_id: targetChapterId,
+        field: "outline_beats",
         old_value: null,
         new_value: summary,
       },

@@ -273,6 +273,10 @@ export function AppShell() {
     void createSkillProposal("character_sheet");
   }
 
+  function createOutlineProposal() {
+    void createSkillProposal("outline_builder");
+  }
+
   function createTimelineProposal() {
     void createSkillProposal("timeline_compiler");
   }
@@ -531,6 +535,7 @@ export function AppShell() {
         onCreateRoomProposalCards={createProposalCardsFromRoom}
         onCreateForeshadowProposal={createForeshadowProposal}
         onCreateMockProposal={createMockProposal}
+        onCreateOutlineProposal={createOutlineProposal}
         onCreateTimelineProposal={createTimelineProposal}
         onEditProposal={editProposal}
         onOpenWritersRoom={openWritersRoom}

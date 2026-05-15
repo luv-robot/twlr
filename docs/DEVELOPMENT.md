@@ -116,8 +116,10 @@ The current P0 vertical slice includes:
 - production skill registry
 - Timeline Compiler mock proposal
 - Foreshadow Tracker mock proposal
+- Outline Builder mock proposal
 - OpenAI Character Sheet proposal path with mock fallback
 - DeepSeek Character Sheet proposal path with mock fallback
+- remote Outline Builder proposal path with mock fallback
 - remote Timeline Compiler and Foreshadow Tracker proposal paths with mock fallback
 - remote provider interface with mock provider
 - remote state-proposal skill adapter for building structured LLM requests outside the desktop UI layer

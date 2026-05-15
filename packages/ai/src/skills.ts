@@ -30,7 +30,7 @@ export const productionSkills: ProductionSkillDefinition[] = [
   {
     skill_id: "outline_builder",
     label: "Outline Builder",
-    output_kind: "structured_note",
+    output_kind: "state_proposal",
     description: "Turns chapter material into outline beats.",
   },
   {
@@ -54,6 +54,10 @@ export function runMockProductionSkill(
 ): StateProposal | null {
   if (skillId === "character_sheet") {
     return createMockCharacterSheetProposal(context, now);
+  }
+
+  if (skillId === "outline_builder") {
+    return createMockOutlineBuilderProposal(context, now);
   }
 
   if (skillId === "timeline_compiler") {
@@ -110,6 +114,54 @@ function createMockCharacterSheetProposal(context: ProductionSkillContext, now: 
           target_id: "loop_altered_archive_record",
           field: "title",
           new_value: "Altered archive record",
+        },
+      },
+    ],
+    review: {
+      reviewed_at: null,
+      reviewed_by: null,
+      decision: null,
+      edited_summary: null,
+    },
+  };
+}
+
+function createMockOutlineBuilderProposal(context: ProductionSkillContext, now: string): StateProposal {
+  return {
+    proposal_id: `proposal_${Date.now()}_outline`,
+    created_at: now,
+    status: "pending",
+    source: {
+      kind: "skill",
+      name: "Outline Builder",
+      llm_provider: "mock",
+    },
+    scope: {
+      chapters: [context.chapter_id],
+      selected_text_range: null,
+    },
+    affected: {
+      chapters: [context.chapter_id],
+      characters: [],
+      open_loops: [],
+      timeline_events: [],
+    },
+    summary: "Chapter outline beat: Mira notices the altered receipt, withholds judgment, and the scene turns toward a concealed archive conflict.",
+    evidence: [
+      context.selected_text ??
+        context.context_packet?.current_chapter.body_excerpt ??
+        "The name had not been erased. It had been replaced.",
+    ],
+    proposed_events: [
+      {
+        event_type: "chapter_metadata_changed",
+        payload: {
+          target_type: "chapter",
+          target_id: context.chapter_id,
+          field: "outline_beats",
+          old_value: null,
+          new_value:
+            "Mira notices the altered receipt; the chapter beat shifts from archive clue to concealed conflict.",
         },
       },
     ],
