@@ -778,6 +778,14 @@ Output:
 
 - `visual_context.json`
 
+Current fixed-interval keyframe command:
+
+```bash
+npm run short-drama:extract-keyframes -- --case ./short-drama-cases/drama-title/episode_001 --video ./episode_001.mp4 --interval 15
+```
+
+The first extractor only creates timestamped frame placeholders in `visual_context.json`. Multimodal visual description is a separate next step, because visual interpretation should remain inspectable and correctable.
+
 ### Step 5: Script Reconstruction
 
 LLM combines:
