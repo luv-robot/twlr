@@ -92,6 +92,7 @@ export interface SnapshotStatus {
   changed_files: number;
   changed_chapters: number;
   changed_state_files: number;
+  changed_areas: string[];
   has_snapshot: boolean;
 }
 

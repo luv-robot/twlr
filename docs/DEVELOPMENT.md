@@ -128,7 +128,7 @@ The current P0 vertical slice includes:
 - first-pass loading / disabled states for project actions, production skills, proposal review, Writers' Room, impact check, and snapshots
 - provider failure summaries for missing keys, invalid keys, insufficient quota, unavailable models, schema rejection, and network errors
 - Save Snapshot command
-- revision check lite
+- revision check lite with writer-facing affected areas
 - minimal i18n key usage in high-frequency UI
 
 ## Browser Smoke Check

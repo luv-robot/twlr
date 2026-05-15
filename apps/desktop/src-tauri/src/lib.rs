@@ -101,6 +101,7 @@ struct SnapshotStatus {
     changed_files: usize,
     changed_chapters: usize,
     changed_state_files: usize,
+    changed_areas: Vec<String>,
     has_snapshot: bool,
 }
 
@@ -362,7 +363,7 @@ fn save_snapshot(request: SaveSnapshotRequest) -> Result<SnapshotSummary, String
 
     init_git(&project_path);
     run_git(&project_path, &["add", "."])?;
-    let status = run_git(&project_path, &["status", "--short"])?;
+    let status = run_git(&project_path, &["status", "--short", "--untracked-files=all"])?;
     let changed_files = status
         .lines()
         .filter(|line| !line.trim().is_empty())
@@ -411,7 +412,7 @@ fn snapshot_status(project_path: String) -> Result<SnapshotStatus, String> {
     }
 
     init_git(&project_path_buf);
-    let status = run_git(&project_path_buf, &["status", "--short"])?;
+    let status = run_git(&project_path_buf, &["status", "--short", "--untracked-files=all"])?;
     let changed_paths = parse_git_status_paths(&status);
     let has_snapshot = run_git(&project_path_buf, &["rev-parse", "--verify", "HEAD"]).is_ok();
 
@@ -425,6 +426,7 @@ fn snapshot_status(project_path: String) -> Result<SnapshotStatus, String> {
             .iter()
             .filter(|path| path.starts_with("state/"))
             .count(),
+        changed_areas: summarize_changed_areas(&changed_paths),
         has_snapshot,
     })
 }
@@ -745,6 +747,38 @@ fn parse_git_status_paths(status: &str) -> Vec<String> {
         })
         .filter(|path| !path.is_empty())
         .collect()
+}
+
+fn summarize_changed_areas(paths: &[String]) -> Vec<String> {
+    let mut areas = Vec::new();
+
+    for path in paths {
+        let area = if path.starts_with("manuscript/") {
+            "Manuscript"
+        } else if path == "state/characters.json" {
+            "Characters"
+        } else if path == "state/open_loops.json" {
+            "Open loops"
+        } else if path == "state/timeline.json" {
+            "Timeline"
+        } else if path.starts_with("state/") {
+            "Story state"
+        } else if path.starts_with("proposals/") {
+            "Review cards"
+        } else if path.starts_with("meetings/") {
+            "Writers' Room"
+        } else if path.starts_with("events/") {
+            "Narrative events"
+        } else {
+            "Project files"
+        };
+
+        if !areas.iter().any(|existing| existing == area) {
+            areas.push(area.to_string());
+        }
+    }
+
+    areas
 }
 
 fn read_project_json_file(
@@ -1193,6 +1227,8 @@ mod tests {
         assert!(status.changed_files > 0);
         assert!(status.changed_chapters > 0);
         assert!(status.changed_state_files > 0);
+        assert!(status.changed_areas.contains(&"Manuscript".to_string()));
+        assert!(status.changed_areas.contains(&"Characters".to_string()));
 
         let snapshot = save_snapshot(SaveSnapshotRequest {
             project_path: project_path_text.clone(),

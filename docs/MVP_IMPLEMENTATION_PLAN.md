@@ -187,7 +187,7 @@ The first vertical slice is now partially executable with mock AI:
 - local autosave
 - chapter creation
 - manual Save Snapshot
-- snapshot status lite
+- snapshot status lite with writer-facing affected areas
 - Character Sheet mock proposal
 - OpenAI Character Sheet proposal path with mock fallback
 - DeepSeek Character Sheet proposal path with mock fallback

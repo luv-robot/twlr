@@ -93,6 +93,7 @@ Expected result:
 Expected result:
 
 - The UI reports changed chapters and changed state areas in writer-facing language.
+- The UI suggests affected areas such as Manuscript, Characters, Timeline, Review cards, or Writers' Room when those areas changed.
 - Raw Git details are not shown in the normal writing surface.
 - The result suggests review work without implying that AI has changed the manuscript.
 

@@ -302,7 +302,9 @@ export function AppShell() {
     try {
       const status = await getWorkspaceSnapshotStatus(nextProjectPath);
       setChangedProjectFileCount(status.changed_files);
-      setSnapshotStatus(formatRevisionCheck(status.changed_chapters, status.changed_state_files));
+      setSnapshotStatus(
+        formatRevisionCheck(status.changed_files, status.changed_chapters, status.changed_state_files, status.changed_areas),
+      );
     } catch (error) {
       setSnapshotStatus(error instanceof Error ? error.message : "Snapshot status unavailable.");
     }
@@ -663,11 +665,21 @@ function formatCompactWordCount(count: number): string {
   return String(count);
 }
 
-function formatRevisionCheck(changedChapters: number, changedStateAreas: number): string {
+function formatRevisionCheck(
+  changedFiles: number,
+  changedChapters: number,
+  changedStateAreas: number,
+  changedAreas: string[] = [],
+): string {
+  if (changedFiles === 0) {
+    return "No project changes since the last snapshot.";
+  }
+
   const chapterLabel = changedChapters === 1 ? "chapter" : "chapters";
   const stateLabel = changedStateAreas === 1 ? "state area" : "state areas";
+  const areaSummary = changedAreas.length > 0 ? ` Review: ${changedAreas.slice(0, 4).join(", ")}.` : "";
 
-  return `${changedChapters} ${chapterLabel} changed; ${changedStateAreas} ${stateLabel} may need review.`;
+  return `${changedFiles} project file(s) changed; ${changedChapters} ${chapterLabel} changed; ${changedStateAreas} ${stateLabel} may need review.${areaSummary}`;
 }
 
 function formatTimelineIssueLabel(count: number): string {
