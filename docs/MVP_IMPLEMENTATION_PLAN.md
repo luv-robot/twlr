@@ -192,6 +192,7 @@ The first vertical slice is now partially executable with mock AI:
 - DeepSeek Character Sheet proposal path with mock fallback
 - Timeline Compiler remote proposal path with mock fallback
 - Foreshadow Tracker remote proposal path with mock fallback
+- production skill running / disabled state during remote calls
 - remote state-proposal skill request adapter
 - pending proposal card persistence and reopen recovery
 - proposal accept / reject
@@ -430,6 +431,11 @@ UI tests:
 - editor remains available after panel toggles
 - proposal card actions work
 - Coordinator status updates after state changes
+
+Queued UI response work:
+
+- add consistent loading, disabled, empty, success, and error states across high-frequency frontend components
+- keep the current execution order; do this as a focused UI reliability pass after the current P0 state loop tasks
 
 Avoid over-testing visual details in P0.
 

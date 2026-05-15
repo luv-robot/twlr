@@ -68,6 +68,7 @@ export function AppShell() {
   const [workspaceStatus, setWorkspaceStatus] = useState("Demo workspace");
   const [snapshotStatus, setSnapshotStatus] = useState("No revision check yet.");
   const [contextProjectionStatus, setContextProjectionStatus] = useState("No context packet built in this session.");
+  const [runningSkillId, setRunningSkillId] = useState<ProductionSkillId | null>(null);
 
   const activeChapter = chapters.find((chapter) => chapter.id === activeChapterId) ?? chapters[0];
   const wordCount = countWords(activeChapter.body);
@@ -281,49 +282,58 @@ export function AppShell() {
   }
 
   async function createSkillProposal(skillId: ProductionSkillId) {
+    if (runningSkillId) {
+      return;
+    }
+
+    setRunningSkillId(skillId);
     const selectedText = activeChapter.body.split("\n\n")[0];
     const contextPacket = buildActiveChapterContextProjection("production_skill", selectedText);
     setContextProjectionStatus(
       `Projected ${contextPacket.current_chapter.word_count} words, ${contextPacket.characters.length} characters, ${contextPacket.open_loops.length} open loops, ${contextPacket.recent_events.length} events.`,
     );
 
-    const result = await runProductionSkill(skillId, {
-      chapter_id: activeChapter.filePath?.replace("manuscript/", "").replace(".md", "") ?? `chapter_${activeChapter.id}`,
-      chapter_title: activeChapter.title,
-      selected_text: selectedText,
-      context_packet: contextPacket,
-    });
-    const proposal = result.proposal;
-    setStorageStatus(result.message);
-
-    if (!proposal) {
-      return;
-    }
-
-    const isOpenAiFallback = proposal.source.llm_provider === "mock" && result.message.includes("OpenAI");
-
-    setProposals((current) => {
-      const existingSameSkill = current.find(
-        (item) =>
-          item.status === "pending" &&
-          item.source.kind === proposal.source.kind &&
-          item.source.name === proposal.source.name,
-      );
-
-      if (existingSameSkill && proposal.source.llm_provider !== "remote") {
-        return current;
-      }
-
-      void savePendingProposalCards([proposal], { silent: isOpenAiFallback });
-      if (existingSameSkill) {
-        return current.map((item) => (item.proposal_id === existingSameSkill.proposal_id ? proposal : item));
-      }
-
-      return [proposal, ...current];
-    });
-
-    if (isOpenAiFallback) {
+    try {
+      const result = await runProductionSkill(skillId, {
+        chapter_id: activeChapter.filePath?.replace("manuscript/", "").replace(".md", "") ?? `chapter_${activeChapter.id}`,
+        chapter_title: activeChapter.title,
+        selected_text: selectedText,
+        context_packet: contextPacket,
+      });
+      const proposal = result.proposal;
       setStorageStatus(result.message);
+
+      if (!proposal) {
+        return;
+      }
+
+      const isOpenAiFallback = proposal.source.llm_provider === "mock" && result.message.includes("OpenAI");
+
+      setProposals((current) => {
+        const existingSameSkill = current.find(
+          (item) =>
+            item.status === "pending" &&
+            item.source.kind === proposal.source.kind &&
+            item.source.name === proposal.source.name,
+        );
+
+        if (existingSameSkill && proposal.source.llm_provider !== "remote") {
+          return current;
+        }
+
+        void savePendingProposalCards([proposal], { silent: isOpenAiFallback });
+        if (existingSameSkill) {
+          return current.map((item) => (item.proposal_id === existingSameSkill.proposal_id ? proposal : item));
+        }
+
+        return [proposal, ...current];
+      });
+
+      if (isOpenAiFallback) {
+        setStorageStatus(result.message);
+      }
+    } finally {
+      setRunningSkillId(null);
     }
   }
 
@@ -515,6 +525,7 @@ export function AppShell() {
         latestAcceptedEvent={acceptedEvents[0]}
         openLoopState={openLoopState}
         timelineState={timelineState}
+        runningSkillId={runningSkillId}
         onAcceptProposal={acceptProposal}
         onCheckAffectedChapters={checkAffectedChapters}
         onCreateRoomProposalCards={createProposalCardsFromRoom}

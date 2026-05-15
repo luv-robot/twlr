@@ -1,4 +1,5 @@
 import { t } from "@twlr/ui";
+import type { ProductionSkillId } from "@twlr/ai";
 import type { CoordinatorStatusItem } from "../data/demoWorkspace";
 import type {
   CharacterStateFile,
@@ -30,6 +31,7 @@ interface StudioCoordinatorPanelProps {
   onCreateTimelineProposal: () => void;
   onOpenWritersRoom: () => void;
   roomMeeting: RoomMeeting | null;
+  runningSkillId: ProductionSkillId | null;
   snapshotStatus: string;
 }
 
@@ -53,6 +55,7 @@ export function StudioCoordinatorPanel({
   onRejectProposal,
   storageStatus,
   roomMeeting,
+  runningSkillId,
   snapshotStatus,
 }: StudioCoordinatorPanelProps) {
   const recentCharacters = [...characterState.characters]
@@ -71,8 +74,12 @@ export function StudioCoordinatorPanel({
         <h2>{t("studioCoordinator.title")}</h2>
         <div className="tabs">
           <button className="tab active">Room</button>
-          <button className="tab">State</button>
-          <button className="tab">Impact</button>
+          <button className="tab" disabled>
+            State
+          </button>
+          <button className="tab" disabled>
+            Impact
+          </button>
         </div>
       </div>
 
@@ -88,14 +95,14 @@ export function StudioCoordinatorPanel({
 
       <section className="coordinator-card">
         <div className="section-label">{t("studioCoordinator.nextUsefulActions")}</div>
-        <button className="primary-button" onClick={onCreateMockProposal}>
-          Character Sheet
+        <button className="primary-button" disabled={Boolean(runningSkillId)} onClick={onCreateMockProposal}>
+          {runningSkillId === "character_sheet" ? "Running Character Sheet..." : "Character Sheet"}
         </button>
-        <button className="secondary-button wide" onClick={onCreateTimelineProposal}>
-          Timeline Compiler
+        <button className="secondary-button wide" disabled={Boolean(runningSkillId)} onClick={onCreateTimelineProposal}>
+          {runningSkillId === "timeline_compiler" ? "Running Timeline Compiler..." : "Timeline Compiler"}
         </button>
-        <button className="secondary-button wide" onClick={onCreateForeshadowProposal}>
-          Foreshadow Tracker
+        <button className="secondary-button wide" disabled={Boolean(runningSkillId)} onClick={onCreateForeshadowProposal}>
+          {runningSkillId === "foreshadow_tracker" ? "Running Foreshadow Tracker..." : "Foreshadow Tracker"}
         </button>
         <button className="secondary-button wide" onClick={onCheckAffectedChapters}>
           Check affected chapters
