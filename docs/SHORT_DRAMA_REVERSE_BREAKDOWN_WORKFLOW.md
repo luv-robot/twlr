@@ -799,6 +799,14 @@ Output:
 
 - `reconstructed_script.json`
 
+Current prompt builder:
+
+```bash
+npm run short-drama:build-prompt -- --case ./short-drama-cases/drama-title/episode_001 --kind reconstruction
+```
+
+This writes `prompts/reconstruction_prompt.md` inside the case folder. The model output should be manually inspected before replacing `reconstructed_script.json`.
+
 ### Step 6: Human Correction
 
 User corrects:
@@ -823,6 +831,14 @@ LLM generates:
 Output:
 
 - `director_diagnosis_report.md`
+
+Current diagnosis prompt builder:
+
+```bash
+npm run short-drama:build-prompt -- --case ./short-drama-cases/drama-title/episode_001 --kind diagnosis
+```
+
+This writes `prompts/diagnosis_prompt.md` inside the case folder. The prompt explicitly blocks film-review language and requires scene-level evidence plus revision suggestions.
 
 ### Step 8: Case Indexing
 
