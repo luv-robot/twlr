@@ -74,15 +74,18 @@ export function AppShell() {
   const wordCount = countWords(activeChapter.body);
   const changedChapterCount = changedChapterIds.size;
   const acceptedEventCount = acceptedEvents.length;
+  const timelineIssueCount = timelineState.timeline_events.filter(
+    (event) => event.certainty === "needs_review" || event.certainty === "contradicted",
+  ).length;
 
   const coordinatorItems = useMemo(
     () => [
       { count: String(proposals.length), label: "pending updates", tone: "proposal" as const },
       { count: String(changedChapterCount), label: "changed chapters", tone: "warning" as const },
       { count: String(openLoopState.open_loops.length), label: "unresolved threads", tone: "warning" as const },
-      { count: "1", label: "possible timeline issue", tone: "risk" as const },
+      { count: String(timelineIssueCount), label: formatTimelineIssueLabel(timelineIssueCount), tone: "risk" as const },
     ],
-    [changedChapterCount, openLoopState.open_loops.length, proposals.length],
+    [changedChapterCount, openLoopState.open_loops.length, proposals.length, timelineIssueCount],
   );
 
   useEffect(() => {
@@ -562,4 +565,8 @@ function formatRevisionCheck(changedChapters: number, changedStateAreas: number)
   const stateLabel = changedStateAreas === 1 ? "state area" : "state areas";
 
   return `${changedChapters} ${chapterLabel} changed; ${changedStateAreas} ${stateLabel} may need review.`;
+}
+
+function formatTimelineIssueLabel(count: number): string {
+  return count === 1 ? "possible timeline issue" : "possible timeline issues";
 }
