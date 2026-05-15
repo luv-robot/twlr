@@ -195,6 +195,7 @@ The first vertical slice is now partially executable with mock AI:
 - remote state-proposal skill request adapter
 - pending proposal card persistence and reopen recovery
 - proposal accept / reject
+- proposal inline edit for summary and evidence before acceptance
 - accepted proposal to narrative events
 - accepted proposal to projected state files
 - canonical character id normalization for accepted proposal state updates

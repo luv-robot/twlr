@@ -429,6 +429,28 @@ button:disabled {
   line-height: 1.35;
 }
 
+.proposal-edit-field {
+  width: 100%;
+  border: 1px solid #d8d3cb;
+  border-radius: 8px;
+  background: #fafaf8;
+  color: #242424;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 10px;
+  resize: vertical;
+}
+
+.proposal-edit-field.summary {
+  min-height: 88px;
+  font-weight: 700;
+}
+
+.proposal-edit-field.evidence {
+  min-height: 76px;
+}
+
 .proposal-scope {
   display: grid;
   gap: 4px;

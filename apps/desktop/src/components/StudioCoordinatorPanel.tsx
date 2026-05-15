@@ -24,6 +24,7 @@ interface StudioCoordinatorPanelProps {
   onCheckAffectedChapters: () => void;
   onCreateForeshadowProposal: () => void;
   onCreateRoomProposalCards: () => void;
+  onEditProposal: (proposalId: string, draft: { evidence: string; summary: string }) => void;
   onRejectProposal: (proposalId: string) => void;
   onCreateMockProposal: () => void;
   onCreateTimelineProposal: () => void;
@@ -45,6 +46,7 @@ export function StudioCoordinatorPanel({
   onCheckAffectedChapters,
   onCreateForeshadowProposal,
   onCreateRoomProposalCards,
+  onEditProposal,
   onCreateMockProposal,
   onCreateTimelineProposal,
   onOpenWritersRoom,
@@ -112,6 +114,7 @@ export function StudioCoordinatorPanel({
             <ProposalCard
               key={proposal.proposal_id}
               onAccept={onAcceptProposal}
+              onEdit={onEditProposal}
               onReject={onRejectProposal}
               proposal={proposal}
             />

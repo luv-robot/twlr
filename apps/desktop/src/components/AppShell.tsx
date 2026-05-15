@@ -8,6 +8,7 @@ import {
   createEmptyCharacterStateFile,
   createEmptyOpenLoopStateFile,
   createEmptyTimelineStateFile,
+  editProposalDraft,
   proposalToNarrativeEvents,
   reviewStateProposal,
 } from "@twlr/core";
@@ -376,6 +377,22 @@ export function AppShell() {
     void saveReviewedProposal(reviewedProposal);
   }
 
+  function editProposal(proposalId: string, draft: { evidence: string; summary: string }) {
+    const proposal = proposals.find((item) => item.proposal_id === proposalId);
+    if (!proposal) {
+      return;
+    }
+
+    const editedProposal = editProposalDraft({
+      proposal,
+      summary: draft.summary,
+      evidence: draft.evidence,
+    });
+    setProposals((current) => current.map((item) => (item.proposal_id === proposalId ? editedProposal : item)));
+    setStorageStatus("Proposal edit saved locally.");
+    void savePendingProposalCards([editedProposal]);
+  }
+
   async function openWritersRoom() {
     const contextPacket = buildActiveChapterContextProjection("writers_room", null);
     const meeting = createMockWritersRoomMeeting();
@@ -504,6 +521,7 @@ export function AppShell() {
         onCreateForeshadowProposal={createForeshadowProposal}
         onCreateMockProposal={createMockProposal}
         onCreateTimelineProposal={createTimelineProposal}
+        onEditProposal={editProposal}
         onOpenWritersRoom={openWritersRoom}
         onRejectProposal={rejectProposal}
         proposals={proposals}

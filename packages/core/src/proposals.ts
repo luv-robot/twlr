@@ -9,6 +9,16 @@ export interface ReviewProposalInput {
   editedSummary?: string | null;
 }
 
+export interface EditProposalDraftInput {
+  proposal: StateProposal;
+  summary: string;
+  evidence: string;
+}
+
+const characterStatusFields = new Set(["current_status", "status", "summary", "description"]);
+const timelineSummaryFields = new Set(["label", "summary"]);
+const openLoopSummaryFields = new Set(["title", "notes", "summary", "description", "expected_payoff"]);
+
 export function reviewStateProposal(input: ReviewProposalInput): StateProposal {
   const reviewedAt = input.reviewedAt ?? new Date().toISOString();
 
@@ -20,6 +30,36 @@ export function reviewStateProposal(input: ReviewProposalInput): StateProposal {
       reviewed_by: input.reviewedBy ?? "author",
       decision: input.decision,
       edited_summary: input.editedSummary ?? input.proposal.review.edited_summary,
+    },
+  };
+}
+
+export function editProposalDraft(input: EditProposalDraftInput): StateProposal {
+  const summary = input.summary.trim() || input.proposal.summary;
+  const evidence = input.evidence.trim();
+
+  return {
+    ...input.proposal,
+    summary,
+    evidence: evidence ? [evidence, ...input.proposal.evidence.slice(1)] : input.proposal.evidence,
+    proposed_events: input.proposal.proposed_events.map((event) => {
+      if (event.payload.target_type === "character" && characterStatusFields.has(event.payload.field ?? "")) {
+        return updateProposalEventValue(event, summary);
+      }
+
+      if (event.payload.target_type === "timeline_event" && timelineSummaryFields.has(event.payload.field ?? "")) {
+        return updateProposalEventValue(event, summary);
+      }
+
+      if (event.payload.target_type === "open_loop" && openLoopSummaryFields.has(event.payload.field ?? "")) {
+        return updateProposalEventValue(event, summary);
+      }
+
+      return event;
+    }),
+    review: {
+      ...input.proposal.review,
+      edited_summary: summary,
     },
   };
 }
@@ -47,6 +87,19 @@ export function proposalToNarrativeEvents(proposal: StateProposal, now = new Dat
           }
         : event.payload,
   }));
+}
+
+function updateProposalEventValue(
+  event: StateProposal["proposed_events"][number],
+  summary: string,
+): StateProposal["proposed_events"][number] {
+  return {
+    ...event,
+    payload: {
+      ...event.payload,
+      new_value: summary,
+    },
+  };
 }
 
 export function serializeJsonlRecord(record: unknown): string {

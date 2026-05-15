@@ -102,6 +102,7 @@ The current P0 vertical slice includes:
 - accepted proposal event logging
 - accepted proposal character references are normalized to canonical character ids
 - pending proposal card persistence and reopen recovery
+- proposal cards support inline summary and evidence edits before acceptance
 - local project reopen reads narrative event log
 - projected character state
 - projected open-loop state
