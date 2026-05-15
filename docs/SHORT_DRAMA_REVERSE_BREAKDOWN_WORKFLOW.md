@@ -752,6 +752,20 @@ Output:
 - raw transcript with timestamps
 - cleaned dialogue transcript
 
+Current command:
+
+```bash
+npm run short-drama:import-transcript -- --case ./short-drama-cases/drama-title/episode_001 --input ./episode_001.srt
+```
+
+Supported first-pass inputs:
+
+- `.srt`
+- `.vtt`
+- plain `.txt`
+
+The importer extracts repeated speaker labels when dialogue uses `角色名：台词` or `Character: line`. Speaker labels are still provisional; human correction remains required before report generation.
+
 ### Step 4: Visual Context Layer
 
 Support:

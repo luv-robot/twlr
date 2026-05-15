@@ -12,7 +12,8 @@
     "desktop": "npm run tauri -w @twlr/desktop",
     "build": "npm run build --workspaces",
     "typecheck": "tsc --noEmit",
-    "short-drama:create-case": "node scripts/short-drama/create-case.mjs"
+    "short-drama:create-case": "node scripts/short-drama/create-case.mjs",
+    "short-drama:import-transcript": "node scripts/short-drama/import-transcript.mjs"
   },
   "devDependencies": {
     "typescript": "^5.8.0"
