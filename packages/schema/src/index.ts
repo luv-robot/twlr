@@ -7,3 +7,4 @@ export type * from "./project";
 export type * from "./proposals";
 export * from "./proposalSchema";
 export type * from "./state";
+export type * from "./shortDrama";

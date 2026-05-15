@@ -715,6 +715,18 @@ human_corrections.json
 director_diagnosis_report.md
 ```
 
+Current command:
+
+```bash
+npm run short-drama:create-case -- --title "Drama Title" --episode 1
+```
+
+Optional arguments:
+
+```bash
+npm run short-drama:create-case -- --title "Drama Title" --episode 1 --series-slug drama-title --out short-drama-cases --source-url "https://example.com/video"
+```
+
 ### Step 2: Media Ingestion
 
 Support:
@@ -810,4 +822,3 @@ Output:
 - Should correction happen in plain files first, or inside a small web UI?
 - What is the minimum number of diagnosed episodes needed before agents become visibly stronger than general models?
 - Should reports be in Chinese first, bilingual later, or language-matched to source content?
-
