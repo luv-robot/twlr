@@ -860,6 +860,18 @@ Output:
 - diagnosis labels
 - quality status
 
+Current case validation command:
+
+```bash
+npm run short-drama:validate-case -- --case ./short-drama-cases/drama-title/episode_001
+```
+
+Use `--strict` when a case should already contain transcript segments, visual frames, reconstructed scenes, and a populated report:
+
+```bash
+npm run short-drama:validate-case -- --case ./short-drama-cases/drama-title/episode_001 --strict
+```
+
 ## 16. Open Questions
 
 - Which video sources are legally acceptable for internal analysis?

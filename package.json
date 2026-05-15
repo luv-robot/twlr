@@ -15,7 +15,8 @@
     "short-drama:build-prompt": "node scripts/short-drama/build-prompt.mjs",
     "short-drama:create-case": "node scripts/short-drama/create-case.mjs",
     "short-drama:extract-keyframes": "node scripts/short-drama/extract-keyframes.mjs",
-    "short-drama:import-transcript": "node scripts/short-drama/import-transcript.mjs"
+    "short-drama:import-transcript": "node scripts/short-drama/import-transcript.mjs",
+    "short-drama:validate-case": "node scripts/short-drama/validate-case.mjs"
   },
   "devDependencies": {
     "typescript": "^5.8.0"
