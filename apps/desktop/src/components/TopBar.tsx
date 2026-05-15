@@ -4,11 +4,11 @@ interface TopBarProps {
   projectTitle: string;
   chapterTitle: string;
   autosaveLabel: string;
-  changedChapterCount: number;
+  changedItemCount: number;
   onSaveSnapshot: () => void;
 }
 
-export function TopBar({ autosaveLabel, changedChapterCount, chapterTitle, onSaveSnapshot, projectTitle }: TopBarProps) {
+export function TopBar({ autosaveLabel, changedItemCount, chapterTitle, onSaveSnapshot, projectTitle }: TopBarProps) {
   return (
     <header className="top-bar">
       <div className="project-title">{projectTitle}</div>
@@ -18,7 +18,7 @@ export function TopBar({ autosaveLabel, changedChapterCount, chapterTitle, onSav
         <span className="status-dot" />
         {autosaveLabel}
       </div>
-      <button className="secondary-button" disabled={changedChapterCount === 0} onClick={onSaveSnapshot}>
+      <button className="secondary-button" disabled={changedItemCount === 0} onClick={onSaveSnapshot}>
         {t("snapshot.save")}
       </button>
       <button className="icon-button" aria-label="Search">

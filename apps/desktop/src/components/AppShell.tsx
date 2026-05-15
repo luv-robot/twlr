@@ -57,6 +57,7 @@ export function AppShell() {
   const [proposals, setProposals] = useState<StateProposal[]>([]);
   const [autosaveLabel, setAutosaveLabel] = useState("Autosaved locally");
   const [changedChapterIds, setChangedChapterIds] = useState<Set<string>>(() => new Set());
+  const [changedProjectFileCount, setChangedProjectFileCount] = useState(0);
   const [acceptedEvents, setAcceptedEvents] = useState<NarrativeEvent[]>([]);
   const [characterState, setCharacterState] = useState<CharacterStateFile>(() => createEmptyCharacterStateFile());
   const [openLoopState, setOpenLoopState] = useState<OpenLoopStateFile>(() => createEmptyOpenLoopStateFile());
@@ -73,6 +74,7 @@ export function AppShell() {
   const activeChapter = chapters.find((chapter) => chapter.id === activeChapterId) ?? chapters[0];
   const wordCount = countWords(activeChapter.body);
   const changedChapterCount = changedChapterIds.size;
+  const changedItemCount = projectPath ? changedProjectFileCount : changedChapterCount;
   const acceptedEventCount = acceptedEvents.length;
   const timelineIssueCount = timelineState.timeline_events.filter(
     (event) => event.certainty === "needs_review" || event.certainty === "contradicted",
@@ -139,6 +141,7 @@ export function AppShell() {
   async function saveSnapshot() {
     if (!projectPath) {
       setChangedChapterIds(new Set());
+      setChangedProjectFileCount(0);
       setAutosaveLabel("Snapshot saved locally");
       return;
     }
@@ -179,6 +182,7 @@ export function AppShell() {
       setAcceptedEvents(workspace.events);
       setActiveChapterId(workspace.chapters[0]?.id ?? "01");
       setChangedChapterIds(new Set());
+      setChangedProjectFileCount(0);
       setWorkspaceStatus(`Opened ${workspace.project.title}`);
       setStorageStatus("Local project logs enabled.");
       refreshSnapshotStatus(nextProjectPath);
@@ -208,6 +212,7 @@ export function AppShell() {
       setAcceptedEvents(workspace.events);
       setActiveChapterId(workspace.chapters[0]?.id ?? "01");
       setChangedChapterIds(new Set());
+      setChangedProjectFileCount(0);
       setWorkspaceStatus(`Created ${workspace.project.title}`);
       setStorageStatus("Local project logs enabled.");
       refreshSnapshotStatus(nextProjectPath);
@@ -254,6 +259,7 @@ export function AppShell() {
   async function refreshSnapshotStatus(nextProjectPath: string) {
     try {
       const status = await getWorkspaceSnapshotStatus(nextProjectPath);
+      setChangedProjectFileCount(status.changed_files);
       setSnapshotStatus(formatRevisionCheck(status.changed_chapters, status.changed_state_files));
     } catch (error) {
       setSnapshotStatus(error instanceof Error ? error.message : "Snapshot status unavailable.");
@@ -378,6 +384,9 @@ export function AppShell() {
           ? `Accepted proposal: ${events.length} event(s) committed; projected state updated.`
           : result.message,
       );
+      if (projectPath) {
+        await refreshSnapshotStatus(projectPath);
+      }
     } catch (error) {
       setStorageStatus(error instanceof Error ? error.message : "Failed to persist event log.");
     }
@@ -422,6 +431,9 @@ export function AppShell() {
     try {
       const result = await persistRoomMeeting(projectPath, meeting);
       setStorageStatus(result.message);
+      if (projectPath && result.status === "persisted") {
+        await refreshSnapshotStatus(projectPath);
+      }
     } catch (error) {
       setStorageStatus(error instanceof Error ? error.message : "Failed to record Writers' Room.");
     }
@@ -482,6 +494,9 @@ export function AppShell() {
       if (result.status === "persisted" && !options?.silent) {
         setStorageStatus(result.message);
       }
+      if (result.status === "persisted" && projectPath) {
+        await refreshSnapshotStatus(projectPath);
+      }
     } catch (error) {
       setStorageStatus(error instanceof Error ? error.message : "Failed to persist proposal cards.");
     }
@@ -491,6 +506,9 @@ export function AppShell() {
     try {
       const result = await persistReviewedProposal(projectPath, proposal);
       setStorageStatus(result.message);
+      if (result.status === "persisted" && projectPath) {
+        await refreshSnapshotStatus(projectPath);
+      }
     } catch (error) {
       setStorageStatus(error instanceof Error ? error.message : "Failed to persist reviewed proposal.");
     }
@@ -500,7 +518,7 @@ export function AppShell() {
     <div className="app-shell">
       <TopBar
         autosaveLabel={autosaveLabel}
-        changedChapterCount={changedChapterCount}
+        changedItemCount={changedItemCount}
         chapterTitle={`Chapter ${activeChapter.id} - ${activeChapter.title}`}
         onSaveSnapshot={saveSnapshot}
         projectTitle={projectTitle}
