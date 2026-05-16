@@ -2,6 +2,56 @@
 
 This playbook is for terminal-first testing of the short-drama reverse breakdown workflow.
 
+## Automation Rule For This Phase
+
+The current test phase prioritizes workflow automation over manual precision cleanup.
+
+Quality gates should check:
+
+- required files and schema shape
+- prompt / report template completeness
+- broken evidence references
+- impossible timecodes
+- obvious process leakage or severe hallucination risk
+
+Do not spend time manually correcting character names, scene boundaries, or ASR wording unless the pipeline is blocked.
+
+## Fast Path: Advance A Case
+
+After a model output file is saved into the case folder, run:
+
+```bash
+npm run short-drama:run-case-review -- --case "$CASE"
+```
+
+This command does not call an LLM. It automatically:
+
+- applies saved model outputs when their expected filenames exist
+- rebuilds prompts for the next stage
+- validates the case
+- lints the diagnosis report
+- audits structure and severe-hallucination risks
+- updates `short-drama-cases/index.json`
+
+Expected model-output filenames:
+
+```text
+visual_context_from_model.json
+visual_context_from_chatgpt.json
+visual_context_form_chatgpt.json
+visual_only_report_from_model.md
+groq_playground_transcript.txt
+transcript_segmented_from_model.json
+reconstructed_script_from_model.json
+director_diagnosis_from_model.md
+```
+
+Run a preview without changing files:
+
+```bash
+npm run short-drama:run-case-review -- --case "$CASE" --dry-run
+```
+
 ## 1. Create A Case
 
 ```bash
@@ -77,12 +127,14 @@ Lint it:
 npm run short-drama:lint-report -- --case "$CASE" --kind visual-only
 ```
 
-## 6. Generate Human Correction Sheet
+## 6. Optional: Generate Human Correction Sheet
 
 ```bash
 npm run short-drama:build-correction-sheet -- --case "$CASE"
 open "$CASE/human_correction_sheet.md"
 ```
+
+For the current automation-first phase, this sheet is optional and should not block report generation.
 
 ## 7. Optional: Extract Priority Audio Segments
 
@@ -212,6 +264,7 @@ Apply and lint:
 ```bash
 npm run short-drama:apply-output -- --case "$CASE" --kind diagnosis-report --input "$CASE/director_diagnosis_from_model.md" --force
 npm run short-drama:lint-report -- --case "$CASE" --kind diagnosis
+npm run short-drama:audit-case -- --case "$CASE"
 ```
 
 ## Things To Confirm Later

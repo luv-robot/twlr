@@ -72,13 +72,21 @@ Online video URL / local video
 -> Extract keyframes / visual scene information
 -> LLM reconstructs script material
 -> LLM performs director-side peer analysis
--> Human corrects character names, scene boundaries, key judgments
+-> Automated structure / severe-hallucination audit
 -> Generate standardized diagnosis report
 ```
 
 P0 should process one episode at a time.
 
 P0 should not attempt full automation where the underlying task is still unreliable. Use existing tools and a small amount of glue code first.
+
+Current test-phase priority:
+
+```text
+automation first, precision calibration later
+```
+
+At this stage, do not block the pipeline on manual correction of character names, scene boundaries, or ASR wording. The minimum acceptable output should be structurally complete and free of severe evidence breaks or obvious hallucinations. Human correction becomes important when a case is promoted into a reusable training or benchmark asset.
 
 ## 4. P0 Non-Goals
 
@@ -110,7 +118,7 @@ Use mature tools wherever possible.
 | Video understanding | Gemini video input when available |
 | Image understanding | Gemini / ChatGPT / Claude multimodal input |
 | LLM analysis | remote LLM API |
-| Human correction | Markdown / JSON files first |
+| Human correction | Optional Markdown / JSON review for promoted cases |
 | Report generation | Markdown template |
 
 The implementation principle:
@@ -118,7 +126,7 @@ The implementation principle:
 ```text
 Use tools for hard media tasks.
 Use glue code for orchestration.
-Use humans for correction.
+Use humans for correction when promoting a case into a reusable training asset.
 Use LLMs for reconstruction and analysis.
 ```
 
@@ -687,9 +695,9 @@ Focus:
 - genre promise
 - platform risk when relevant
 
-## 13. Human Correction Gate
+## 13. Case Promotion Gate
 
-Human correction is not optional.
+Human correction is optional during automation testing and should not block a first-pass diagnosis report.
 
 Before a report becomes a reusable training asset, a human should confirm:
 
@@ -704,6 +712,15 @@ Before a report becomes a reusable training asset, a human should confirm:
 The product should make correction lightweight.
 
 P0 correction can be a simple JSON or Markdown review file. UI can come later.
+
+For normal pipeline tests, use automated gates first:
+
+- schema and file completeness
+- broken transcript / visual references
+- impossible timecodes
+- missing report sections
+- obvious process leakage
+- severe hallucination risk
 
 ## 14. Quality Bar
 
@@ -954,7 +971,21 @@ npm run short-drama:index-cases -- --root ./short-drama-cases
 
 This writes `short-drama-cases/index.json`, summarizing each episode's progress and missing next steps.
 
-Current human correction sheet command:
+Current automation pass command:
+
+```bash
+npm run short-drama:run-case-review -- --case ./short-drama-cases/drama-title/episode_001
+```
+
+This applies already-saved model outputs, rebuilds next prompts, validates the case, lints the report, audits structure / severe-hallucination risks, and updates the case index.
+
+Current structural audit command:
+
+```bash
+npm run short-drama:audit-case -- --case ./short-drama-cases/drama-title/episode_001
+```
+
+Current optional human correction sheet command:
 
 ```bash
 npm run short-drama:build-correction-sheet -- --case ./short-drama-cases/drama-title/episode_001
@@ -968,5 +999,6 @@ This writes `human_correction_sheet.md`, a lightweight table-based review sheet 
 - Should the first P0 support only local video to reduce platform risk?
 - Which multimodal provider should be used first for keyframe interpretation?
 - Should correction happen in plain files first, or inside a small web UI?
+- What is the AI short-drama production workflow script format that this module should import/export later? The adapter should be reserved, but not implemented until the format document is provided.
 - What is the minimum number of diagnosed episodes needed before agents become visibly stronger than general models?
 - Should reports be in Chinese first, bilingual later, or language-matched to source content?

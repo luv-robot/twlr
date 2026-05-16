@@ -13,6 +13,7 @@
     "build": "npm run build --workspaces",
     "typecheck": "tsc --noEmit",
     "short-drama:apply-output": "node scripts/short-drama/apply-output.mjs",
+    "short-drama:audit-case": "node scripts/short-drama/audit-case.mjs",
     "short-drama:build-correction-sheet": "node scripts/short-drama/build-correction-sheet.mjs",
     "short-drama:build-prompt": "node scripts/short-drama/build-prompt.mjs",
     "short-drama:build-scene-map": "node scripts/short-drama/build-scene-map.mjs",
@@ -23,6 +24,7 @@
     "short-drama:import-transcript": "node scripts/short-drama/import-transcript.mjs",
     "short-drama:index-cases": "node scripts/short-drama/index-cases.mjs",
     "short-drama:lint-report": "node scripts/short-drama/lint-report.mjs",
+    "short-drama:run-case-review": "node scripts/short-drama/run-case-review.mjs",
     "short-drama:transcribe-groq": "node scripts/short-drama/transcribe-groq.mjs",
     "short-drama:validate-case": "node scripts/short-drama/validate-case.mjs"
   },
