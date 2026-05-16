@@ -26,6 +26,11 @@ const targets = {
     type: "json",
     requiredKeys: ["series_title", "episode_number", "characters", "scenes"],
   },
+  "transcript-raw": {
+    fileName: "transcript_raw.json",
+    type: "json",
+    requiredKeys: ["series_title", "episode_number", "segments"],
+  },
   "visual-only-report": {
     fileName: "visual_only_observation_report.md",
     type: "markdown",
@@ -170,6 +175,7 @@ function printHelp() {
 
 Kinds:
   visual-context
+  transcript-raw
   reconstructed-script
   visual-only-report
   diagnosis-report

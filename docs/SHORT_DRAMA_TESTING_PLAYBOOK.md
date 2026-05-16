@@ -99,19 +99,94 @@ For the current visual-only workflow, the priority segments are usually:
 - the hidden-command or antagonist segment
 - the final hierarchy / cliffhanger segment
 
-## 8. Validate And Index
+## 8. Optional: Transcribe Audio Segments With Groq
+
+Use Groq when embedded subtitles are missing and ASR is the fastest path.
+
+Create a local ignored key file:
+
+```bash
+cp .env.example .env.local
+```
+
+Then replace `gsk_your_key_here` in `.env.local` with the real Groq key.
+
+Preview the transcription plan:
+
+```bash
+npm run short-drama:transcribe-groq -- --case "$CASE" --dry-run
+```
+
+Check API key and model visibility before uploading audio:
+
+```bash
+npm run short-drama:check-groq
+```
+
+Transcribe all visual scene audio segments:
+
+```bash
+npm run short-drama:transcribe-groq -- --case "$CASE"
+```
+
+Or transcribe only the current priority conflict scenes:
+
+```bash
+npm run short-drama:transcribe-groq -- --case "$CASE" --only vscene_002,vscene_004
+```
+
+The command writes:
+
+- `$CASE/asr/groq/*.groq.json`
+- `$CASE/asr/groq/*.txt`
+- `$CASE/transcript_raw.json`
+- `$CASE/transcript_clean.md`
+
+If `short-drama:check-groq` returns `403 Forbidden`, the request has reached Groq but is being rejected before transcription. Check:
+
+- the key was created under the same Groq project currently selected in the console
+- the project has access to `whisper-large-v3-turbo`
+- the terminal is using the same network / proxy route that can access Groq
+- a newly generated API key works better than the previous key
+
+## 9. Validate And Index
 
 ```bash
 npm run short-drama:validate-case -- --case "$CASE"
 npm run short-drama:index-cases -- --root ./short-drama-cases
 ```
 
-## 9. When Transcript Is Available
+## 10. When Transcript Is Available
 
 Import subtitle or rough transcript:
 
 ```bash
 npm run short-drama:import-transcript -- --case "$CASE" --input "xianzun.srt"
+```
+
+If the transcript is a full unsegmented ASR text block from Groq Playground, import it first:
+
+```bash
+npm run short-drama:import-transcript -- --case "$CASE" --input "$CASE/groq_playground_transcript.txt" --source asr
+```
+
+Then ask a model to clean and roughly segment it:
+
+```bash
+npm run short-drama:build-prompt -- --case "$CASE" --kind transcript-cleanup
+open "$CASE/prompts/transcript-cleanup_prompt.md"
+```
+
+Save the model JSON as:
+
+```text
+$CASE/transcript_segmented_from_model.json
+```
+
+Apply it:
+
+```bash
+npm run short-drama:apply-output -- --case "$CASE" --kind transcript-raw --input "$CASE/transcript_segmented_from_model.json" --force
 ```
 
 Build reconstruction prompt:

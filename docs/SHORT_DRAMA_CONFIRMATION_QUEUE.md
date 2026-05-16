@@ -6,12 +6,17 @@ These items should wait for product confirmation.
 
 1. ASR path
 
-   Options:
+   Current direction:
 
-   - external manual subtitle tools only
-   - MacWhisper as recommended local tool
-   - remote API transcription
-   - support all later, but pick one default now
+   - P0: Groq Whisper API for low-cost remote transcription.
+   - P1: Deepgram as likely production ASR default.
+   - Fallback / premium: OpenAI transcription.
+   - Manual subtitle import remains supported for cases that already have SRT/VTT.
+
+   Need confirmation later:
+
+   - whether Deepgram should become the default before trial users.
+   - whether the UI should expose provider choice or keep it hidden behind workspace settings.
 
 2. Visual-only report status
 
@@ -68,5 +73,4 @@ These items should wait for product confirmation.
 
 4. Confirm character names after transcript import.
 
-5. Confirm whether the project should prioritize ASR automation next or continue improving visual / report tooling.
-
+5. Confirm whether Groq transcription quality is sufficient for the first formal `xianzun` diagnosis, or whether the same episode should be retranscribed with Deepgram for comparison.

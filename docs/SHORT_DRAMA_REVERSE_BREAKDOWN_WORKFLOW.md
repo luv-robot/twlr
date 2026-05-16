@@ -105,7 +105,7 @@ Use mature tools wherever possible.
 | Video download | `yt-dlp` when legally and technically allowed |
 | Video/audio processing | `ffmpeg` |
 | Subtitle extraction | embedded subtitles / platform subtitles when available |
-| ASR | Whisper, OpenAI transcription, Deepgram, or equivalent |
+| ASR | Groq Whisper for P0, Deepgram for production default, OpenAI as premium / fallback |
 | Keyframe extraction | `ffmpeg` fixed interval and scene-change extraction |
 | Video understanding | Gemini video input when available |
 | Image understanding | Gemini / ChatGPT / Claude multimodal input |
@@ -120,6 +120,34 @@ Use tools for hard media tasks.
 Use glue code for orchestration.
 Use humans for correction.
 Use LLMs for reconstruction and analysis.
+```
+
+### ASR Provider Strategy
+
+Most useful short-drama samples will not have embedded subtitles, so ASR is a required P0 capability rather than a convenience feature.
+
+Recommended order:
+
+1. `Groq Whisper` for P0 validation because it is low-cost, fast, OpenAI-compatible, and enough to transcribe segmented short-drama audio.
+2. `Deepgram` for production because it is a dedicated ASR platform with stronger speech-specific controls such as diarization, utterances, formatting, and keyword hints.
+3. `OpenAI transcription` as a premium or fallback path, especially when the later analysis pipeline already uses OpenAI models.
+
+The product-facing abstraction should stay provider-neutral:
+
+```text
+ASR Provider
+-> transcribe(audio file, language, options)
+-> transcript_raw.json
+-> transcript_clean.md
+```
+
+The current P0 implementation uses scene-based audio chunks:
+
+```text
+visual_scene_map.json
+-> audio_segments/manifest.json
+-> Groq Whisper transcription
+-> transcript_raw.json
 ```
 
 ## 6. Visual Context Layer

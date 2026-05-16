@@ -39,6 +39,7 @@ export interface ShortDramaTranscriptFile {
 
 export interface ShortDramaTranscriptSegment {
   segment_id: string;
+  scene_id?: string;
   start_time: string;
   end_time: string;
   speaker_id: string;

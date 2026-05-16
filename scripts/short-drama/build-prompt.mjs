@@ -13,8 +13,8 @@ if (args.help || !args.case || !args.kind) {
 const caseDir = resolve(String(args.case));
 const kind = String(args.kind);
 
-if (!["visual", "visual-only-diagnosis", "reconstruction", "diagnosis"].includes(kind)) {
-  throw new Error("--kind must be visual, visual-only-diagnosis, reconstruction, or diagnosis.");
+if (!["visual", "visual-only-diagnosis", "transcript-cleanup", "reconstruction", "diagnosis"].includes(kind)) {
+  throw new Error("--kind must be visual, visual-only-diagnosis, transcript-cleanup, reconstruction, or diagnosis.");
 }
 
 if (!existsSync(caseDir)) {
@@ -26,9 +26,11 @@ const prompt =
     ? buildVisualPrompt(caseDir)
     : kind === "visual-only-diagnosis"
       ? buildVisualOnlyDiagnosisPrompt(caseDir)
-      : kind === "reconstruction"
-        ? buildReconstructionPrompt(caseDir)
-        : buildDiagnosisPrompt(caseDir);
+      : kind === "transcript-cleanup"
+        ? buildTranscriptCleanupPrompt(caseDir)
+        : kind === "reconstruction"
+          ? buildReconstructionPrompt(caseDir)
+          : buildDiagnosisPrompt(caseDir);
 const defaultOut = join(caseDir, "prompts", `${kind}_prompt.md`);
 const outPath = args.out ? resolve(String(args.out)) : defaultOut;
 
@@ -138,7 +140,9 @@ function buildReconstructionPrompt(caseDirPath) {
   const metadata = readJson(join(caseDirPath, "source_metadata.json"));
   const transcript = readJson(join(caseDirPath, "transcript_raw.json"));
   const visualContext = readJson(join(caseDirPath, "visual_context.json"));
+  const visualSceneMap = readOptionalJson(join(caseDirPath, "visual_scene_map.json"));
   const corrections = readJson(join(caseDirPath, "human_corrections.json"));
+  const transcriptLimitations = describeTranscriptLimitations(transcript);
 
   return `# Short Drama Script Reconstruction Prompt
 
@@ -165,6 +169,17 @@ Focus on:
 Do not write a diagnosis report yet.
 Do not praise the work.
 Do not discuss theme, artistry, or cinematography unless it directly affects scene function.
+
+## Transcript Reliability
+
+${transcriptLimitations}
+
+If the transcript lacks timestamps or speaker labels:
+
+- do not invent exact dialogue timecodes
+- use the visual scene map as the primary scene-boundary scaffold
+- assign dialogue to scenes conservatively by order, topic shift, names, and visible action
+- mark uncertain role names, scene boundaries, and key judgments in \`open_questions\`
 
 ## Output Rules
 
@@ -227,6 +242,7 @@ Use a combination of:
 - visible action or staging changes
 - conflict turns
 
+If a visual scene map is available, use it as the initial scaffold, then revise only when transcript evidence clearly requires it.
 Do not split every shot into a scene.
 Do not merge distinct conflicts into one scene just because location stays the same.
 
@@ -242,6 +258,12 @@ ${JSON.stringify(metadata, null, 2)}
 ${JSON.stringify(transcript, null, 2)}
 \`\`\`
 
+## Visual Scene Map
+
+\`\`\`json
+${JSON.stringify(visualSceneMap ?? null, null, 2)}
+\`\`\`
+
 ## Visual Context
 
 \`\`\`json
@@ -252,6 +274,112 @@ ${JSON.stringify(visualContext, null, 2)}
 
 \`\`\`json
 ${JSON.stringify(corrections, null, 2)}
+\`\`\`
+`;
+}
+
+function describeTranscriptLimitations(transcript) {
+  const segments = Array.isArray(transcript.segments) ? transcript.segments : [];
+  const hasUsableTimecodes = segments.some((segment) => segment.start_time || segment.end_time);
+  const hasSpeakerLabels = segments.some((segment) => segment.speaker_label);
+
+  if (segments.length <= 1 && !hasUsableTimecodes) {
+    return "The transcript is currently an unsegmented ASR text block without usable timecodes or speaker labels.";
+  }
+
+  const notes = [];
+  notes.push(`${segments.length} transcript segment(s) are available.`);
+  notes.push(hasUsableTimecodes ? "Some transcript timecodes are available." : "No reliable transcript timecodes are available.");
+  notes.push(hasSpeakerLabels ? "Some speaker labels are available." : "No speaker labels are available.");
+  return notes.join("\n");
+}
+
+function buildTranscriptCleanupPrompt(caseDirPath) {
+  const metadata = readJson(join(caseDirPath, "source_metadata.json"));
+  const transcript = readJson(join(caseDirPath, "transcript_raw.json"));
+  const visualSceneMap = readOptionalJson(join(caseDirPath, "visual_scene_map.json"));
+  const corrections = readJson(join(caseDirPath, "human_corrections.json"));
+
+  return `# Short Drama ASR Cleanup Prompt
+
+You are preparing noisy ASR text for a short-drama writer/director peer-review workflow.
+
+You are not writing a diagnosis.
+You are not summarizing the episode.
+You are not inventing new plot facts.
+
+## Task
+
+Convert the raw ASR transcript into a usable segmented transcript JSON.
+
+Focus on:
+
+- adding punctuation where the ASR clearly lacks it
+- splitting dialogue into short usable beats
+- assigning likely scene_id from the visual scene map when possible
+- preserving uncertain words rather than over-correcting them
+- marking unknown speakers as \`speaker_unknown\`
+- keeping role names tentative when ASR is noisy
+
+## Important Limits
+
+- The source transcript may not have timestamps.
+- Do not invent exact timestamps.
+- If exact segment time is unknown, leave \`start_time\` and \`end_time\` as empty strings.
+- You may use visual scene ranges only to choose \`scene_id\`, not to fabricate precise line timings.
+- Keep the original meaning and order.
+- If a word sounds wrong but the likely correction is obvious from context, correct it conservatively.
+
+## Output Rules
+
+Return JSON only.
+Match this shape:
+
+\`\`\`json
+{
+  "series_title": "",
+  "episode_number": 1,
+  "language": "zh-CN",
+  "source": "asr_cleanup",
+  "segments": [
+    {
+      "segment_id": "seg_0001",
+      "scene_id": "vscene_001",
+      "start_time": "",
+      "end_time": "",
+      "speaker_id": "speaker_unknown",
+      "speaker_label": null,
+      "text": "",
+      "source": "asr",
+      "confidence": null
+    }
+  ],
+  "cleanup_notes": []
+}
+\`\`\`
+
+## Source Metadata
+
+\`\`\`json
+${JSON.stringify(metadata, null, 2)}
+\`\`\`
+
+## Visual Scene Map
+
+\`\`\`json
+${JSON.stringify(visualSceneMap ?? null, null, 2)}
+\`\`\`
+
+## Human Corrections
+
+\`\`\`json
+${JSON.stringify(corrections, null, 2)}
+\`\`\`
+
+## Raw Transcript
+
+\`\`\`json
+${JSON.stringify(transcript, null, 2)}
 \`\`\`
 `;
 }
@@ -544,12 +672,13 @@ function printHelp() {
   console.log(`Usage:
   npm run short-drama:build-prompt -- --case ./short-drama-cases/demo/episode_001 --kind visual
   npm run short-drama:build-prompt -- --case ./short-drama-cases/demo/episode_001 --kind visual-only-diagnosis
+  npm run short-drama:build-prompt -- --case ./short-drama-cases/demo/episode_001 --kind transcript-cleanup
   npm run short-drama:build-prompt -- --case ./short-drama-cases/demo/episode_001 --kind reconstruction
   npm run short-drama:build-prompt -- --case ./short-drama-cases/demo/episode_001 --kind diagnosis
 
 Options:
   --case  Required. Existing short-drama case folder.
-  --kind  Required. visual, visual-only-diagnosis, reconstruction, or diagnosis.
+  --kind  Required. visual, visual-only-diagnosis, transcript-cleanup, reconstruction, or diagnosis.
   --out   Optional. Output markdown path. Defaults to ./prompts/{kind}_prompt.md inside the case.
 `);
 }
