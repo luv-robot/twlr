@@ -12,6 +12,14 @@ apps/desktop/src-tauri/gen/schemas/
 cache/
 *.sqlite
 
+# Local short-drama analysis cases and media
+short-drama-cases/
+*.mp3
+*.mp4
+*.m4a
+*.mov
+*.wav
+
 # Environment
 .env
 .env.local

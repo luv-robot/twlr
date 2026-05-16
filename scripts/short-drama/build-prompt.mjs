@@ -13,8 +13,8 @@ if (args.help || !args.case || !args.kind) {
 const caseDir = resolve(String(args.case));
 const kind = String(args.kind);
 
-if (!["visual", "reconstruction", "diagnosis"].includes(kind)) {
-  throw new Error("--kind must be visual, reconstruction, or diagnosis.");
+if (!["visual", "visual-only-diagnosis", "reconstruction", "diagnosis"].includes(kind)) {
+  throw new Error("--kind must be visual, visual-only-diagnosis, reconstruction, or diagnosis.");
 }
 
 if (!existsSync(caseDir)) {
@@ -24,9 +24,11 @@ if (!existsSync(caseDir)) {
 const prompt =
   kind === "visual"
     ? buildVisualPrompt(caseDir)
-    : kind === "reconstruction"
-      ? buildReconstructionPrompt(caseDir)
-      : buildDiagnosisPrompt(caseDir);
+    : kind === "visual-only-diagnosis"
+      ? buildVisualOnlyDiagnosisPrompt(caseDir)
+      : kind === "reconstruction"
+        ? buildReconstructionPrompt(caseDir)
+        : buildDiagnosisPrompt(caseDir);
 const defaultOut = join(caseDir, "prompts", `${kind}_prompt.md`);
 const outPath = args.out ? resolve(String(args.out)) : defaultOut;
 
@@ -213,7 +215,6 @@ Match this shape:
   "episode_hook": null,
   "episode_cliffhanger": null,
   "open_questions": []
-}
 \`\`\`
 
 ## Scene Boundary Rules
@@ -251,6 +252,108 @@ ${JSON.stringify(visualContext, null, 2)}
 
 \`\`\`json
 ${JSON.stringify(corrections, null, 2)}
+\`\`\`
+`;
+}
+
+function buildVisualOnlyDiagnosisPrompt(caseDirPath) {
+  const metadata = readJson(join(caseDirPath, "source_metadata.json"));
+  const visualContext = readJson(join(caseDirPath, "visual_context.json"));
+  const sceneMap = readOptionalJson(join(caseDirPath, "visual_scene_map.json"));
+
+  return `# Short Drama Visual-Only Director-Side Observation Prompt
+
+You are not a film critic.
+You are a short-drama writer/director peer reviewer working without transcript evidence.
+
+## Core Limitation
+
+This is a visual-only pass.
+
+You must clearly mark all conclusions that require dialogue confirmation.
+Do not infer exact plot, names, secrets, motivations, or stakes unless they are visually evident.
+
+## Task
+
+Produce a visual-only director-side observation report.
+
+Focus on:
+
+- visual scene segmentation
+- location / arena changes
+- character entrance and exit patterns
+- visible power relations
+- visible conflict escalation
+- staging and action
+- likely genre signals
+- possible hook / reversal / hierarchy moments
+- what must be confirmed by transcript
+
+Do not output a final diagnosis.
+Do not discuss artistic style as film criticism.
+Do not summarize the plot as if dialogue were known.
+
+## Output Format
+
+Return Markdown using this exact structure:
+
+\`\`\`markdown
+# 《剧名》第 X 集 无对白视觉观察报告
+
+## 1. 一句话判断
+本集仅从画面看，主要视觉工作是什么？哪些判断必须等对白确认？
+
+## 2. 视觉场景地图
+| 段落 | 时间 | 视觉地点 | 可见人物/关系 | 可见动作 | 可能戏剧功能 | 需对白确认 |
+|---|---|---|---|---|---|---|
+
+## 3. 权力关系与冲突升级
+- 可见权力差：
+- 可见冲突升级：
+- 可见反击 / 压制 / 震慑：
+- 不确定项：
+
+## 4. 场面调度与动作
+- 动作是否替代对白：
+- 是否存在站桩争吵风险：
+- 道具 / 空间是否承担叙事功能：
+- 可保留的画面信息：
+
+## 5. 短剧商业信号
+- 类型信号：
+- 爽点/反转信号：
+- 追看信号：
+- 可剪辑传播片段：
+
+## 6. 必须等待对白确认的问题
+- 人物名：
+- 人物目标：
+- 冲突筹码：
+- 信息释放：
+- 集尾钩子真实含义：
+
+## 7. 下一步建议
+- 先补哪几段对白：
+- 哪些视觉段落优先做剧本重建：
+- 哪些判断暂不进入正式报告：
+\`\`\`
+
+## Source Metadata
+
+\`\`\`json
+${JSON.stringify(metadata, null, 2)}
+\`\`\`
+
+## Visual Scene Map
+
+\`\`\`json
+${JSON.stringify(sceneMap ?? null, null, 2)}
+\`\`\`
+
+## Visual Context
+
+\`\`\`json
+${JSON.stringify(visualContext, null, 2)}
 \`\`\`
 `;
 }
@@ -402,6 +505,14 @@ function readJson(filePath) {
   return JSON.parse(readFileSync(filePath, "utf8"));
 }
 
+function readOptionalJson(filePath) {
+  if (!existsSync(filePath)) {
+    return null;
+  }
+
+  return JSON.parse(readFileSync(filePath, "utf8"));
+}
+
 function parseArgs(argv) {
   const result = {};
 
@@ -432,12 +543,13 @@ function parseArgs(argv) {
 function printHelp() {
   console.log(`Usage:
   npm run short-drama:build-prompt -- --case ./short-drama-cases/demo/episode_001 --kind visual
+  npm run short-drama:build-prompt -- --case ./short-drama-cases/demo/episode_001 --kind visual-only-diagnosis
   npm run short-drama:build-prompt -- --case ./short-drama-cases/demo/episode_001 --kind reconstruction
   npm run short-drama:build-prompt -- --case ./short-drama-cases/demo/episode_001 --kind diagnosis
 
 Options:
   --case  Required. Existing short-drama case folder.
-  --kind  Required. visual, reconstruction, or diagnosis.
+  --kind  Required. visual, visual-only-diagnosis, reconstruction, or diagnosis.
   --out   Optional. Output markdown path. Defaults to ./prompts/{kind}_prompt.md inside the case.
 `);
 }

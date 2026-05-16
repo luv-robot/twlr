@@ -794,6 +794,22 @@ npm run short-drama:build-prompt -- --case ./short-drama-cases/drama-title/episo
 
 This writes `prompts/visual_prompt.md`. Upload the listed keyframes to a multimodal model with this prompt, then paste the model's corrected JSON back into `visual_context.json`.
 
+If dialogue transcription is blocked, continue with a visual-only pass:
+
+```bash
+npm run short-drama:build-scene-map -- --case ./short-drama-cases/drama-title/episode_001
+```
+
+This writes `visual_scene_map.json`, grouping frame-level visual context into provisional visual scenes.
+
+Then generate a visual-only observation prompt:
+
+```bash
+npm run short-drama:build-prompt -- --case ./short-drama-cases/drama-title/episode_001 --kind visual-only-diagnosis
+```
+
+This writes `prompts/visual-only-diagnosis_prompt.md`. It is not a final diagnosis. It is a no-dialogue director-side observation pass that highlights scene arenas, visible conflict escalation, power relations, and the exact questions that still require transcript confirmation.
+
 ### Step 5: Script Reconstruction
 
 LLM combines:

@@ -73,10 +73,35 @@ export interface ShortDramaVisualFrame {
 }
 
 export interface ShortDramaVisualSceneNote {
+  start_time?: string;
+  end_time?: string;
+  time_range?: string;
+  summary?: string;
+  visual_pattern?: string;
+  possible_function?: string;
+  evidence_frame_ids?: string[];
+  confidence?: number | null;
+}
+
+export interface ShortDramaVisualSceneMapFile {
+  series_title: string;
+  episode_number: number;
+  scenes: ShortDramaVisualSceneMapEntry[];
+  open_questions: string[];
+}
+
+export interface ShortDramaVisualSceneMapEntry {
+  scene_id: string;
   start_time: string;
   end_time: string;
-  summary: string;
+  location: string | null;
+  visual_summary: string;
+  possible_dramatic_function: string | null;
+  visible_conflict: string | null;
+  power_relation: string | null;
+  action_tags: ShortDramaActionTag[];
   evidence_frame_ids: string[];
+  needs_dialogue_confirmation: string[];
 }
 
 export interface ShortDramaReconstructedScript {
