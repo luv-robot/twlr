@@ -810,6 +810,18 @@ npm run short-drama:build-prompt -- --case ./short-drama-cases/drama-title/episo
 
 This writes `prompts/visual-only-diagnosis_prompt.md`. It is not a final diagnosis. It is a no-dialogue director-side observation pass that highlights scene arenas, visible conflict escalation, power relations, and the exact questions that still require transcript confirmation.
 
+To safely apply model output back into the case:
+
+```bash
+npm run short-drama:apply-output -- --case ./short-drama-cases/drama-title/episode_001 --kind visual-only-report --input ./visual_only_report_from_model.md --force
+```
+
+To check that the report is not drifting into film criticism:
+
+```bash
+npm run short-drama:lint-report -- --case ./short-drama-cases/drama-title/episode_001 --kind visual-only
+```
+
 ### Step 5: Script Reconstruction
 
 LLM combines:
@@ -830,6 +842,12 @@ npm run short-drama:build-prompt -- --case ./short-drama-cases/drama-title/episo
 ```
 
 This writes `prompts/reconstruction_prompt.md` inside the case folder. The model output should be manually inspected before replacing `reconstructed_script.json`.
+
+To apply inspected model JSON:
+
+```bash
+npm run short-drama:apply-output -- --case ./short-drama-cases/drama-title/episode_001 --kind reconstructed-script --input ./reconstructed_script_from_model.json --force
+```
 
 ### Step 6: Human Correction
 
@@ -864,6 +882,18 @@ npm run short-drama:build-prompt -- --case ./short-drama-cases/drama-title/episo
 
 This writes `prompts/diagnosis_prompt.md` inside the case folder. The prompt explicitly blocks film-review language and requires scene-level evidence plus revision suggestions.
 
+To apply a generated report:
+
+```bash
+npm run short-drama:apply-output -- --case ./short-drama-cases/drama-title/episode_001 --kind diagnosis-report --input ./director_diagnosis_from_model.md --force
+```
+
+To lint a generated report:
+
+```bash
+npm run short-drama:lint-report -- --case ./short-drama-cases/drama-title/episode_001 --kind diagnosis
+```
+
 ### Step 8: Case Indexing
 
 Store the processed case as expert knowledge material.
@@ -887,6 +917,22 @@ Use `--strict` when a case should already contain transcript segments, visual fr
 ```bash
 npm run short-drama:validate-case -- --case ./short-drama-cases/drama-title/episode_001 --strict
 ```
+
+Current case index command:
+
+```bash
+npm run short-drama:index-cases -- --root ./short-drama-cases
+```
+
+This writes `short-drama-cases/index.json`, summarizing each episode's progress and missing next steps.
+
+Current human correction sheet command:
+
+```bash
+npm run short-drama:build-correction-sheet -- --case ./short-drama-cases/drama-title/episode_001
+```
+
+This writes `human_correction_sheet.md`, a lightweight table-based review sheet for confirming character names, scene boundaries, and key judgments.
 
 ## 16. Open Questions
 

@@ -21,8 +21,10 @@ if (!existsSync(caseDir)) {
 const metadata = checkJson("source_metadata.json", ["series_title", "episode_number", "source_type"]);
 const transcript = checkJson("transcript_raw.json", ["segments"]);
 const visualContext = checkJson("visual_context.json", ["frames", "scene_level_notes"]);
+const visualSceneMap = checkOptionalJson("visual_scene_map.json", ["scenes"]);
 const reconstructedScript = checkJson("reconstructed_script.json", ["characters", "scenes"]);
 checkJson("human_corrections.json", ["character_name_map", "scene_boundary_edits"]);
+const visualOnlyReport = checkOptionalText("visual_only_observation_report.md");
 const report = checkText("director_diagnosis_report.md");
 
 if (metadata) {
@@ -39,11 +41,24 @@ if (visualContext) {
   count > 0 ? pass(`${count} visual frame placeholder(s)`) : warn("No visual frames yet.");
 }
 
+if (visualSceneMap) {
+  const count = Array.isArray(visualSceneMap.scenes) ? visualSceneMap.scenes.length : 0;
+  count > 0 ? pass(`${count} visual scene map segment(s)`) : warn("visual_scene_map.json has no scenes.");
+}
+
 if (reconstructedScript) {
   const sceneCount = Array.isArray(reconstructedScript.scenes) ? reconstructedScript.scenes.length : 0;
   const characterCount = Array.isArray(reconstructedScript.characters) ? reconstructedScript.characters.length : 0;
   sceneCount > 0 ? pass(`${sceneCount} reconstructed scene(s)`) : warn("No reconstructed scenes yet.");
   characterCount > 0 ? pass(`${characterCount} reconstructed character(s)`) : warn("No reconstructed characters yet.");
+}
+
+if (visualOnlyReport) {
+  const requiredHeadings = ["## 1. 一句话判断", "## 2. 视觉场景地图", "## 7. 下一步建议"];
+  const missingHeadings = requiredHeadings.filter((heading) => !visualOnlyReport.includes(heading));
+  missingHeadings.length === 0
+    ? pass("Visual-only report template headings present.")
+    : warn(`Visual-only report missing heading(s): ${missingHeadings.join(", ")}`);
 }
 
 if (report) {
@@ -93,6 +108,15 @@ function checkJson(fileName, requiredKeys) {
   }
 }
 
+function checkOptionalJson(fileName, requiredKeys) {
+  const filePath = join(caseDir, fileName);
+  if (!existsSync(filePath)) {
+    return null;
+  }
+
+  return checkJson(fileName, requiredKeys);
+}
+
 function checkText(fileName) {
   const filePath = join(caseDir, fileName);
   if (!existsSync(filePath)) {
@@ -103,6 +127,15 @@ function checkText(fileName) {
   const value = readFileSync(filePath, "utf8");
   value.trim().length > 0 ? pass(`${fileName} exists.`) : warn(`${fileName} is empty.`);
   return value;
+}
+
+function checkOptionalText(fileName) {
+  const filePath = join(caseDir, fileName);
+  if (!existsSync(filePath)) {
+    return null;
+  }
+
+  return checkText(fileName);
 }
 
 function pass(message) {

@@ -54,6 +54,18 @@ This document tracks product and implementation decisions that should wait for a
 
    Produce multiple Writers' Room page options before selecting the implementation direction.
 
+3. Short-drama ASR path
+
+   Decide whether P0 transcription should use a local tool such as MacWhisper, a remote API, or external manual subtitle import only.
+
+4. Short-drama case storage boundary
+
+   Decide whether local analysis cases should remain outside Git by default, and whether a redacted/exported case package format is needed.
+
+5. Visual-only report status
+
+   Decide whether visual-only observation reports should be shown to users as a formal feature or kept as an internal diagnostic stage before transcript-backed reports.
+
 ## Current Assumptions
 
 - OpenAI is the first concrete remote provider.
@@ -62,3 +74,5 @@ This document tracks product and implementation decisions that should wait for a
 - Git remains hidden behind writer-facing snapshot language.
 - Studio Coordinator remains operational and low-emotion-density.
 - Writers' Room can generate proposal cards only through explicit author action.
+- Short-drama video/audio/case folders are local analysis artifacts and should not be committed to Git by default.
+- Visual-only observations are provisional and must not be treated as final director-side diagnosis.
