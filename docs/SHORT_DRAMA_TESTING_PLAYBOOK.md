@@ -84,14 +84,29 @@ npm run short-drama:build-correction-sheet -- --case "$CASE"
 open "$CASE/human_correction_sheet.md"
 ```
 
-## 7. Validate And Index
+## 7. Optional: Extract Priority Audio Segments
+
+If full SRT is blocked, cut audio by the visual scene map and transcribe the highest-value segments first:
+
+```bash
+npm run short-drama:extract-audio-segments -- --case "$CASE" --force
+open "$CASE/audio_segments"
+```
+
+For the current visual-only workflow, the priority segments are usually:
+
+- the main confrontation segment
+- the hidden-command or antagonist segment
+- the final hierarchy / cliffhanger segment
+
+## 8. Validate And Index
 
 ```bash
 npm run short-drama:validate-case -- --case "$CASE"
 npm run short-drama:index-cases -- --root ./short-drama-cases
 ```
 
-## 8. When Transcript Is Available
+## 9. When Transcript Is Available
 
 Import subtitle or rough transcript:
 
@@ -131,4 +146,3 @@ npm run short-drama:lint-report -- --case "$CASE" --kind diagnosis
 - Which ASR path to use first: MacWhisper, external manual tool, OpenAI-compatible API, or another provider.
 - Whether the first formal test should use full episode audio or only 2-3 priority segments.
 - Whether the report language should default to Chinese for Chinese short dramas.
-

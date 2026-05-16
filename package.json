@@ -17,6 +17,7 @@
     "short-drama:build-prompt": "node scripts/short-drama/build-prompt.mjs",
     "short-drama:build-scene-map": "node scripts/short-drama/build-scene-map.mjs",
     "short-drama:create-case": "node scripts/short-drama/create-case.mjs",
+    "short-drama:extract-audio-segments": "node scripts/short-drama/extract-audio-segments.mjs",
     "short-drama:extract-keyframes": "node scripts/short-drama/extract-keyframes.mjs",
     "short-drama:import-transcript": "node scripts/short-drama/import-transcript.mjs",
     "short-drama:index-cases": "node scripts/short-drama/index-cases.mjs",
